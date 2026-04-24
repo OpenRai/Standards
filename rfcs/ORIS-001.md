@@ -7,68 +7,55 @@ OpenRai Initiative Standard: 001
 > Status: Draft
 > Category: Cryptographic Primitive / Application Interface
 
-## Conventions
+## 1. Conventions
 
-The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document indicate normative requirements and recommendations.
+The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document are to be interpreted as normative requirements.
 
-Unless otherwise stated, all lengths are measured in bytes, all byte strings are serialized exactly as written, and all hexadecimal strings are unprefixed.
+Unless otherwise stated:
 
-## 1. Abstract
+- all lengths are in bytes
+- all strings are UTF-8 text strings
+- all hexadecimal strings are unprefixed
+- all multi-byte integers are unsigned
 
-This document defines a standard for authenticating arbitrary off-chain text messages using Nano account keys.
+## 2. Abstract
 
-NOMS reuses Nano’s existing hashing and account-signing behavior. A message is first encoded as UTF-8, wrapped in a small domain-separated binary payload, hashed with Blake2b-256, and then signed using the same Nano-compatible signing primitive used for block signatures.
+This document specifies Nano Off-chain Messages (NOMs), a compact format for signing arbitrary off-chain text with Nano account keys.
 
-The result is a compact, deterministic, and easy-to-implement format for off-chain signatures without requiring any change to Nano’s underlying cryptographic foundations.
+A NOMS message is encoded as UTF-8, wrapped in a fixed domain-separated binary envelope, hashed with Blake2b-256, and signed using the same Nano-compatible account-signing behavior used for block signatures.
 
-## 2. Motivation
+The purpose of NOMS is to provide a deterministic, low-overhead, interoperable signing primitive for off-chain authentication without modifying Nano’s underlying cryptographic model.
 
-As the Nano ecosystem expands to include agentic workflows, machine-to-machine micropayments, delegated authentication, and other off-chain coordination patterns, there is a need for accounts and agents to prove identity and intent outside the chain itself.
+## 3. Scope
 
-Signing raw message bytes directly is undesirable because it leaves room for ambiguity and cross-protocol misuse. A message signed for one purpose should not be trivially reusable in another context. Existing message-signing schemes in other ecosystems often rely on variable-length ASCII framing and parser-specific conventions, which can add unnecessary overhead and ambiguity.
+NOMS defines a signing and verification format for off-chain text messages.
 
-NOMS addresses this by defining:
+NOMS does not by itself provide:
 
-- a fixed domain-separation header
-- an explicit 4-byte big-endian message length
-- deterministic UTF-8 encoding rules for text input
-- a signing flow that is compatible with Nano’s existing block-signature behavior
+- replay protection
+- audience restriction
+- structured consent semantics
+- typed data encoding
 
-NOMS is a cryptographic primitive for authenticating off-chain text. It does not by itself provide replay protection, audience restriction, or a structured user-consent model.
+Applications that require those properties MUST provide them at a higher layer.
 
-## 3. Specification
+## 4. Payload Format
 
-This version of NOMS signs UTF-8 text messages.
-
-Given an application message string, an implementation MUST:
-
-1. encode the string as UTF-8 according to Section 3.1
-2. construct the NOMS payload
-3. hash the payload with Blake2b-256
-4. sign the resulting 32-byte digest using the same account-signing behavior Nano uses for block hashes
-
-### 3.1. Message Encoding and Payload Construction
-
-The NOMS payload is a concatenated byte array with three strictly ordered components:
+A NOMS payload is the concatenation of three fields:
 
 ```text
 payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE
 ```
 
-If the application input is a string, it MUST be converted to`MESSAGE` as follows:
+Where:
 
-- UTF-8 encoding MUST be used
-- a UTF-8 BOM MUST NOT be added
-- implementations MUST NOT normalize Unicode
-- implementations MUST NOT trim whitespace
-- implementations MUST NOT rewrite line endings
-- implementations MUST NOT append a terminating NUL byte
+-`MAGIC_HEADER` is a fixed 25-byte constant
+-`MESSAGE_LENGTH` is a 4-byte big-endian unsigned integer
+-`MESSAGE` is the UTF-8 byte sequence of the application message
 
-`MESSAGE_LENGTH` is the exact number of UTF-8 bytes in`MESSAGE`, not the number of Unicode code points or characters.
+### 4.1. Magic Header
 
-#### Component 1: Magic Header (25 bytes)
-
-`MAGIC_HEADER` is the following fixed byte sequence:
+`MAGIC_HEADER` MUST be exactly the following 25-byte sequence:
 
 ```text
 \x18Nano Off-chain Message:\n
@@ -77,48 +64,48 @@ If the application input is a string, it MUST be converted to`MESSAGE` as follow
 Hexadecimal form:
 
 ```text
-18 4e 61 6e 6f 20 4f 66 66 2d 63 68 61 69 6e 20 4d 65 73 73 61 67 65 3a 0a
+18 4e 61 6e 6f 20 4f 66 66 2d 63 68 61 69 6e 20 4d 65
+73 73 61 67 65 3a 0a
 ```
 
-The first byte is`0x18` (decimal 24), which matches the byte length of the following ASCII string`Nano Off-chain Message:\n`. The complete header is therefore 25 bytes.
+This constant provides domain separation. A verifier MUST reject any payload whose header does not exactly match this value.
 
-This header provides domain separation. NOMS signatures are generated over a distinct payload format rather than over raw message bytes or raw Nano protocol values.
+Future incompatible revisions of this specification MUST use a different header.
 
-Any future incompatible revision of this standard MUST define a different`MAGIC_HEADER`.
+### 4.2. Message Length
 
-#### Component 2: Message Length (4 bytes)
+`MESSAGE_LENGTH` MUST be the exact byte length of`MESSAGE`, encoded as a 32-bit unsigned integer in big-endian order.
 
-`MESSAGE_LENGTH` is a 32-bit unsigned integer encoded in big-endian byte order.
+The maximum representable length is $2^{32}-1$ bytes.
 
-Example:
+Implementations MAY enforce lower local limits. If a message exceeds an implementation-defined limit, it MUST be rejected.
 
-- a 124-byte message is encoded as`00 00 00 7c`
+### 4.3. Message Encoding
 
-The format supports message lengths up to`2^32 - 1` bytes.
+If the application input is a string,`MESSAGE` MUST be produced as follows:
 
-Implementations MAY impose lower operational limits for memory, latency, or denial-of-service protection. Messages exceeding an implementation’s configured maximum MUST be rejected.
+- encode the string as UTF-8
+- do not prepend a UTF-8 BOM
+- do not normalize Unicode
+- do not alter whitespace
+- do not rewrite line endings
+- do not append a terminating NUL byte
 
-#### Component 3: Message (variable length)
+`MESSAGE_LENGTH` is the number of UTF-8 bytes, not the number of characters or Unicode code points.
 
-`MESSAGE` is the raw UTF-8 byte sequence of the application text.
+## 5. Signing
 
-### 3.2. Hashing
+To produce a NOMS signature for a message string:
 
-The constructed`payload` MUST be hashed with Blake2b using a 256-bit digest:
+1. Encode the message as`MESSAGE` according to Section 4.3.
+2. Construct`payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE`.
+3. Compute:
 
 ```text
 message_hash = Blake2b256(payload)
 ```
 
-This is the same digest size Nano uses for block hashes.
-
-The result,`message_hash`, is exactly 32 bytes.
-
-### 3.3. Signing
-
-NOMS uses the same signing model Nano uses for block signatures.
-
-After computing`message_hash`, implementations MUST sign that 32-byte digest exactly as a Nano block hash would be signed by the same account key. NOMS does not define a new signature primitive; it reuses Nano’s existing account-signing behavior unchanged and substitutes the NOM`message_hash` in place of a block hash.
+4. Sign`message_hash` using the same Nano-compatible account-signing behavior used for block hashes.
 
 Formally:
 
@@ -129,68 +116,59 @@ signature = NanoAccountSign(private_key, message_hash)
 Where:
 
 -`private_key` is the 32-byte Nano account private key
--`message_hash` is the 32-byte Blake2b-256 digest from Section 3.2
--`signature` is the resulting 64-byte Nano-compatible signature
+-`message_hash` is the 32-byte Blake2b-256 digest
+-`signature` is a 64-byte signature
 
-Requirements:
+Implementations:
 
-- implementations MUST be verification-compatible with Nano block signatures for the same key material and digest
-- implementations MUST NOT substitute Ed25519ph, Ed25519ctx, or any other alternate signing mode not used by Nano itself
-- implementations MUST NOT hash the payload a second time before calling the Nano signing primitive
-- implementations using libraries that require expanded or combined secret-key representations MUST derive those representations from the 32-byte Nano private key as required by the library
+- MUST be verification-compatible with Nano block-signature verification for the same key and digest
+- MUST NOT apply a second hash before signing
+- MUST NOT substitute Ed25519ph, Ed25519ctx, or any alternate signing mode not used by Nano block signatures
 
-In practice, implementations SHOULD call the same signing function they already use for Nano blocks.
-
-### 3.4. Verification
+## 6. Verification
 
 To verify a NOMS signature, an implementation MUST:
 
-1. obtain the signer’s public key, either directly or by decoding the provided Nano account address
-2. UTF-8 encode the message exactly as specified in Section 3.1
-3. construct`payload = MAGIC_HEADER || be32(len(MESSAGE)) || MESSAGE`
+1. obtain the signer’s public key, either directly or by decoding a Nano account address
+2. encode the message exactly as specified in Section 4.3
+3. construct the payload exactly as specified in Section 4
 4. compute`message_hash = Blake2b256(payload)`
-5. verify the signature against`message_hash` using the same Nano-compatible verification primitive used for block signatures
-6. reject on any failure in decoding, encoding, length handling, or signature verification
+5. verify the signature against`message_hash` using the same Nano-compatible verification behavior used for block signatures
+6. reject on any failure in account decoding, message encoding, length handling, payload construction, hashing, or signature verification
 
-Verification MUST be performed over the exact message bytes implied by the original application string. Any transformation of the text before verification changes the signed message.
+Verification MUST be performed over the exact message bytes implied by the original application input. Any transformation changes the signed message and invalidates the signature.
 
-## 4. Canonical Encodings and Interoperability
+## 7. Canonical Encodings
 
-The core NOMS primitive is the payload, hash, and signature process defined in Section 3. Transport objects and wallet API mappings are secondary interoperability conventions.
+The core NOMS primitive is binary. This section defines canonical textual forms for interoperability.
 
-### 4.1. Signature String Encoding
+### 7.1. Signature Encoding
 
-When a NOMS signature is represented as a string, the canonical form is:
+When serialized as text, a NOMS signature SHOULD be encoded as:
 
-- exactly 128 hexadecimal characters
+- 128 hexadecimal characters
 - lowercase
 - no`0x` prefix
 
-Applications and wallets SHOULD emit lowercase hexadecimal.
+Verifiers MAY accept uppercase or mixed-case hexadecimal for compatibility, but lowercase hexadecimal is canonical.
 
-Verifiers MAY accept uppercase or mixed-case hexadecimal for compatibility, but lowercase without a prefix is the canonical serialized form.
+### 7.2. Account Encoding
 
-### 4.2. Account Identifiers
+When a signer account is included, the canonical textual form SHOULD be a lowercase`nano_` address.
 
-When a signer account is included alongside a NOMS signature, the canonical textual account form is a lowercase`nano_` address.
+Verifiers MAY accept legacy`xrb_` addresses if supported by the local environment.
 
-For compatibility, verifiers MAY accept legacy`xrb_` addresses if their environment already supports them, but`nano_` is the canonical form for new integrations.
+If an account string is provided, it MUST decode to the same public key used for verification.
 
-If an account string is provided, it MUST decode to the same public key used for signature verification.
+## 8. Interoperability Conventions
 
-### 4.3. Suggested Transport Envelope
+Applications that transport a NOMS signature together with its context SHOULD include at least:
 
-Applications that need to transmit both the signature and its context SHOULD use a structured object containing at least the signed message, the signer account, and the signature.
+- the account
+- the original message string
+- the signature
 
-Suggested fields:
-
-| Field | Type | Requirement | Notes |
-|---|---|---|---|
-| account | string | SHOULD | Canonical form is lowercase`nano_` |
-| message | string | SHOULD | The exact text that was UTF-8 encoded and signed |
-| signature | string | MUST | 128-character lowercase hex string |
-
-Example:
+Suggested JSON object:
 
 ```json
 {
@@ -200,105 +178,93 @@ Example:
 }
 ```
 
-### 4.4. Wallet API Mapping
+If NOMS is mapped into a wallet API that expects only a signature result, the implementation SHOULD return the canonical signature string.
 
-Some wallet APIs expect a flat message-signature result rather than a structured object.
+NOMS does not define a recovery identifier.
 
-When NOMS is adapted to such an interface, the returned value SHOULD be the canonical`signature` string alone unless the surrounding API explicitly supports returning additional context.
+## 9. Security Considerations
 
-NOMS does not define a`recoveryId`, because Nano-compatible account signatures do not use recovery-based public-key reconstruction.
+### 9.1. Domain Separation
 
-## 5. Security Considerations
+NOMS signs a distinct binary envelope rather than raw message bytes. This reduces the risk that an off-chain signature can be reinterpreted as authorization for another purpose.
 
-### 5.1. Domain Separation
+### 9.2. Replay
 
-NOMS signs a domain-separated payload, not raw message bytes. This prevents direct reinterpretation of a NOMS signature as authorization over an arbitrary raw 32-byte Nano protocol value.
+NOMS authenticates message content, not freshness. Applications using NOMS for login, session binding, or authorization SHOULD include replay-resistant context such as:
 
-A successful cross-protocol forgery would require defeating the relevant security properties of Blake2b-256 or the Nano-compatible signature primitive, which are assumed computationally infeasible.
+- domain or service name
+- nonce or challenge
+- timestamp or expiration
+- intended action
+- session or request identifier
 
-### 5.2. Replay Protection
+### 9.3. User Consent
 
-NOMS authenticates a message, but it does not by itself prove freshness or restrict where the message may be replayed.
+NOMS is a primitive, not a complete user-consent protocol.
 
-Applications using NOMS for authentication SHOULD include context such as:
+Wallets SHOULD display the exact message being signed. Applications SHOULD avoid vague or opaque signing prompts.
 
-- the relying-party domain or service name
-- a nonce or challenge
-- a timestamp and/or expiration time
-- the intended action
-- an audience, session identifier, or request identifier when relevant
+### 9.4. Encoding Integrity
 
-### 5.3. Human-Readable Consent
+Invisible characters, normalization changes, whitespace changes, and line-ending rewrites all change the signed bytes.
 
-NOMS is a cryptographic primitive, not a full consent or sign-in specification.
+Implementations MUST treat the original message text as exact data.
 
-If NOMS is used in user-facing wallets, the wallet SHOULD display the exact message being signed as clearly as possible. Applications SHOULD avoid prompting users to sign vague or opaque text.
+### 9.5. Resource Limits
 
-Higher-level application standards may define structured message templates or consent UX on top of NOM.
+Although the format permits messages up to $2^{32}-1$ bytes, very large messages may be impractical or unsafe.
 
-### 5.4. Message Encoding Pitfalls
+Implementations SHOULD enforce reasonable size limits and SHOULD use incremental hashing where appropriate.
 
-Any change to Unicode normalization, line endings, whitespace, or invisible characters changes the signed bytes.
+## 10. Implementation Notes
 
-Implementations MUST treat the original message text as exact data, not as content to be reformatted for convenience.
+The framing overhead of NOMS is always 29 bytes:
 
-### 5.5. Resource Limits
+- 25 bytes for`MAGIC_HEADER`
+- 4 bytes for`MESSAGE_LENGTH`
 
-Although the encoding permits message sizes up to`2^32 - 1` bytes, large messages may be impractical or unsafe to process in constrained environments.
+This allows straightforward parsing and streaming.
 
-Implementations SHOULD enforce reasonable message-size limits and SHOULD prefer streaming hash implementations for large inputs.
+A verifier can process input in order:
 
-## 6. Implementation Notes
+1. compare the first 25 bytes to`MAGIC_HEADER`
+2. read the next 4 bytes as a big-endian length
+3. read exactly that many message bytes
+4. hash the header, length, and message
+5. verify the signature
 
-The NOMS framing overhead is always 29 bytes:
+A contiguous payload buffer is not required.
 
-- 25 bytes of`MAGIC_HEADER`
-- 4 bytes of`MESSAGE_LENGTH`
+## 11. Test Vectors
 
-This makes the framing easy to parse in both high-level and low-level environments.
+Before this specification advances beyond Draft, interoperable test vectors SHOULD be published.
 
-A parser can process a NOMS payload as follows:
-
-1. read and compare the first 25 bytes against`MAGIC_HEADER`
-2. read the next 4 bytes as a big-endian`uint32`, giving length`L`
-3. read exactly`L` bytes as`MESSAGE`
-4. hash`MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE`
-5. verify the signature using the signer’s public key
-
-Implementations do not need to allocate the entire payload as a single contiguous buffer. The hash can be computed incrementally by feeding the header, length, and message bytes in sequence.
-
-## 7. Test Vectors
-
-Before this standard advances beyond Draft, interoperable test vectors SHOULD be published.
-
-At minimum, the published vectors SHOULD include:
+At minimum, the set SHOULD include:
 
 - an empty message
 - a short ASCII message
-- a message containing newline characters
-- a Unicode message containing non-ASCII UTF-8 bytes
-- messages at boundary lengths such as 255 and 256 bytes
+- a message containing newlines
+- a message containing non-ASCII UTF-8 text
+- boundary-length messages, including 255 and 256 bytes
 
 Each test vector SHOULD include:
 
-- the 32-byte private key in hex
-- the derived public key in hex
-- the canonical`nano_` account
-- the original message string
-- the UTF-8 message bytes in hex
-- the complete payload in hex
-- the Blake2b-256`message_hash` in hex
-- the final signature in canonical hex form
+- private key in hex
+- public key in hex
+- canonical`nano_` account
+- original message string
+- UTF-8 message bytes in hex
+- full payload in hex
+- Blake2b-256 digest in hex
+- final signature in canonical hex form
 
-## 8. Summary
+## 12. Summary
 
-NOMS defines a compact and domain-separated way to sign off-chain UTF-8 text messages with Nano account keys.
+NOMS defines a compact, domain-separated, deterministic method for signing off-chain UTF-8 text with Nano account keys.
 
-Its design goals are:
+Its goals are:
 
-- compatibility with Nano’s existing cryptographic behavior
+- compatibility with Nano’s existing signing behavior
 - deterministic cross-language encoding
 - minimal framing overhead
-- straightforward implementation across different environments
-
-Future standards may build on NOMS to define richer authentication, delegation, or human-consent message formats, but this document is intentionally limited to the signing primitive and its basic interoperability conventions.
+- simple implementation and verification
