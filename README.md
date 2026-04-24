@@ -1,5 +1,6 @@
-# Standards
-OpenRai Initiative Standards specifications
+# OpenRai RFCs
+
+Specifications for OpenRai standards designed to promote interoperability across the wider [Nano](https://nano.org/) ecosystem.
 
 ## Standards Index
 
