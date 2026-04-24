@@ -7,25 +7,6 @@ OpenRai Initiative Standard: 001
 > Status: Draft
 > Category: Cryptographic Primitive / Application Interface
 
-Yes — I think that structure works well, and I would keep`Rationale`.
-
-`Motivation` answers, “Why should this standard exist at all?”
-`Rationale` answers, “Why was this design chosen over other plausible designs?”
-
-For NOM, that distinction is useful. The motivation is off-chain authentication for Nano accounts. The rationale is why NOMS uses a fixed binary header, a 4-byte big-endian length, UTF-8 without normalization, and Nano-compatible signing over a Blake2b-256 digest.
-
-And yes, keeping`Conventions` between`Motivation` and`Specification` is sensible.
-
-## [ORIS-001] Nano Off-chain Messages (NOMs)
-
-Standard: OpenRai Initiative Standard 001 (ORIS-001)
-
-Title: Nano Off-chain Messages (NOMs)
-
-Status: Draft
-
-Category: Cryptographic Primitive / Application Interface
-
 ## Abstract
 
 This document defines Nano Off-chain Messages (NOMs), a compact and deterministic format for signing arbitrary off-chain text with Nano account keys.
