@@ -1,4 +1,4 @@
-# OpenRai RFCs
+# OpenRai Specifications
 
 Specifications for OpenRai standards designed to promote interoperability across the wider [Nano](https://nano.org/) ecosystem.
 
