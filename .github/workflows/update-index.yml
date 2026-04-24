@@ -1,0 +1,86 @@
+name: Update Standards Index
+
+on:
+  push:
+    paths:
+      - 'rfcs/**'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build and inject ORIS index into README
+        run: |
+          python3 - <<'PYEOF'
+          import re
+          import glob
+          import os
+
+          readme_path = "README.md"
+          rfcs_dir = "rfcs"
+
+          # Collect all ORIS-*.md files, sorted alphanumerically by filename
+          files = sorted(glob.glob(os.path.join(rfcs_dir, "ORIS-*.md")))
+
+          entries = []
+          for filepath in files:
+              with open(filepath, "r", encoding="utf-8") as f:
+                  text = f.read()
+
+              # Extract catalogue ID from the first fenced code block containing
+              # "OpenRai Initiative Standard: <number>"
+              id_match = re.search(
+                  r"```\s*\nOpenRai Initiative Standard:\s*(\d+)\s*\n```",
+                  text,
+              )
+              if not id_match:
+                  print(f"WARNING: could not extract ID from {filepath}, skipping.")
+                  continue
+              doc_id = f"{int(id_match.group(1)):03d}"
+
+              # Extract the first h1 title
+              title_match = re.search(r"^# (.+)$", text, re.MULTILINE)
+              if not title_match:
+                  print(f"WARNING: could not extract title from {filepath}, skipping.")
+                  continue
+              title = title_match.group(1).strip()
+
+              entries.append(f"- [ORIS-{doc_id}: {title}]({filepath})")
+
+          if entries:
+              index_content = "\n".join(entries)
+          else:
+              index_content = "_No standards documents found yet._"
+
+          with open(readme_path, "r", encoding="utf-8") as f:
+              readme = f.read()
+
+          pattern = r"(<!-- ORIS-INDEX-START -->).*?(<!-- ORIS-INDEX-END -->)"
+          replacement = r"\1\n" + index_content + r"\n\2"
+          new_readme = re.sub(pattern, replacement, readme, flags=re.DOTALL)
+
+          with open(readme_path, "w", encoding="utf-8") as f:
+              f.write(new_readme)
+
+          print("README.md updated successfully.")
+          PYEOF
+
+      - name: Commit updated README.md
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "docs: auto-update standards index [skip ci]"
+            git push
+          fi
