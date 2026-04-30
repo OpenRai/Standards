@@ -185,6 +185,8 @@ A NOMS signature SHOULD be represented as:
 - lowercase
 - no`0x` prefix
 
+Each byte of the 64-byte signature MUST be encoded as exactly two lowercase hexadecimal characters, zero-padded where necessary. Variable-length or bignum-style hex encoding MUST NOT be used.
+
 Verifiers MAY accept uppercase hexadecimal as input for compatibility, but emitters SHOULD produce lowercase.
 
 ### Account Encoding
@@ -261,33 +263,54 @@ A contiguous full-payload buffer is not required.
 
 ## Published Test Vectors
 
-Published test vectors are required for interoperable implementations.
+The following vectors are canonical for ORIS-001. All values are confirmed by independent implementations in TypeScript (using `nanocurrency` and `blakejs`) and Rust (using `ed25519-dalek` and `blake2b`).
 
-A canonical set of ORIS-001 test vectors SHOULD be published alongside this document. Until published, the reference location is:
+### Keypair
 
-- to be added
+Both vectors below use the same keypair.
 
-At minimum, the published set SHOULD include:
+The private key is a raw 32-byte Ed25519 account private key in the format produced by [`PlasmaPower/nano-vanity`](https://github.com/PlasmaPower/nano-vanity) — sometimes referred to as an "adhoc key" in desktop wallets. It is **not** a Nano wallet seed. A seed-based wallet that interprets this value as a seed will derive a different keypair entirely.
 
-- empty message
-- short ASCII message
-- message containing newlines
-- message containing non-ASCII UTF-8
-- boundary-length examples
-- invalid examples for negative verification tests
+```
+private key : 681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173
+public key  : d2b3c9d00ffb55e84e7979d67308a515fb07ca79e40a77eb1aafe62881781783
+account     : nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
 
-Each vector SHOULD include:
+### Vector 1 — Non-ASCII UTF-8 with emoji
 
-- private key
-- public key
-- account identifier
-- original message string
-- UTF-8 message bytes
-- full payload bytes
-- Blake2b-256 payload digest
-- final signature
+```
+message (string)       : Hej Nano!🥦
+message (UTF-8 hex)    : 48656a204e616e6f21f09fa5a6
+message (byte length)  : 13
 
-Before this document advances beyond Draft, those vectors SHOULD be available in a stable public location.
+payload (hex, 42 bytes):
+  184e616e6f204f66662d636861696e204d6573736167653a0a
+  0000000d
+  48656a204e616e6f21f09fa5a6
+
+Blake2b-256 digest     : 33ce285b257df1ba87e1a91f32211a3b900ab4fdf68bebb3f75bef4b85aef951
+
+signature              : 535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d
+                         781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09
+```
+
+### Vector 2 — Empty message
+
+```
+message (string)       : (empty)
+message (UTF-8 hex)    : (empty)
+message (byte length)  : 0
+
+payload (hex, 29 bytes):
+  184e616e6f204f66662d636861696e204d6573736167653a0a
+  00000000
+
+Blake2b-256 digest     : 977a10e19a7857eefad986d73b071bbb7dad60846c7785f6d0ccffe0d7bd40b9
+
+signature              : 8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f3490077066f174
+                         d7fb6795b966e1d9078952ad065f836b35cd82d402cbeb63f9ace94b2123c506
+```
 
 ## Reference Implementation
 
