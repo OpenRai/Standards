@@ -2,7 +2,7 @@
 OpenRai Initiative Standard: 002
 ```
 
-# NanoNyms: Reusable Stealth Addresses for Nano
+# NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano
 
 > Status: Draft\
 > Category: Application Interface
