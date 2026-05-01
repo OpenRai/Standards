@@ -2,14 +2,14 @@
 OpenRai Initiative Standard: 002
 ```
 
-# NanoNym Protocol and Address Format
+# NanoNyms: Reusable Stealth Addresses for Nano
 
 > Status: Draft\
 > Category: Application Interface
 
 ## Abstract
 
-This document defines the NanoNym protocol and the v2 address format. It describes what a NanoNym address contains and how it is encoded, how send and receive flows work, how stealth accounts are selected, and where the protocol stops and adapters begin.
+A NanoNym is a payment code (`nnym_`) encoding a "spend" public key, a "view" public key, and a notification URI; a sender uses these components to derive a one-time `nano_` account for each payment, preventing on-chain observers from linking separate transactions to the same NanoNym. This specification defines the encoding format, the send and receive workflows, and the boundary between the core protocol and notification adapters.
 
 ## Motivation
 
