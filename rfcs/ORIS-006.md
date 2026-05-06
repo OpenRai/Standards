@@ -98,7 +98,25 @@ nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 >
 > Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in CAIP-25 sessions or any other protocol expecting strict CAIP-10 compliance.
 >
-> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum. Systems that key accounts, permissions, sessions, or balances by CAIP-10 account ID SHOULD canonicalize accepted legacy `xrb_` forms to the equivalent `nano_` address before comparison or storage.
+> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum. Systems that key accounts, permissions, sessions, or balances by CAIP-10 account ID MUST apply the canonicalization rules below before comparison or storage.
+
+### Canonicalization
+
+The canonical CAIP-10 form for a Nano account is:
+
+```text
+nano:mainnet:nano%5F<account-body>
+```
+
+Where `<account-body>` is the 60-character Nano address body after the `nano_` prefix.
+
+For internal storage, indexing, permission checks, session matching, and account comparison, implementations MUST map all accepted equivalent forms to the canonical CAIP-10 form before comparison or persistence.
+
+This includes:
+
+- replacing an accepted `xrb_` or `xrb%5F` prefix with `nano_` or `nano%5F`
+- percent-encoding the underscore when emitting a CAIP-10 account ID
+- rejecting any form that fails Nano address validation after decoding
 
 ### CAIP-25 Namespace
 
@@ -157,7 +175,59 @@ If future applications require additional Nano chain references, they SHOULD be 
 
 ## Published Test Vectors
 
-None. This document defines textual identifiers only.
+These vectors use the same account body:
+
+```text
+3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+The corresponding public key is:
+
+```text
+d2b3c9d00ffb55e84e7979d67308a515fb07ca79e40a77eb1aafe62881781783
+```
+
+### Vector 1 - Native Nano Address
+
+Input:
+
+```text
+nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+Canonical CAIP-10 output:
+
+```text
+nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+### Vector 2 - Legacy Native Address
+
+Input:
+
+```text
+xrb_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+Canonical CAIP-10 output:
+
+```text
+nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+### Vector 3 - Legacy CAIP-10 Input
+
+Input:
+
+```text
+nano:mainnet:xrb%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
+
+Canonical CAIP-10 output:
+
+```text
+nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
+```
 
 ## Reference Implementation
 
