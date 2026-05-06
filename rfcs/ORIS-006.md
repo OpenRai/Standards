@@ -25,6 +25,15 @@ Nano needs one small, stable reference for those identifiers. This avoids each a
 
 Nano does not currently have a maintained end-user testnet that wallet applications should treat as a parallel public environment. Because Nano is feeless, a public testnet is also less important for ordinary payment and signing integration testing than it is for fee-bearing chains. This document therefore defines only Nano mainnet.
 
+## Rationale
+
+> [!NOTE]
+> Future CAIP Evolution
+>
+> This document uses percent-encoding of the `_` character to comply with the current CAIP-10 account address grammar. The Chain Agnostic community should consider a future CAIP-10 revision that natively includes `_`, and potentially other common safe characters, in the `account_address` production.
+>
+> Such an update would improve human readability and reduce encoding overhead for multiple namespaces, including Nano.
+
 ## Conventions
 
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document indicate normative requirements.
