@@ -15,7 +15,6 @@ It defines:
 
 - the CAIP-2 namespace and chain ID for Nano mainnet
 - the CAIP-10 account ID form for Nano accounts
-- the CAIP-25 namespace key used in session proposals and approvals
 
 ## Motivation
 
@@ -23,7 +22,7 @@ Wallets and applications increasingly use CAIP identifiers to negotiate multi-ch
 
 Nano needs one small, stable reference for those identifiers. This avoids each application choosing its own namespace, chain reference, or account string format.
 
-Nano does not currently have a maintained end-user testnet that wallet applications should treat as a parallel public environment. Because Nano is feeless, a public testnet is also less important for ordinary payment and signing integration testing than it is for fee-bearing chains. This document therefore defines only Nano mainnet.
+Nano test and beta networks serve development, staging, and release-testing purposes, but they are out of scope for public wallet interoperability in this document. Because Nano is feeless, public wallet interoperability does not require a fee-bearing-chain-style public testnet identifier for ordinary payment and signing integration testing. This document therefore defines only Nano mainnet.
 
 ## Rationale
 
@@ -96,7 +95,7 @@ nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 > [!TIP]
 > **Implementation Guidance**
 >
-> Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in CAIP-25 sessions or any other protocol expecting strict CAIP-10 compliance.
+> Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in any protocol expecting strict CAIP-10 compliance, including future session protocols.
 >
 > On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum. Systems that key accounts, permissions, sessions, or balances by CAIP-10 account ID MUST apply the canonicalization rules below before comparison or storage.
 
@@ -118,45 +117,11 @@ This includes:
 - percent-encoding the underscore when emitting a CAIP-10 account ID
 - rejecting any form that fails Nano address validation after decoding
 
-### CAIP-25 Namespace
+### Session Protocols
 
-For CAIP-25 session proposals and approvals, the namespace key for Nano is:
+This document does not define a CAIP-25, WalletConnect, or other session-protocol profile for Nano. Future ORIS documents MAY define Nano session scope keys, request and response shapes, method names, notification or event names, and account encoding rules for specific session protocols.
 
-```text
-nano
-```
-
-A session proposal that requests Nano support SHOULD place Nano chains, methods, and events under the `nano` namespace.
-
-Example proposal shape:
-
-```json
-{
-  "nano": {
-    "chains": ["nano:mainnet"],
-    "methods": ["nano_signMessage"],
-    "events": ["accountsChanged"]
-  }
-}
-```
-
-A session approval MUST return Nano accounts in CAIP-10 form.
-
-Example approval shape:
-
-```json
-{
-  "nano": {
-    "accounts": [
-      "nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn"
-    ],
-    "methods": ["nano_signMessage"],
-    "events": ["accountsChanged"]
-  }
-}
-```
-
-This document does not standardize Nano JSON-RPC method names or event names. Future ORIS documents MAY define those names. Until then, applications and wallets MUST negotiate method and event support explicitly inside the `nano` namespace.
+Protocols that carry Nano accounts in strict CAIP-10 fields MUST use the canonical CAIP-10 form defined above.
 
 ### Reserved Identifiers
 
@@ -241,9 +206,8 @@ Reference implementations are informative only and do not override the normative
 
 Nano CAIP integrations use:
 
-- namespace: `nano`
+- CAIP-2 namespace: `nano`
 - CAIP-2 chain ID: `nano:mainnet`
 - CAIP-10 account ID: `nano:mainnet:<percent-encoded-nano-address>`
-- CAIP-25 namespace key: `nano`
 
-No public end-user Nano testnet identifier is defined by this standard.
+No Nano testnet or beta-network identifier is defined by this standard.
