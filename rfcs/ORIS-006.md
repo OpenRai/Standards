@@ -83,6 +83,7 @@ Requirements:
 - the underscore in a Nano address prefix MUST be percent-encoded as `%5F`
 - emitters SHOULD use a `nano%5F` address prefix
 - wallets MAY accept equivalent legacy `xrb%5F` account addresses for compatibility
+- implementations that accept `xrb%5F` input MUST treat it as equivalent to the corresponding `nano%5F` account ID after validating that both forms decode to the same public key
 - implementations MAY accept unencoded `nano_` or `xrb_` account addresses as non-strict legacy input, but MUST NOT emit them as CAIP-10 account IDs
 - implementations MUST NOT place a raw public key, private key, seed, wallet ID, representative, or account index in the account component
 
@@ -97,7 +98,7 @@ nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 >
 > Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in CAIP-25 sessions or any other protocol expecting strict CAIP-10 compliance.
 >
-> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum.
+> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum. Systems that key accounts, permissions, sessions, or balances by CAIP-10 account ID SHOULD canonicalize accepted legacy `xrb_` forms to the equivalent `nano_` address before comparison or storage.
 
 ### CAIP-25 Namespace
 
