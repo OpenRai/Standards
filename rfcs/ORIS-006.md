@@ -92,6 +92,13 @@ After percent-decoding the account component, the decoded value is the ordinary 
 nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 ```
 
+> [!TIP]
+> **Implementation Guidance**
+>
+> Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in CAIP-25 sessions or any other protocol expecting strict CAIP-10 compliance.
+>
+> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum.
+
 ### CAIP-25 Namespace
 
 For CAIP-25 session proposals and approvals, the namespace key for Nano is:
