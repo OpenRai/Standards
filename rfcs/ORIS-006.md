@@ -9,7 +9,7 @@ OpenRai Initiative Standard: 006
 
 ## Abstract
 
-This document defines the CAIP identifiers applications SHOULD use when referring to Nano in chain-agnostic wallet protocols such as WalletConnect v2.
+This document defines the CAIP identifiers applications SHOULD use when referring to Nano in CAIP-based wallet and application protocols.
 
 It defines:
 
