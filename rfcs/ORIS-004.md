@@ -57,7 +57,11 @@ This document does not cover:
 
 ### Notification Key Derivation
 
-The NanoNym owner derives a secp256k1 keypair from the Nano seed using key type `2`. This keypair is used exclusively for Nostr event signing and gift-wrap decryption. It is not an Ed25519 key and is not used for stealth-address math.
+The NanoNym owner derives or assigns a secp256k1 keypair for Nostr notification delivery. This keypair is used exclusively for Nostr gift-wrap decryption and, when acting as a sender, Nostr event construction. It is not an Ed25519 key and is not used for stealth-address math.
+
+Wallets that derive NanoNyms from seed SHOULD derive a distinct Nostr notification key for each NanoNym aggregate-account index using the same account index that derives that NanoNym's spend and view keys. Reusing one notification key across multiple NanoNyms MAY be supported as a wallet policy choice, but it links those NanoNyms at the Nostr transport layer.
+
+The current NanoNymNault derivation uses key type `2` under the NanoNym account-index derivation branch for this Nostr keyspace.
 
 The corresponding Nostr public key is encoded as an `npub` and embedded in the NanoNym's notification URI:
 
@@ -70,7 +74,7 @@ The three keyspaces are:
 | Keyspace | Curve | Key type | Purpose |
 |---|---|---|---|
 | Spend / View | Ed25519 | 0, 1 | Stealth address derivation |
-| Notification | secp256k1 | 2 | Nostr transport |
+| Notification | secp256k1 | 2 | Nostr transport, when derived from seed |
 | Per-payment ephemeral | Ed25519 | random | Stealth input `R` |
 
 ### Event Wrapping
@@ -80,9 +84,11 @@ The sender delivers the payment event using NIP-59 gift wrap. The inner payload 
 The wrapping procedure is:
 
 1. Construct the ORIS-003 JSON payload.
-2. Place that payload as the content of a Nostr event.
-3. Seal and gift-wrap the event per NIP-59 to the recipient's `npub`.
-4. Publish the wrapped event to one or more Nostr relays.
+2. Place that payload as the `content` of a NIP-59 rumor event.
+3. Set the rumor event kind to `14`.
+4. Add a `p` tag containing the recipient notification public key in lowercase 64-character hex form.
+5. Seal and gift-wrap the rumor per NIP-59 to the recipient's `npub`.
+6. Publish the resulting kind `1059` gift-wrap event to one or more Nostr relays.
 
 This document does not respecify NIP-59 or NIP-44. Implementations MUST conform to those Nostr specifications.
 
@@ -98,7 +104,7 @@ The recipient discovers incoming stealth payments by scanning Nostr relays for g
 
 The recipient:
 
-1. Connects to relays and fetches events addressed to the notification public key.
+1. Connects to relays and fetches kind `1059` gift-wrap events.
 2. Unwraps each event per NIP-59 and decrypts it per NIP-44.
 3. Parses the inner content as an ORIS-003 payment event.
 4. Extracts `R` from the payload.
@@ -110,7 +116,7 @@ The recipient:
 The scanning model is blind in the following sense:
 
 - relays can observe gift-wrapped events to an `npub` but cannot read their contents
-- third-party observers cannot associate the `npub` with on-chain Nano activity
+- third-party observers cannot associate the `npub` with on-chain Nano activity from protocol fields alone
 - the recipient processes all events addressed to the `npub`, but only valid stealth derivations correspond to actual payments
 
 ### Relay Availability
@@ -121,9 +127,10 @@ Implementations SHOULD support configuring multiple relays and MAY implement ret
 
 ### Privacy Properties
 
-- The sender's identity is hidden from relays and observers by NIP-59.
+- The sender's Nostr identity is hidden from relays and observers by NIP-59 when senders use fresh or otherwise unlinkable wrapping keys as required by NIP-59.
 - The payment amount, stealth address, and transaction hash are hidden inside NIP-44 encryption.
-- The notification `npub` is unlinkable to the spend and view keys without seed knowledge.
+- A notification `npub` derived under the NanoNym account-index keyspace is unlinkable to the spend and view keys without seed knowledge.
+- Reusing a notification `npub` across multiple NanoNyms links those NanoNyms at the transport layer even though it does not reveal their spend or view keys.
 - The ephemeral scalar `r` is never transmitted.
 
 ### Cross-Transport Correlation

@@ -9,7 +9,7 @@ OpenRai Initiative Standard: 002
 
 ## Abstract
 
-A NanoNym is a payment code (`nnym_`) encoding a "spend" public key, a "view" public key, and a notification URI; a sender uses these components to derive a one-time `nano_` account for each payment, preventing on-chain observers from linking separate transactions to the same NanoNym. This specification defines the encoding format, the send and receive workflows, and the boundary between the core protocol and notification adapters.
+A NanoNym is a payment code (`nnym_`) encoding a "spend" public key, a "view" public key, and a notification URI; a sender uses these components to derive a one-time `nano_` account for each payment, preventing on-chain observers from linking separate transactions to the same NanoNym by address reuse or public NanoNym data alone. This specification defines the encoding format, the send and receive workflows, and the boundary between the core protocol and notification adapters.
 
 ## Motivation
 
@@ -36,6 +36,7 @@ Unless otherwise stated:
 - `notificationUri` is an application-routed Tier 1 destination URI
 - all strings are UTF-8
 - all multi-byte integers are big-endian
+- scalar values used by the current stealth derivation are 32-byte little-endian integers modulo the Ed25519 group order
 - Tier 1 notification routing is represented as a URI carried inside the NanoNym
 - wallet-specific implementation choices are informative unless explicitly stated as protocol requirements
 
@@ -97,6 +98,34 @@ Human-readable encoding:
 - Prefix: `nnym_`
 - Body: Nano-style base32
 
+### Base32 Encoding
+
+The body uses Nano's account-address alphabet:
+
+```text
+13456789abcdefghijkmnopqrstuwxyz
+```
+
+The binary payload is encoded as a continuous big-endian bit stream. Encoders MUST process input bytes most-significant bit first, emit 5-bit groups into the alphabet above, and pad the final group with zero bits if fewer than five bits remain. The encoded body MUST NOT include separators or `=` padding.
+
+Decoders MUST reject characters outside the Nano alphabet. Decoders MAY accept uppercase alphabet characters by normalizing them to lowercase before decoding. After decoding, implementations MUST validate the payload length implied by `notificationUriLen`; trailing non-zero padding or extra decoded bytes MUST cause decoding to fail.
+
+### Checksum
+
+The checksum is the first two bytes of a five-byte BLAKE2b digest over the payload prefix that excludes the checksum itself:
+
+```text
+checksum = BLAKE2b(payload_without_checksum, digest_length = 5)[0..2]
+```
+
+`payload_without_checksum` is:
+
+```text
+version || B_spend || B_view || notificationUriLen || notificationUri
+```
+
+The checksum bytes are appended in digest order. Implementations MUST verify the checksum before returning decoded fields.
+
 ### Example Address Breakdown
 
 ```text
@@ -108,6 +137,22 @@ This means:
 - the NanoNym protocol stores a generic URI
 - NanoNymNault interprets that URI as a Nostr destination
 - the protocol itself does not define how Nostr delivery works
+
+### Address Test Vector
+
+This vector is for address encoding only. The keys are repeated bytes and are not production keys.
+
+```text
+version         = 02
+B_spend        = 0101010101010101010101010101010101010101010101010101010101010101
+B_view         = 0202020202020202020202020202020202020202020202020202020202020202
+notificationUri= nostr:npub1nanonymtest
+uri hex        = 6e6f7374723a6e707562316e616e6f6e796d74657374
+uri length     = 0016
+checksum       = d85d
+
+nnym_1a1i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i41i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i411d8wuumgjs5numigoj54um3fsqpwydfgjkq8x8rdn
+```
 
 ### Notification URI Rules
 
@@ -152,6 +197,64 @@ For each active NanoNym, the receiver:
 6. Verifies the payment against the chain and adds the resulting stealth account to wallet state.
 
 Offline or cold recovery works by replaying the same derivation rules from seed and scanning through the configured notification mechanism plus chain state.
+
+### Stealth Derivation
+
+This section defines the minimum math required for interoperable NanoNym v2 send and receive workflows. A future stealth-math standard MAY replace this section, but implementations of v2 NanoNyms MUST follow these rules unless a later ORIS explicitly updates the v2 profile.
+
+Let:
+
+- `G` be the Ed25519 basepoint.
+- `L` be the Ed25519 group order, `2^252 + 27742317777372353535851937790883648493`.
+- `H_scalar(x)` be the scalar derivation function defined below.
+- `a_spend` and `a_view` be the recipient's spend and view private scalars derived from the recipient's private seed material.
+- `B_spend = a_spend * G`.
+- `B_view = a_view * G`.
+- `r` be the sender's per-payment ephemeral private scalar.
+- `R = r * G`.
+
+Private seed material is converted to a scalar by:
+
+```text
+hash64  = BLAKE2b(input, digest_length = 64)
+clamped = hash64[0..32]
+clamped[0]  &= 248
+clamped[31] &= 127
+clamped[31] |= 64
+scalar = little_endian_integer(clamped) mod L
+```
+
+In the current v2 derivation, long-term spend/view private keys and randomly generated ephemeral private keys are 32-byte seed inputs to this scalar conversion. Formulas below use the resulting scalars.
+
+The shared secret is:
+
+```text
+S_sender   = r * B_view
+S_receiver = a_view * R
+```
+
+The tweak scalar is:
+
+```text
+account_index = 00000000
+tweak_seed    = BLAKE2b(S || account_index, digest_length = 32)
+t             = H_scalar(tweak_seed)
+```
+
+The stealth public key and Nano destination are:
+
+```text
+SA = B_spend + t * G
+destination = nano_address(SA)
+```
+
+The recipient recovers the private scalar needed to spend from `destination` as:
+
+```text
+a_stealth = (a_spend + t) mod L
+```
+
+Implementations MUST reject malformed Ed25519 points for `B_spend`, `B_view`, `R`, and `SA`. Implementations SHOULD use a curve library that rejects invalid encodings and small-order points; if the library accepts such points, the implementation MUST perform equivalent validation before using them in shared-secret or point-addition operations.
 
 ### Stealth Account Selection
 

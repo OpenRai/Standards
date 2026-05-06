@@ -63,11 +63,13 @@ Optional fields:
 {
   "version": 2,
   "protocol": "nanonym",
-  "R": "ab3f1e7c9d...64 hex chars...fa08",
-  "tx_hash": "9c21de5b3a...64 hex chars...17f0",
+  "R": "ab3f1e7c9d00000000000000000000000000000000000000000000000000fa08",
+  "tx_hash": "9c21de5b3a0000000000000000000000000000000000000000000000000017f0",
   "amount_raw": "1000000000000000000000000000000"
 }
 ```
+
+The example above illustrates field shape only. It is not a cryptographic test vector and does not assert that `R` is a valid curve point.
 
 ### Validation Rules
 
@@ -79,6 +81,10 @@ Optional fields:
 6. `memo`, if present, MUST be a valid UTF-8 string.
 7. Implementations MUST reject payloads missing any required field.
 8. Implementations MUST ignore unrecognized fields for forward compatibility.
+
+Validation of `R` includes decoding the compressed Ed25519 point and rejecting malformed encodings. Implementations SHOULD also reject small-order points. Profile documents that use `R` for verification MAY impose stricter validation if their proof model requires it.
+
+`tx_hash` identifies the Nano send block that transferred funds to the derived stealth account. Chain validation of that block, including confirmation state, destination, and amount, is profile-specific and is not performed by base-schema validation.
 
 ### Profile Extensibility
 
@@ -105,7 +111,7 @@ The value `2` is retained because it is already emitted by the existing implemen
 
 This schema carries `R`, not `r`. The scalar remains secret to the payer and is disclosed only in profiles where the verifier lacks the recipient's view private key.
 
-The underlying stealth derivation math, point validation rules, scalar handling, and domain-separated hashing are intentionally deferred to a later stealth-math standard.
+The NanoNym v2 stealth derivation used by ORIS-002 defines the current scalar and point rules. A future stealth-math standard MAY factor those rules out, but it must preserve base-schema semantics for `R` unless it also defines a new schema version.
 
 ### Relationship to Other Standards
 
