@@ -26,10 +26,18 @@ Nano test and beta networks serve development, staging, and release-testing purp
 
 ## Rationale
 
+### Choice of Account ID Format
+
+Two alternative designs were considered for the CAIP-10 account address component:
+1. **Raw Hex Public Keys:** Using the 64-character hex-encoded public key. While this natively fits the CAIP-10 grammar without requiring percent-encoding, it was rejected because raw public keys lack the built-in safety of Nano address checksums, are unfamiliar to end-users, and are rarely exposed directly by user-facing block explorers or wallets.
+2. **Stripping the Underscore or Prefix:** Omitting the prefix (e.g., `3noms...`) or stripping the underscore (e.g., `nano3noms...`). This was rejected because it yields non-standard address representations that break compatibility with existing native address parsers and validation tools.
+
+**Percent-encoding the standard address (`nano%5F...`)** was selected because it fully preserves the standard, recognizable Nano address (including its prefix and checksum), guarantees unambiguous round-trip conversion, and achieves 100% compliance with the CAIP-10 grammar via standard percent-encoding (`%5F` for the underscore).
+
 > [!NOTE]
-> Future CAIP Evolution
+> **Future CAIP Evolution**
 >
-> This document uses percent-encoding of the `_` character to comply with the current CAIP-10 account address grammar. The Chain Agnostic community should consider a future CAIP-10 revision that natively includes `_`, and potentially other common safe characters, in the `account_address` production.
+> The Chain Agnostic community should consider a future CAIP-10 revision that natively includes `_`, and potentially other common safe characters, in the `account_address` production.
 >
 > Such an update would improve human readability and reduce encoding overhead for multiple namespaces, including Nano.
 
@@ -113,9 +121,9 @@ For internal storage, indexing, permission checks, session matching, and account
 
 This includes:
 
-- replacing an accepted `xrb_` or `xrb%5F` prefix with `nano_` or `nano%5F`
-- percent-encoding the underscore when emitting a CAIP-10 account ID
-- rejecting any form that fails Nano address validation after decoding
+- replacing any accepted legacy `xrb_` or `xrb%5F` prefix with the canonical `nano%5F` prefix
+- percent-encoding the underscore (as `%5F`) when emitting a CAIP-10 account ID
+- rejecting any form that fails standard Nano address validation (invalid characters, length, or checksum) after decoding
 
 ### Session Protocols
 
