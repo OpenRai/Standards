@@ -85,7 +85,7 @@ The wrapping procedure is:
 
 1. Construct the ORIS-003 JSON payload.
 2. Place that payload as the `content` of a NIP-59 rumor event.
-3. Set the rumor event kind to `10402` (a dedicated regular event kind for NanoNym notifications).
+3. Set the rumor event kind to `2165` (a dedicated regular event kind correlating to NanoNym v2 and the Nano SLIP-0044 coin type 165).
 4. Add a `p` tag containing the recipient notification public key in lowercase 64-character hex form.
 5. Seal and gift-wrap the rumor per NIP-59 to the recipient's `npub`.
 6. Publish the resulting kind `1059` gift-wrap event to one or more Nostr relays.
