@@ -1,6 +1,6 @@
-# OpenRai Specifications
+# OpenRai Initiative Standards
 
-Specifications for OpenRai standards designed to promote interoperability across the wider [Nano](https://nano.org/) ecosystem.
+A collection of technical specifications designed to promote interoperability across the wider [Nano](https://nano.org/) ecosystem.
 
 ## Standards Index
 
