@@ -81,7 +81,7 @@ At the protocol boundary, the notification route is just a URI. NanoNymNault cur
 | 33..64  | B_view             | 32 bytes | view pubkey      | Ed25519          |
 | 65..66  | notificationUriLen | 2 bytes  | URI length       | uint16 BE        |
 | 67..N   | notificationUri    | variable | Tier 1 route     | UTF-8            |
-| N+1..N+2| checksum           | 2 bytes  | integrity check  | BLAKE2b-derived  |
+| N+1..N+5| checksum           | 5 bytes  | integrity check  | BLAKE2b-derived  |
 +---------+--------------------+----------+------------------+------------------+
 ```
 
@@ -112,10 +112,13 @@ Decoders MUST reject characters outside the Nano alphabet. Decoders MAY accept u
 
 ### Checksum
 
-The checksum is the first two bytes of a five-byte BLAKE2b digest over the payload prefix that excludes the checksum itself:
+The checksum is a five-byte BLAKE2b digest over the payload prefix that excludes the checksum itself:
 
 ```text
-checksum = BLAKE2b(payload_without_checksum, digest_length = 5)[0..2]
+checksum = BLAKE2b(payload_without_checksum, digest_length = 5)
+```
+
+> **Note on Checksum Length:** A 5-byte (40-bit) checksum is used to match standard cryptocurrency address practices (e.g., standard Nano accounts). While a shorter checksum might suffice against a clipboard swap attack (which replaces the entire address anyway), 40 bits provide robust protection against accidental corruption, such as typos, OCR errors, or partial truncation.
 ```
 
 `payload_without_checksum` is:
@@ -149,9 +152,9 @@ B_view         = 020202020202020202020202020202020202020202020202020202020202020
 notificationUri= nostr:npub1nanonymtest
 uri hex        = 6e6f7374723a6e707562316e616e6f6e796d74657374
 uri length     = 0016
-checksum       = d85d
+checksum       = d85daf4016
 
-nnym_1a1i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i41i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i411d8wuumgjs5numigoj54um3fsqpwydfgjkq8x8rdn
+nnym_1a1i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i41i41a3161i41a3161i41a3161i41a3161i41a3161i41a3161i411d8wuumgjs5numigoj54um3fsqpwydfgjkq8x8rdpqn17i
 ```
 
 ### Notification URI Rules
@@ -223,6 +226,8 @@ clamped[31] &= 127
 clamped[31] |= 64
 scalar = little_endian_integer(clamped) mod L
 ```
+
+> **Note on Scalar Clamping:** Setting the 254th bit (`|= 64`) produces an integer larger than the Ed25519 group order `L`. The subsequent `mod L` operation strips this bit, which might appear to defeat the purpose of standard Ed25519 clamping. However, because Ed25519 scalar multiplication is inherently modular—`(s) * G == (s mod L) * G`—the resulting points and shared secrets remain mathematically identical and fully secure. This ensures consistent derivation across libraries, even if the scalar clamping is technically redundant before the modulo operation.
 
 In the current v2 derivation, long-term spend/view private keys and randomly generated ephemeral private keys are 32-byte seed inputs to this scalar conversion. Formulas below use the resulting scalars.
 
