@@ -2,14 +2,14 @@
 OpenRai Initiative Standard: 005
 ```
 
-# x402 Exact-Nano Payment Verification Profile for NanoNym
+# Utilizing NanoNyms for x402 Exact Pre-payment Verification
 
 > Status: Draft\
 > Category: Application Interface
 
 ## Abstract
 
-This document defines a NanoNym payment profile for x402 v2 using the `exact` payment scheme. A client pays first by sending Nano to a stealth account derived from the resource server's NanoNym, then presents a proof payload through the standard x402 payment headers. The proof reveals the per-payment scalar `r`, allowing a verifier or facilitator to confirm the stealth derivation without holding the NanoNym owner's view private key.
+This document defines a NanoNym-based payment profile for x402 v2 using the `exact` payment scheme. A client pays first by sending Nano to a stealth account derived from a _resource server-supplied_ NanoNym, then presents a _proof-payload_ through the standard x402 v2 payment headers. The proof reveals the per-payment scalar `r`, allowing the resource server (without holding the NanoNym issuer's private key), a verifier, or a facilitator to prove the requesting client's ownership of the payment by confirming the stealth derivation.
 
 ## Motivation
 
@@ -19,13 +19,6 @@ x402's `exact` scheme is designed for fixed-price, short-lived payment negotiati
 - the payment payload proves that the send block paid the exact requested amount to the correct NanoNym-derived stealth account
 - a facilitator can verify the proof and maintain replay state, keeping the resource server stateless with respect to Nano ledger details
 
-This profile exists to:
-
-- make NanoNym payments fit x402 v2 message shapes and headers
-- define the Nano-specific `exact` payment requirements
-- specify the NanoNym proof object carried in `PaymentPayload.payload`
-- define facilitator verification and settlement semantics for pay-first Nano payments
-
 ## Conventions
 
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document indicate normative requirements.
@@ -34,7 +27,7 @@ Unless otherwise stated:
 
 - ORIS-002 defines the NanoNym address format and stealth derivation
 - ORIS-003 defines the base NanoNym payment event schema extended by this profile
-- x402 refers to protocol version `2`
+- x402 refers to protocol version `2` as proposed by the x402 Foundation
 - `r` denotes the Ed25519 ephemeral scalar corresponding to `R`
 - x402 objects use their v2 field names, including `PaymentRequired`, `PaymentRequirements`, `PaymentPayload`, `VerifyResponse`, and `SettlementResponse`
 - the HTTP transport uses `PAYMENT-REQUIRED`, `PAYMENT-SIGNATURE`, and `PAYMENT-RESPONSE`
@@ -54,17 +47,16 @@ This document covers:
 This document does not cover:
 
 - generic x402 HTTP semantics
-- Nostr notification delivery
 - long-lived subscription, account, or session authorization models
-- non-Nano payment assets
+- non-Nano payment assets or mechanisms
 
 ### Conceptual Model
 
-In ORIS-004, the stealth mechanism provides recipient privacy: the sender notifies the recipient of a payment that only the recipient can identify. In this x402 profile, the same mechanism provides payment commitment: the client proves that a confirmed Nano send block paid a stealth address derived from the resource server's NanoNym.
+In ORIS-004, the stealth mechanism provides recipient privacy: the sender notifies the recipient of a payment that only the recipient can identify. In this x402 profile, the same mechanism provides payment commitment: the client proves that a confirmed Nano send block paid a stealth address derived from the resource server's NanoNym - a payment that could only have been executed by the entity that posessed the `r` value, thereby proving the client's authorship of the public block hash.
 
 This is still an x402 `exact` payment because the resource server declares a fixed amount and recipient. The difference is timing:
 
-- sign-first exact schemes put an authorization in `PaymentPayload.payload` and settlement broadcasts the transfer
+- sign-first exact schemes put an authorization in `PaymentPayload.payload` and settlement means broadcasting the transfer
 - this profile puts a Nano payment receipt and derivation proof in `PaymentPayload.payload` after the transfer has already been broadcast
 
 ### Payment Requirements
