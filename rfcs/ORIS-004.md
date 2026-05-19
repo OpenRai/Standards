@@ -85,7 +85,7 @@ The wrapping procedure is:
 
 1. Construct the ORIS-003 JSON payload.
 2. Place that payload as the `content` of a NIP-59 rumor event.
-3. Set the rumor event kind to `14`.
+3. Set the rumor event kind to `10402` (a dedicated regular event kind for NanoNym notifications).
 4. Add a `p` tag containing the recipient notification public key in lowercase 64-character hex form.
 5. Seal and gift-wrap the rumor per NIP-59 to the recipient's `npub`.
 6. Publish the resulting kind `1059` gift-wrap event to one or more Nostr relays.
@@ -119,11 +119,14 @@ The scanning model is blind in the following sense:
 - third-party observers cannot associate the `npub` with on-chain Nano activity from protocol fields alone
 - the recipient processes all events addressed to the `npub`, but only valid stealth derivations correspond to actual payments
 
-### Relay Availability
+### Relay Discovery and Permanence
 
-This profile inherits Nostr's relay-availability assumptions. If the relays used by the sender are not monitored by the recipient, the notification may not be discovered.
+Because `nostr:npub1...` lacks relay hints, senders MUST be able to discover the recipient's preferred inbox relays. Senders SHOULD resolve the recipient's `npub` using NIP-65 (Relay List Metadata) events fetched from standard directory relays (e.g., `purplepag.es`, `relay.nostr.band`). NanoNym wallets MUST publish NIP-65 `10002` events for their notification keys to enable this discovery.
 
-Implementations SHOULD support configuring multiple relays and MAY implement retry or redundancy strategies at the application layer.
+**Design Rationale on Permanence (Tier 1 vs Tier 2):**
+NanoNym defines Nostr gift-wraps as "Tier 1" notifications. The design goal is for Tier 1 storage to be a permanent, complete historical record of incoming payments. However, because public Nostr relays are sovereign and often aggressively prune old events, guaranteed permanence is difficult without paid or archival relays. 
+
+It is this practical reality of Nostr pruning that necessitates "Tier 2" fallback mechanisms (scanning the Nano ledger directly to recover historical stealth events). Wallets SHOULD treat Nostr notifications as permanent records and MAY use specialized archival relays to preserve them.
 
 ### Privacy Properties
 
