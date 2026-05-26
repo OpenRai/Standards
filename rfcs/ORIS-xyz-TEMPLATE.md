@@ -23,6 +23,4 @@ OpenRai Initiative Standard: xyz
 
 (prioritize links to a repository URL of minimal, non-normative reference implementations, over inline code samples)
 
-## Summary
 
-(short design rationale)

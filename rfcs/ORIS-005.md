@@ -306,6 +306,4 @@ No published test vectors are defined in this document yet.
 - <https://github.com/x402-foundation/x402/blob/main/specs/schemes/exact/scheme_exact.md>
 - <https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md>
 
-## Summary
 
-This profile maps NanoNym to x402 v2 as a Nano implementation of the `exact` scheme. The client pays first, then presents a NanoNym proof as the scheme-specific payment payload. Facilitators verify the receipt, enforce exact amount and destination checks, and maintain the spent set so resource servers can remain stateless for normal short-lived x402 checkout flows.

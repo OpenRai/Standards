@@ -132,6 +132,4 @@ No published test vectors are defined in this document yet.
 - <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0002-nanonym-payment-event-schema.md>
 - <https://github.com/cbrunnkvist/NanoNymNault>
 
-## Summary
 
-The NanoNym payment event schema fixes the minimum interoperable payload for stealth-payment notifications while leaving transport, encryption, and proof semantics to profile-specific standards.

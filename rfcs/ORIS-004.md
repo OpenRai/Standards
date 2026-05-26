@@ -155,6 +155,4 @@ No published test vectors are defined in this document yet.
 - <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0003-nostr-notification-transport-profile.md>
 - <https://github.com/cbrunnkvist/NanoNymNault>
 
-## Summary
 
-This profile binds NanoNym notification delivery to Nostr without changing the base payment-event schema. It preserves the recipient-privacy model by transmitting only `R` and by delegating transport confidentiality to NIP-59 and NIP-44.

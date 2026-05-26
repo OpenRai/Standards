@@ -333,6 +333,4 @@ No published test vectors are defined in this document yet.
 - <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/protocol-specification.md>
 - <https://github.com/cbrunnkvist/NanoNymNault>
 
-## Summary
 
-NanoNym defines a transport-agnostic stealth-payment model around three address components: spend key, view key, and notification URI. The v2 binary layout encodes these as a versioned, base32-encoded payload with a BLAKE2b-derived checksum. Wallets and adapters may vary, but the protocol boundary remains stable if address decoding, stealth derivation, and notification handoff remain consistent.

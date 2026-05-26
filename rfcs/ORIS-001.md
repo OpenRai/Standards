@@ -316,13 +316,4 @@ signature              : 8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f34900
 
 (to be added) Any reference implementation is informative only and does not override the normative requirements in this document.
 
-## Summary
 
-NOMS defines a compact, domain-separated, deterministic method for signing off-chain UTF-8 text with Nano account keys.
-
-Its design goals are:
-
-- compatibility with Nano's existing cryptographic behavior
-- deterministic cross-language encoding
-- minimal framing overhead
-- simple signing and verification

@@ -210,12 +210,4 @@ https://github.com/OpenRai/ows-core/blob/84fd50ad1760653cdc66dfa4c5ced229555adbb
 
 Reference implementations are informative only and do not override the normative requirements in this document.
 
-## Summary
 
-Nano CAIP integrations use:
-
-- CAIP-2 namespace: `nano`
-- CAIP-2 chain ID: `nano:mainnet`
-- CAIP-10 account ID: `nano:mainnet:<percent-encoded-nano-address>`
-
-No Nano testnet or beta-network identifier is defined by this standard.
