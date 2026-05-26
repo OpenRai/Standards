@@ -11,4 +11,5 @@ A collection of technical specifications designed to promote interoperability ac
 - [ORIS-004: Nostr Transport Profile for NanoNym Payment Notifications](rfcs/ORIS-004.md)
 - [ORIS-005: Utilizing NanoNyms for x402 Exact Pre-payment Verification](rfcs/ORIS-005.md)
 - [ORIS-006: Nano CAIP Identifiers](rfcs/ORIS-006.md)
+- [ORIS-008: Nano Integration and Reliable Payment Processing Standard](rfcs/ORIS-008.md)
 <!-- ORIS-INDEX-END -->
