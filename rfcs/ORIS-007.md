@@ -9,129 +9,34 @@ OpenRai Initiative Standard: 007
 
 ### Abstract
 
-Nano has a minimal block-lattice design and no native memo, smart-contract, or arbitrary-data field. Applications that fully integrate Nano as a distributed ledger, and means of value transfer, therefore sometimes assign application-level meaning to ordinary ledger-visible behavior.
+Nano has a minimal block-lattice design with no native memo, smart-contract, or arbitrary-data fields. To correlate payments, pass metadata, or signal state, developers historically and continuously reach for "common hacks" that assign application-level meaning to ordinary ledger behavior. 
 
-This document names and classifies common Nano application-level patterns and anti-patterns related to metadata, correlation, and signaling. It provides the basis for a **shared vocabulary**, documents **common failure modes**, and intends to guide developers toward bounded, consensual, privacy-aware, and network-friendly designs.
+This document catalogs and classifies these signaling and correlation patterns to establish a **shared vocabulary** and document **common failure modes**—guiding developers toward safer, more network-friendly integrations.
 
-Inclusion of a pattern in this document _does not imply endorsement, protocol support, wallet support, or recommendation for general use._
+Inclusion of a pattern here does not imply endorsement, protocol support, or wallet compatibility.
 
-### Conventions
+---
 
-The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document indicate application guidance where they appear.
+### Conventions & Terminology
 
-Unless otherwise stated:
+*   `nano_`: A standard Nano account address.
+*   `raw`: The smallest indivisible Nano unit ($1\ \text{XNO} = 10^{30}\ \text{raw}$).
+*   `XNO`: The user-facing unit of account.
+*   `application-level meaning`: Meaning assigned by software above the protocol layer.
+*   `signal`: A ledger event or state interpreted by an application.
+*   `off-chain`: Data exchanged outside the Nano P2P network.
 
-- `nano_` refers to a standard Nano account address.
-- `raw` refers to the smallest indivisible Nano unit, with $1\ \text{XNO} = 10^{30}\ \text{raw}$.
-- `XNO` refers to the Nano user-facing unit.
-- `ledger` refers to the Nano block lattice and confirmed account-chain state.
-- `application-level meaning` means _meaning assigned by an application above the Nano protocol._
-- `signal` means an observed ledger event or state _interpreted by an application_.
-- `off-chain` means data exchanged _outside_ the Nano ledger or its P2P network.
+---
 
-See also the [Glossary](#Glossary) at the end of this document for other commonly used technical terms.
+### Risk Classification System
 
-### Informational Only
+This catalog uses broad **risk** and **compatibility** labels to describe how each pattern interacts with general wallets, user expectations, privacy, infrastructure, and network health:
 
-This document is a catalogue of observed conventions, tricks, and anti-patterns used or considered by Nano application developers.
+*   **Low-Risk**: Preserves ordinary payment semantics and imposes no unusual burden on wallets, representatives, or indexers.
+*   **Context-Dependent**: Workable in bounded, application-controlled environments, but relies on specific assumptions (wallet precision, user consent, scale) that fail in general use.
+*   **Harmful if Generalized**: High risk of user confusion, privacy loss, wallet misbehavior, ledger bloat, or excessive indexing overhead if used broadly.
 
-It does not modify the Nano protocol, define new transaction types, propose introducing any memo field, or define any smart-contract mechanisms.
-
-Documenting a pattern does not mean that OpenRai, Nano node implementations, wallets, representatives, services, or users endorse or support it. Applications SHOULD prefer explicit off-chain metadata, signed payment context, and dedicated application-controlled accounts over implicit ledger signaling.
-
-### Classification System
-
-This document uses broad _risk_ and _compatibility_ labels rather than endorsement labels.
-
-The labels describe how a pattern tends to interact with ordinary Nano usage, wallet behavior, user expectations, privacy, infrastructure assumptions, and network health. They do not create protocol rules and do not imply official endorsement, protocol support, wallet support, or application-layer consensus.
-
-#### "Low-risk convention"
-
-A pattern that generally preserves ordinary Nano payment semantics and does not overload consensus-relevant fields or impose unusual behavior on unrelated users, wallets, representatives, nodes, or indexers.
-
-Low-risk conventions are still application-level conventions. They are not part of the Nano protocol unless specified elsewhere.
-
-#### "Context-dependent convention"
-
-A pattern that may be workable in a bounded or application-controlled environment, but whose safety depends on assumptions about wallet behavior, indexing, infrastructure, user consent, scale, precision, or operational controls.
-
-Applications using context-dependent conventions SHOULD document their assumptions and failure modes, including the conditions under which the pattern would drift toward "harmful if generalized."
-
-#### "Harmful if generalized"
-
-A pattern that may cause user confusion, privacy loss, representative or wallet misbehavior, unwanted receivables, unnecessary ledger growth, indexing burden, or other ecosystem costs if used broadly, automatically, or without consent.
-
-Applications SHOULD avoid _harmful-if-generalized_ patterns for routine application behavior.
-
-### General Principle
-
-#### Prefer off-chain metadata
-
-Applications SHOULD keep invoices, order identifiers, user messages, authentication challenges, receipts, and other rich metadata off-chain.
-
-When authenticity is required, applications SHOULD use explicit cryptographic binding, such as signed messages, rather than implicit ledger interpretation.
-
-#### Keep Nano payments semantically ordinary
-
-A Nano payment should normally mean:
-
-- value moved from one account to another;
-- the destination account can receive the value;
-- the receiver can spend the value after receiving it;
-- the amount is the value transferred, not an encoded message.
-
-Applications SHOULD avoid designs where ordinary users must understand hidden semantics in amounts, representative fields, receive timing, or account construction.
-
-#### Require consent for application-specific meaning
-
-Application-level signaling is safest when all participants intentionally opt into the convention.
-
-Applications SHOULD NOT send unwanted dust, pending receivables, representative changes, or other ledger events to unrelated accounts as a notification or message mechanism.
-
-#### Bound ledger footprint
-
-Nano is feeless to users, but ledger activity *still imposes costs* on nodes, representatives, wallets, explorers, indexers, and archival infrastructure.
-
-Applications SHOULD bound:
-
-- number of generated accounts;
-- number of sends;
-- number of receives;
-- number of representative changes;
-- number of dust outputs;
-- reliance on archival history.
-
-#### Confirm signals before acting
-
-Applications SHOULD base irreversible application behavior on confirmed and cemented Nano blocks, not merely locally observed unconfirmed activity.
-
-When interpreting ledger-visible behavior (such as Raw Dust Tagging, Representative Tagging, or Open Block Registration), applications MUST verify that the blocks carrying these signaling patterns have achieved network-wide confirmation (cementing) before triggering downstream actions. Unconfirmed blocks are susceptible to network double-spend conflicts or block replacement, which could lead to out-of-sync application states. For normative guidelines on general transaction and payment confirmation systems, see [ORIS-008](file:///Users/conny/Developer/nano/OpenRai/Standards/rfcs/ORIS-008.md).
-
-#### Design for wallet variation
-
-Wallets differ in:
-
-- display precision;
-- input precision;
-- auto-receive behavior;
-- dust filtering;
-- representative-change UX;
-- account discovery;
-- deterministic derivation support;
-- handling of very small pending amounts.
-
-Applications SHOULD NOT assume that a general-purpose wallet exposes raw-level precision, publishes receive blocks on demand, or preserves unusual application-level conventions.
-
-#### Privacy considerations
-
-The Nano ledger is fully transparent. All sends, receives, balances, frontiers, and representative changes are publicly observable and permanently linkable once published. Several recurring privacy risks cut across the patterns catalogued in this document:
-
-- Address reuse is the dominant linkability risk. Any account that appears as a destination or source more than once links all of its payments to a single observable identity.
-- Sweep linkage occurs when funds from many invoice or deposit accounts are consolidated into a hot wallet, retroactively linking otherwise separate accounts to a single controller.
-- Amount-suffix fingerprinting can reveal that a user is interacting with a specific application whenever unusual raw-level suffixes recur.
-- Derivation-structure leakage can expose business volume, customer counts, or future addresses if extended public derivation material, index gaps, or sequential index patterns are observable.
-
-Individual pattern entries refer back to these considerations rather than repeating them in full.
+---
 
 ### Payment Correlation Patterns
 
@@ -221,7 +126,7 @@ Failure modes:
 - Unbounded account creation can burden wallet scanning and application state.
 - Reuse of a supposedly unique invoice account can create ambiguity.
 - Recovery requires deterministic derivation, stored metadata, or both.
-- Sweeping funds may link invoice accounts together; see Account Sweep Linkage and the Privacy considerations subsection.
+- Sweeping funds may link invoice accounts together; see Account Sweep Linkage.
 
 Network-health considerations:
 
@@ -373,7 +278,7 @@ Failure modes:
 
 Privacy considerations:
 
-Raw Dust Tagging can fingerprint payments through amount-suffix patterns; see the Privacy considerations subsection under General Principles.
+Raw Dust Tagging can fingerprint payments through amount-suffix patterns, exposing user interaction with specific applications across the public ledger.
 
 Classification note:
 
@@ -495,7 +400,7 @@ Failure modes:
 - An open block can only be published once the account receives funds; the application or user must arrange for an initial send.
 - Wallet account-discovery behavior varies; the open block may not be discovered or surfaced in time.
 - Anyone who can send to the deterministic address can effectively force activation against the account holder's intent.
-- Sequential derivation indexes may leak business volume; see Account Index Signal and the Privacy considerations subsection.
+- Sequential derivation indexes may leak business volume; see Account Index Signal.
 - Recovery requires the same derivation scheme and gap-limit assumptions used at registration.
 
 Recommendation:
@@ -913,7 +818,7 @@ Useful properties:
 
 Failure modes:
 
-- Index meaning may leak business or user information; see the Privacy considerations subsection.
+- Index meaning may leak business or user information (e.g., leaking sequential order volumes or user signup sequences).
 - Gaps can break account discovery.
 - Different wallets may use different derivation schemes.
 - Publishing extended public derivation material can expose future addresses.
@@ -1060,7 +965,7 @@ Failure modes:
 - Creates unwanted pending receivables.
 - Clutters wallets and account histories.
 - Enables spam and harassment.
-- Can be used for tracking and deanonymization; see the Privacy considerations subsection.
+- Can be used for tracking and deanonymizing users by forcing them to link their accounts on sweeping.
 - Burdens wallets, indexers, explorers, and users.
 - May cause recipients to accidentally link accounts when sweeping; see Account Sweep Linkage.
 
