@@ -126,6 +126,33 @@ Applications accepting payments MUST explicitly define, implement, and test thei
 | **Receive Delay** | Delay between observing a confirmed `send` and publishing the `receive` block. | Hot wallets SHOULD process receives promptly to secure funds. However, the system's database credit MUST rely on the confirmed `send` block rather than the `receive` block timing. |
 | **Confirmation Delay** | A transaction remains in the local node's "unconfirmed" queue during network backlogs or spam. | Do not credit the user database. The UI should display the transaction as "Pending network confirmation" but keep the funds locked until the block is fully cemented. |
 
+---
+
+### 6. Architectural Hygiene and Privacy Guidelines
+
+To ensure network health (good ledger citizenship) and preserve user privacy, integrations SHOULD adhere to the following systemic guidelines:
+
+#### A. Bound Ledger Footprint
+Because Nano is feeless to users, the marginal cost of publishing a transaction or opening an account is zero to the client, but non-zero to the network consensus, indexers, and archival nodes. Integrations MUST limit unnecessary ledger growth:
+*   **Account Generation:** Avoid creating massive pools of unused or short-lived accounts. Limit deterministic derivation index spans where possible.
+*   **Dust Control:** Do not generate unsolicited or excessive dust outputs that create unreceived pending receivables across the network.
+*   **State Pruning Support:** Do not build system dependencies that rely on scanning the complete archival history of accounts; design services to operate purely on cemented frontiers.
+
+#### B. Keep Ledger Semantics Minimal (Off-Chain Priority)
+*   **Prefer Off-Chain Metadata:** Keep invoices, authentication challenges, user messages, order details, and receipts off-chain. Bind them to ledger events via explicit off-chain communication or lightweight transaction references.
+*   **Avoid On-Chain Encoding:** Do not attempt to store arbitrary state or message payloads on-chain (e.g., abusing representative fields, PoW values, or amount suffixes to represent structured data). 
+
+#### C. Design for Wallet Diversity
+Integrations MUST NOT assume that third-party customer wallets interact with the ledger in the exact same manner as the application hot wallet.
+*   **Display and Input Precision:** Many consumer wallets display or allow input only up to 6 decimal places of `XNO`, while the node handles $10^{30}$ `raw` units. Avoid relying on users manually entering raw-level amount suffixes.
+*   **Auto-Receive Delays:** Consumer wallets may delay publishing receive blocks, auto-receive selectively, or completely hide very small pending dust amounts. Base credit and invoice-processing state machines on confirmed incoming *send* blocks, not on the customer's *receive* block publishing.
+
+#### D. Prevent On-Chain Identity Linkage
+Because the Nano ledger is fully transparent, public tracking of deposit/withdrawal patterns exposes users to financial privacy loss.
+*   **Address Reuse:** Avoid using a single static deposit address for all customers or all transactions of a customer. Utilize unique, per-invoice deposit accounts.
+*   **Sweep Linkage:** When consolidating customer deposits from unique addresses to a primary application hot wallet, be aware that the sweep transactions permanently link otherwise unrelated customer addresses in the public record. 
+*   **Derivation-Structure Leakage:** Do not expose deterministic wallet public seeds or extended public keys (`xpub`) to clients. Sequential account index generation can leak transactional volume or customer registration metrics to outside observers.
+
 ## Glossary
 
 - **Confirmation Height:** The length of the cemented chain segment of a Nano account. Only blocks at or below this height are fully confirmed.
