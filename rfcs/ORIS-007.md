@@ -9,7 +9,7 @@ OpenRai Initiative Standard: 007
 
 ### Abstract
 
-Nano has a minimal block-lattice design with no native memo, smart-contract, or arbitrary-data fields. To correlate payments, pass metadata, or signal state, developers historically and continuously reach for "common hacks" that assign application-level meaning to ordinary ledger behavior. 
+Nano has a minimal block-lattice design with no native memo, smart-contract, or arbitrary-data fields. To correlate payments, pass metadata, or signal state, developers have repeatedly found ways to assign application-level meaning to ordinary ledger behavior. 
 
 This document catalogs and classifies these signaling and correlation patterns to establish a **shared vocabulary** and document **common failure modes**—guiding developers toward safer, more network-friendly integrations.
 
@@ -17,14 +17,9 @@ Inclusion of a pattern here does not imply endorsement, protocol support, or wal
 
 ---
 
-### Conventions & Terminology
+### Conventions
 
-*   `nano_`: A standard Nano account address.
-*   `raw`: The smallest indivisible Nano unit ($1\ \text{XNO} = 10^{30}\ \text{raw}$).
-*   `XNO`: The user-facing unit of account.
-*   `application-level meaning`: Meaning assigned by software above the protocol layer.
-*   `signal`: A ledger event or state interpreted by an application.
-*   `off-chain`: Data exchanged outside the Nano P2P network.
+Addresses use the `nano_` prefix. Amounts are given in `XNO` (the user-facing unit) or `raw` (the smallest indivisible unit, $1\ \text{XNO} = 10^{30}\ \text{raw}$). See the [Glossary](#glossary) for block-level terms.
 
 ---
 
@@ -40,1014 +35,429 @@ This catalog uses broad **risk** and **compatibility** labels to describe how ea
 
 ### Payment Correlation Patterns
 
-Payment correlation is the most common reason developers look for Nano signaling techniques. Since Nano has no native memo field, applications often need to determine which invoice, order, customer, session, or application event a payment belongs to.
+Nano has no memo field, so correlating an incoming payment to an invoice, order, or session is the most common signaling challenge developers face. The patterns below are ordered by preference.
 
-Recommended triage:
-
-1. If the receiver can generate a unique destination account, use an Invoice Deposit Account.
-2. If payment context can be exchanged off-chain, use an Off-chain Payment Reference.
-3. If the payer has an authenticated source account, Source Account Attribution may be acceptable.
-4. If both sides use controlled application-specific wallet code, Raw Dust Tagging may be possible, but remains fragile.
+1. If payment context can be exchanged off-chain, use an [**Off-chain Payment Reference**](#off-chain-payment-reference).
+2. If the receiver can generate a unique destination account, use an [**Invoice Deposit Account**](#invoice-deposit-account).
+3. If the payer has an authenticated source account, [**Source Account Attribution**](#source-account-attribution) may be acceptable.
+4. If both sides use controlled wallet code or [`nano:` URIs](https://docs.nano.org/integration-guides/the-basics/#uri-and-qr-code-standards) with embedded `amount`, [**Raw Dust Tagging**](#raw-dust-tagging) may work, but remains fragile.
 5. Avoid representative-field signaling, arbitrary address payloads, burn signals, and unsolicited dust for payment correlation.
-
-The Payment Correlation Guidance section near the end of this document provides the normative summary; the list above is intended as a quick triage when reading the catalogue.
 
 #### Off-chain Payment Reference
 
-Classification: Low-risk convention
+Nano has no memo field, so there's no way to attach an invoice number to a payment on-chain. The simplest workaround: don't try. Instead, generate a payment request off-chain — with a destination account, amount, invoice ID, and optional expiration — and have the payer send to that request. Match the incoming payment by destination and amount. If you need to prove the request came from you, sign it.
 
-Other names:
+**Classification:** Low-risk · **AKA:** Signed Payment Reference, External Invoice Reference
 
-- Out-of-band Payment Reference
-- OOB Reference
-- Signed Payment Reference
-- External Invoice Reference
+**How it works:** The application generates a payment context (destination, amount, invoice ID, nonce, expiration) and delivers it to the payer off-chain. The payer sends Nano to the specified destination. The application matches the incoming payment by destination and amount, then retrieves the full invoice context from its own database.
 
-Problem addressed:
+**Risks:**
+- If the reference is not signed, a man-in-the-middle can substitute their own destination account.
+- If nonce and expiration are omitted, the same reference can be replayed.
+- The off-chain database is the single source of truth — if it's lost, payment-to-invoice mapping is unrecoverable.
 
-An application needs to associate a Nano payment with an invoice, order, session, account, or other off-chain business object.
+**Verdict:** Use this as the default approach for invoice correlation. Always sign the reference and include nonce, amount, destination, and expiration.
 
-Mechanism:
+#### Block Hash Commitment
 
-The application exchanges payment context off-chain. The context may include a destination account, amount, invoice identifier, nonce, expiration time, payer identity, or application-specific terms.
+Every confirmed Nano block has a unique hash. Storing that hash off-chain gives you a compact, immutable reference to a specific payment or account-chain event — useful for receipts, audit logs, and reconciliation.
 
-If authenticity is required, the context can be signed by the payer, receiver, or both.
+**Classification:** Low-risk · **AKA:** Block Reference, Hash Anchor
 
-Useful properties:
+**How it works:** After a payment confirms, the application stores the block hash in its own database or communicates it off-chain. The hash identifies the exact ledger event.
 
-- Preserves ordinary Nano payment semantics.
-- Does not require memo fields or ledger overloading.
-- Can carry rich structured metadata.
-- Can include replay protection, expiration, and audience binding.
-- Does not require unusual wallet behavior if the payment itself is ordinary.
+**Risks:**
+- Default node configurations retain only the frontier of each account chain. Intermediate block bodies may become unavailable from non-archival nodes shortly after confirmation.
+- A block hash identifies a block but carries no application meaning — the metadata must be preserved separately.
 
-Failure modes:
-
-- Off-chain metadata can be lost if the application does not persist it.
-- Unsigned references may be spoofed or replayed.
-- Payment and metadata may become inconsistent if not bound carefully.
-- Reconstruction of full application context requires access to the off-chain database.
-
-Recommendation:
-
-Applications SHOULD prefer off-chain payment references for most payment-correlation and metadata needs. When security matters, the reference SHOULD include nonce, amount, destination, expiration, and application audience, and SHOULD be authenticated with an appropriate signature scheme.
+**Verdict:** Safe and useful as an off-chain reference. Document your archival assumptions if you need to resolve historical block bodies.
 
 #### Invoice Deposit Account
 
-Classification: Low-risk convention
+When you can't coordinate a payment reference off-chain, or when you want the ledger itself to carry the correlation, generate a fresh Nano account for each invoice. Any payment to that account is payment for that invoice — no ambiguity, no amount-matching, no memo field needed.
 
-Other names:
+**Classification:** Low-risk · **AKA:** Per-invoice Account, One-time Destination Account
 
-- Unique Deposit Account
-- Per-invoice Account
-- Payment Request Account
-- One-time Destination Account
+**How it works:** The receiver derives or generates a unique Nano address for a specific invoice, order, or session. The payer sends to that address. The application monitors the address for incoming payments and attributes them to the corresponding invoice.
 
-Problem addressed:
+**Risks:**
+- Each invoice creates a new account that must be monitored and eventually swept. Unbounded account creation burdens wallet scanning and application state.
+- Reusing a supposedly one-time account creates ambiguity about which invoice was paid.
+- Sweeping funds from many invoice accounts into a hot wallet links them on-chain; see [Account Sweep Linkage](#account-sweep-linkage).
+- Recovery requires either deterministic derivation or stored metadata mapping accounts to invoices.
+- Generating large numbers of unused accounts burdens node scanning. Keep account generation bounded.
 
-A receiver needs to identify which invoice or payment request a Nano payment satisfies without relying on memos or amount tags.
-
-Mechanism:
-
-The receiver generates a unique Nano destination account for a specific invoice, order, session, or payment request. Any payment to that account is interpreted in the context of that invoice.
-
-Useful properties:
-
-- Preserves ordinary payment semantics.
-- Works with normal wallets.
-- Does not require exact amount tagging.
-- Allows simple indexer logic.
-- Avoids address reuse for distinct invoices.
-- Can be combined with off-chain invoices and signed references.
-
-Failure modes:
-
-- Requires account generation and monitoring infrastructure.
-- Unbounded account creation can burden wallet scanning and application state.
-- Reuse of a supposedly unique invoice account can create ambiguity.
-- Recovery requires deterministic derivation, stored metadata, or both.
-- Sweeping funds may link invoice accounts together; see Account Sweep Linkage.
-
-Network-health considerations:
-
-Invoice accounts are generally safe when bounded and application-controlled. Applications SHOULD avoid generating large numbers of unused accounts or requiring broad ecosystem scanning of arbitrary derivation paths.
-
-Recommendation:
-
-Applications SHOULD use Invoice Deposit Accounts when they can generate and monitor unique destination accounts. This is one of the simplest and least surprising Nano payment-correlation patterns.
+**Verdict:** One of the simplest and most reliable correlation patterns. Use it when you can generate and monitor unique destinations.
 
 #### Customer Deposit Account
 
-Classification: Low-risk convention
+Some services need to identify repeat deposits from the same user over time. Instead of generating a new account per invoice, assign each user a single deposit address. Payments to that address are always attributed to that user.
 
-Other names:
+**Classification:** Low-risk · **AKA:** Per-user Account, User Deposit Account
 
-- User Deposit Account
-- Per-customer Account
-- Static Customer Address
+**How it works:** The service assigns one Nano address to each user. The user sends to that address whenever they want to deposit. The application monitors the address and credits the corresponding user.
 
-Problem addressed:
+**Risks:**
+- All of a user's deposits are linked on the public ledger. Anyone who knows the address can see the user's deposit history.
+- Anyone who knows the address can send funds to it, creating attribution problems.
+- Payments from exchanges or custodial wallets may come from a shared hot wallet, requiring additional attribution logic.
+- If the address leaks or the mapping database is compromised, historical activity is exposed.
 
-A service wants to identify payments from a known customer or account over time.
+**Verdict:** Simple and effective for repeated deposits, but offers weaker privacy than per-invoice accounts. Use [Invoice Deposit Accounts](#invoice-deposit-account) when unlinkability matters. Do not use a stable deposit address as a reusable public identity without explicit consent.
 
-Mechanism:
+#### Account Sweep Linkage
 
-The service assigns one Nano destination account to a customer. Payments to that account are attributed to the customer.
+When you consolidate funds from many invoice or user deposit accounts into a single hot wallet, the sweep transactions publicly link all those accounts to one controller. This retroactively defeats the unlinkability you gained by using per-invoice accounts in the first place.
 
-Useful properties:
+**Classification:** Harmful if generalized · **AKA:** Sweep Correlation
 
-- Works with ordinary wallets.
-- Simple for repeated deposits.
-- Does not require exact amounts or source-account assumptions.
-- Easy to index.
+**How it works:** The service periodically transfers balances from many deposit accounts to one or a few destination accounts. The sweep transactions are visible on-chain and link all source accounts to the same entity.
 
-Failure modes:
+**Risks:**
+- Retroactively links all swept accounts on a fully transparent ledger.
+- Reveals aggregate business volume and timing to any observer.
+- Combined with timing analysis, can deanonymize individual customers.
 
-- Address reuse links the customer's payments.
-- Anyone who knows the address may send funds to it.
-- Payments from exchanges or custodians may still require additional attribution.
-- Customer privacy is weaker than with one-time deposit accounts.
-- Account compromise or database leakage can reveal historical customer activity.
+This is not a technique to adopt — it is an unavoidable consequence of consolidating per-invoice accounts that applications must actively mitigate.
 
-Classification note:
-
-This pattern becomes context-dependent when privacy and address reuse matter. Do not use a stable customer deposit account as a reusable public identity without explicit consent and linkability analysis.
-
-Recommendation:
-
-Customer Deposit Accounts are operationally simple, but applications SHOULD prefer Invoice Deposit Accounts when payment-level unlinkability or precise invoice correlation matters.
+**Verdict:** If you consolidate funds, minimize linkability. Options: batch consolidations, use multiple sweep destinations, separate user-facing deposit accounts from internal accounting.
 
 #### Source Account Attribution
 
-Classification: Context-dependent convention
+If you know which Nano account a user controls, you can attribute incoming payments by watching where the funds come from. The user registers their source account with your application once; subsequent payments from that account are attributed to them.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Sender Account Attribution
 
-- Sender Account Attribution
-- Payer Address Identification
-- Registered Source Account
+**How it works:** The payer registers or authenticates a Nano account with the application. Later, when funds arrive from that account, the application attributes the payment to the registered payer.
 
-Problem addressed:
+**Risks:**
+- Exchange and custodial withdrawals come from shared hot wallets, not the user's own account. Attribution against a shared source is meaningless and may be actively misleading.
+- Users may change wallets, rotate accounts, or have their accounts swept — breaking attribution silently.
+- All payments from the same source account are linkable on the public ledger.
+- Without explicit registration and authentication, a source account does not identify a person.
 
-A receiver wants to identify the payer based on the source account that sent funds.
+**Verdict:** Only use when the source account is explicitly registered and authenticated. Never assume a source account identifies a human — most exchange withdrawals come from shared wallets.
 
-Mechanism:
+#### Reply-with-Send Receipt
 
-The payer first registers or authenticates a Nano account with the application. Later payments from that account are attributed to the registered payer.
+When your application receives a payment, you might want to send a small amount back to the payer as an on-chain "receipt." The problem: you're sending to the source account of the incoming payment, which may be a custodial hot wallet, an exchange, or a shared service — not the actual payer.
 
-Useful properties:
+**Classification:** Context-dependent · **AKA:** Echo Send, Send-back Receipt
 
-- Does not require unique destination accounts for every payment.
-- Works when the payer controls the source account.
-- Can be combined with off-chain signatures proving control of the source account.
+**How it works:** The application receives a payment, identifies the source account, and sends a small amount back to that account as an on-chain confirmation.
 
-Failure modes:
+**Risks:**
+- Inherits all failure modes of [Source Account Attribution](#source-account-attribution): the source account may not be the payer.
+- Creates unsolicited receivables for the source-account controller.
+- May be misinterpreted as a refund or a fresh payment.
+- Inherits the auto-receive problems of [Receive Acknowledgement](#receive-acknowledgement) and [Pending Receivable Marker](#pending-receivable-marker).
 
-- Exchange and custodial withdrawals may originate from accounts not controlled by the user.
-- Custodial hot wallets, tip bots, and similar shared-source services route many users through a single source account; attribution against that account is meaningless and may be actively misleading.
-- Users may change wallets or source accounts.
-- Source accounts may be shared, rotated, or swept.
-- Observers can link all attributed payments from the same source.
-- Attribution is unsafe unless the source account was explicitly registered or authenticated.
-
-Classification note:
-
-This pattern is context-dependent because its safety depends entirely on the assumption that the source account is controlled by, and uniquely identifies, the registered payer. That assumption fails by default for any payer who uses an exchange, custodial wallet, or shared infrastructure.
-
-Recommendation:
-
-Applications MAY use Source Account Attribution only when the source account is explicitly registered, authenticated, and expected. Applications SHOULD NOT assume that a source account identifies a human payer without prior agreement.
+**Verdict:** Do not use as a default acknowledgement mechanism. If on-chain acknowledgement is required, restrict to explicitly registered source accounts. Prefer off-chain signed receipts.
 
 #### Raw Dust Tagging
 
-Classification: Context-dependent convention
+Nano's raw unit is incredibly small ($1\ \text{XNO} = 10^{30}\ \text{raw}$). By varying the last few digits of a payment amount, you can encode a small tag — an invoice number, a discriminator, a state value — directly in the amount field. The receiver reads the suffix and interprets it.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Amount Tagging, Amount-as-Metadata, Raw Encoding
 
-- Raw Amount Tagging
-- Amount Tagging
-- Dust Tagging
-- Raw Encoding
-- Amount-as-Metadata
-- Value-as-Message
-
-Problem addressed:
-
-A receiver wants to distinguish payments or encode a small application-level value without generating separate destination accounts or exchanging off-chain metadata.
-
-Mechanism:
-
-The sender varies the exact raw amount, or a very small fractional XNO suffix, so that the receiver can infer application-level meaning from the precise amount received.
-
-Example:
+**How it works:**
 
 ```text
 1.000000000000000000000000000123 XNO
 ```
 
-Because $1\ \text{XNO} = 10^{30}\ \text{raw}$, the trailing fractional digits in this example correspond to the three least-significant raw units (decimal value 123). Application-specific code may interpret this suffix as a tag, invoice discriminator, or small state value.
+The trailing digits encode the value 123 in raw units. The receiver extracts the suffix and maps it to application meaning.
 
-Useful properties:
+**Risks:**
+- Most wallets display ~6 decimal places. A raw-level suffix is invisible to users and may be rounded or truncated by the sender's wallet.
+- Some wallets refuse to create or receive extremely small amounts.
+- The receiver may not publish a receive block for dust-level pending amounts.
+- Amount-suffix patterns fingerprint payments on the public ledger, linking them to a specific application.
+- Refunds, partial payments, and exchange withdrawals destroy the tag.
 
-- Does not require a native memo field.
-- Can be observed from payment amount alone.
-- May work in tightly controlled systems where both sender and receiver use application-specific wallet code.
-- Can distinguish otherwise similar payments to the same destination.
+**Wallet compatibility:** Applications MUST NOT assume that a general-purpose wallet can display, preserve, send, or receive raw-level tags.
 
-Wallet compatibility:
+**Verdict:** Viable only when both sides use application-controlled wallet code and exact raw amounts are preserved. For most invoice correlation, prefer [Invoice Deposit Accounts](#invoice-deposit-account) or [Off-chain Payment References](#off-chain-payment-reference). Do not use dust-level amount tags as a public messaging layer.
 
-Raw Dust Tagging is poorly supported by ordinary user-facing wallets.
+### State Signaling Patterns
 
-Many user-facing wallets limit display and input precision to a smaller number of XNO decimal places, commonly around six decimal places. A user may therefore see or enter only an approximation of the intended amount, even if the underlying Nano protocol can represent raw-level precision.
-
-Some wallets may also refuse to create, hide, ignore, deprioritize, or fail to present receive actions for extremely small pending amounts. As a result, dust-level tags may be visible only to application-specific wallet code, node RPC integrations, explorers, or custom indexers.
-
-Applications MUST NOT assume that a human-operated general-purpose wallet can accurately display, preserve, send, or receive raw-level tags.
-
-Failure modes:
-
-- The sender's wallet may round, truncate, or reject the requested amount.
-- The receiver's wallet may display a rounded amount and hide the embedded tag.
-- The receiver may not publish a receive block for very small pending amounts.
-- Automatic receive behavior may differ across wallets.
-- A user may manually alter the amount and destroy the tag.
-- Multiple payments with similar tagged amounts may be ambiguous.
-- Refunds, partial payments, overpayments, and exchange withdrawals can destroy the intended correlation.
-- Application logic may accidentally treat a dust-tagged payment as an ordinary payment or vice versa.
-- Using very small amounts as tags can create unwanted receivables and indexing noise.
-
-Privacy considerations:
-
-Raw Dust Tagging can fingerprint payments through amount-suffix patterns, exposing user interaction with specific applications across the public ledger.
-
-Classification note:
-
-Raw Dust Tagging can become harmful if generalized for broad correlation, messaging, or unsolicited notifications. Do not use dust-level amount tags as a public application messaging layer.
-
-Recommendation:
-
-Raw Dust Tagging is appropriate only in controlled contexts where both sender and receiver explicitly support the convention, exact raw amounts are preserved, ordinary wallet UI precision is not relied upon, and failure cases are handled. For ordinary invoice correlation, applications SHOULD prefer Invoice Deposit Accounts or Off-chain Payment References.
-
-### Receive and Account-State Signaling Patterns
+These patterns use ledger events — receive blocks, open blocks, balance changes, frontier updates — as application-level signals. They all share a common risk: wallet behavior (auto-receive, batching, delay) can make the signal meaningless or involuntary.
 
 #### Receive Acknowledgement
 
-Classification: Context-dependent convention
+In Nano, incoming funds sit as "pending" until the receiver publishes a receive block. Some applications interpret that receive block as more than a balance update — as a signal that the receiver has accepted a ticket, claimed a deposit, or committed to something. This only works if the receiving account is application-controlled and the wallet's receive behavior is predictable.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Receive-as-Commit, Claim Signal
 
-- Receive Block Acknowledgement
-- Receive-as-Commit
-- Acceptance Receive
-- Claim Signal
+**How it works:** The application sends funds to a dedicated account it controls. It monitors for the receive block and treats it as the "acceptance" event in its state machine.
 
-Problem addressed:
+**Risks:**
+- Most user wallets auto-receive, so a receive block on a normal account means nothing about user intent.
+- Even application-controlled wallets may delay or batch receives, making timing unreliable.
+- A pending send received hours later can trigger a stale state transition.
+- Auto-receive can collapse this pattern into a [Pending Receivable Marker](#pending-receivable-marker) — the receive happens without intent, making the signal meaningless.
 
-An application wants to interpret the receiver's publication of a receive block as an acknowledgement, acceptance, or state transition.
-
-Mechanism:
-
-A sender sends funds to an account. The application treats the receiver's later receive block as a signal that the receiver has accepted, consumed, acknowledged, or committed to something.
-
-Useful properties:
-
-- Uses ordinary Nano account-chain behavior.
-- Can be meaningful when the receiving account is controlled by the application.
-- May model simple state transitions, such as "ticket claimed" or "deposit accepted."
-
-Failure modes:
-
-- Many wallets auto-receive without user intent. This can involuntarily promote a Pending Receivable Marker into a Receive Acknowledgement, collapsing the two patterns into each other.
-- Some wallets delay, batch, or hide receive behavior.
-- A receive block may indicate wallet behavior, not application consent.
-- Users may receive funds accidentally.
-- The same pending send may be received long after the intended application context expired.
-- Indexers must track both send and receive sides.
-
-Classification note:
-
-Receive Acknowledgement is context-dependent because its semantic value depends entirely on whether the receiving account is application-controlled and whether the wallet's receive behavior is known to the application. It drifts toward "harmful if generalized" when applied to ordinary user accounts.
-
-Recommendation:
-
-Receive Acknowledgement MAY be used only with dedicated accounts and controlled receive behavior. Applications SHOULD NOT interpret a normal user's receive block as consent unless the user and wallet explicitly support that application convention.
+**Verdict:** Only use with dedicated application-controlled accounts where receive behavior is deterministic. Never interpret a normal user's receive as consent.
 
 #### Pending Receivable Marker
 
-Classification: Harmful if generalized
+You can send a small amount to someone's account and leave it pending — unreceived. The idea is that the existence of the pending amount itself is the signal, and the recipient doesn't need to do anything. In practice, this is spam.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Pending-as-Message, Receivable Notification
 
-- Pending Marker
-- Unreceived Send Signal
-- Receivable Notification
-- Pending-as-Message
+**How it works:** The sender sends a tiny amount to a recipient account and does not require (or expect) a receive block. Indexers and the recipient's wallet can see the pending amount.
 
-Problem addressed:
+**Risks:**
+- Creates unwanted receivables that clutter wallets and account state.
+- Wallets with auto-receive will convert the pending amount into a receive block, destroying the intended "unreceived" signal.
+- Easily abused for spam, harassment, and tracking.
+- Does not convey consent or awareness — the recipient never agreed to receive a signal.
 
-An application wants to signal something to an account by creating a pending receivable without requiring the recipient to receive it.
-
-Mechanism:
-
-A sender sends a small amount to a recipient account. The application interprets the existence of the unreceived pending amount as a marker, notification, or message.
-
-Useful properties:
-
-- The signal can be visible to indexers before the recipient receives it.
-- The recipient does not need to publish a receive block for the marker to exist.
-- Technically easy to create.
-
-Failure modes:
-
-- Creates unwanted receivables for users.
-- May clutter wallets and account state.
-- May be hidden or ignored by wallets.
-- Can be abused for spam, harassment, or tracking.
-- Forces recipients and infrastructure to deal with unsolicited state.
-- Does not reliably convey consent or awareness.
-- Wallets with aggressive auto-receive behavior will convert the marker into a published receive block, eliminating the intended "unreceived" property and conflating this pattern with Receive Acknowledgement.
-
-Recommendation:
-
-Applications SHOULD NOT use pending receivables as a general signaling mechanism. This pattern is especially problematic when sent to accounts that have not opted into the application.
+**Verdict:** Do not use. This pattern pushes unsolicited state onto accounts that didn't opt in.
 
 #### Open Block as Registration
 
-Classification: Context-dependent convention
+The first block on a Nano account is the "open" block. Some applications use this as a registration signal: if a derived account publishes an open block, the application interprets it as the user activating or enrolling. The catch: an open block requires incoming funds, so someone has to send to the account first — and anyone can do that, forcing registration against the user's intent.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Account Activation Signal
 
-- First-block Registration
-- Account Activation Signal
-- Open-as-Enrollment
+**How it works:** The application derives a deterministic account for the user (e.g., at a specific HD index). When the user (or the application) funds that account and the open block is published, the application treats it as registration.
 
-Problem addressed:
+**Risks:**
+- Anyone who can send to the deterministic address can force an open block, triggering registration against the user's intent.
+- Sequential derivation indexes leak business volume (e.g., order count).
+- Recovery depends on the same derivation scheme and gap-limit assumptions.
+- Wallet account-discovery behavior varies; the open block may not surface in time.
 
-An application wants to treat the existence of an open block on a derived or designated account as proof that the account holder has activated, enrolled in, or registered with the application.
-
-Mechanism:
-
-The application instructs the user (or its own derivation logic) to open a specific account, often at a deterministic derivation index, and then watches the ledger for the open block. The presence of that block is interpreted as activation.
-
-Useful properties:
-
-- Uses ordinary Nano account-opening behavior.
-- Can be deterministic if combined with a known derivation scheme.
-- Avoids requiring a separate registration channel.
-
-Failure modes:
-
-- An open block can only be published once the account receives funds; the application or user must arrange for an initial send.
-- Wallet account-discovery behavior varies; the open block may not be discovered or surfaced in time.
-- Anyone who can send to the deterministic address can effectively force activation against the account holder's intent.
-- Sequential derivation indexes may leak business volume; see Account Index Signal.
-- Recovery requires the same derivation scheme and gap-limit assumptions used at registration.
-
-Recommendation:
-
-Open Block as Registration MAY be used when both the derivation scheme and the funding flow are application-controlled, and when activation has no security-critical consequences that an arbitrary third-party send could trigger inappropriately. Applications SHOULD combine the on-chain signal with off-chain consent to avoid involuntary registration.
+**Verdict:** Only use when both the derivation and funding flow are application-controlled. Always pair with off-chain consent to prevent involuntary registration.
 
 #### Balance State Signal
 
-Classification: Context-dependent convention
+Some applications encode state directly in an account's balance — specific balance values or ranges correspond to application states. This is extremely fragile: any send or receive changes the balance, so a single unwanted incoming payment irreversibly corrupts the encoded state.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Balance-as-State
 
-- Balance Encoding
-- Account Balance State
-- Balance-as-State
+**How it works:** The application controls an account and sets its balance to a specific value that encodes application state. Observers read the balance and interpret it.
 
-Problem addressed:
+**Risks:**
+- Any incoming payment — even an unwanted one — changes the balance and corrupts the state irreversibly.
+- Requires exact balance tracking and confirmation at every step.
+- Wallet operations may alter balances in unexpected ways.
 
-An application wants to infer state from the exact balance of an account.
-
-Mechanism:
-
-The account's balance is treated as a state value. Specific balances or balance ranges correspond to application-level states.
-
-Useful properties:
-
-- Observable from account state.
-- Does not require parsing arbitrary metadata.
-- May work in closed systems where all sends and receives are controlled by the application.
-
-Failure modes:
-
-- Although Nano has no fees, partial sends and receives still mutate balance, so any unexpected incoming payment corrupts the encoded state.
-- Wallet operations may alter balances in ways the application did not expect.
-- Requires exact balance tracking and confirmation.
-- Poorly suited to ordinary user wallets.
-
-Recommendation:
-
-Balance State Signal SHOULD be limited to application-controlled accounts where all account activity is controlled and audited. It SHOULD NOT be used with ordinary user accounts.
+**Verdict:** Only viable for fully application-controlled accounts where every send and receive is audited. Do not use with user accounts.
 
 #### Frontier Signal
 
-Classification: Context-dependent convention
+The frontier is the latest block on an account chain. Some applications use it as a publication pointer: each new block is a new "version" of the application state, and observers watch the frontier for updates. The actual metadata lives off-chain; the frontier just anchors it.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Head Block Signal
 
-- Frontier-as-State
-- Head Block Signal
-- Account-chain Pointer
-- Publication Frontier
+**How it works:** The application publishes blocks on a dedicated account chain. Each new block references the current off-chain state (e.g., by including a hash of the metadata). Observers track the frontier to discover the latest state.
 
-Problem addressed:
-
-An application wants to use the latest confirmed block of an account as a state pointer, publication marker, or low-frequency update signal.
-
-Mechanism:
-
-The application publishes a block on a dedicated account chain. Observers interpret the current frontier as the latest application state marker, often while resolving actual metadata off-chain.
-
-Useful properties:
-
-- Provides an ordered account-local publication point.
-- Can anchor off-chain state by referencing a block hash.
-- May be useful for low-frequency application-controlled updates.
-
-Failure modes:
-
-- Frontier changes may be caused by unrelated wallet activity.
-- Requires observers to track account frontier state.
+**Risks:**
+- Unrelated wallet activity on the same account changes the frontier, confusing observers.
 - High-frequency updates create unnecessary ledger activity.
-- Historical interpretation may require archival or indexer support.
-- The block itself carries only ordinary Nano fields.
+- Historical interpretation requires archival nodes or indexers.
+- The block itself carries only ordinary Nano fields — the actual data is off-chain.
 
-Classification note:
-
-Frontier Signal can approach low-risk when a dedicated publisher account anchors infrequent off-chain state. It drifts toward "harmful if generalized" when used as a high-rate message bus.
-
-Recommendation:
-
-Frontier Signal MAY be acceptable for low-frequency, application-controlled anchoring. Applications SHOULD NOT use ordinary user account frontiers or rapid frontier updates as a messaging system.
-
-#### Reply-with-Send Receipt
-
-Classification: Context-dependent convention
-
-Other names:
-
-- Echo Send
-- Acknowledgement Send
-- Send-back Receipt
-
-Problem addressed:
-
-An application wants to acknowledge a received payment by sending a small amount back to the original payer's source account.
-
-Mechanism:
-
-When the application receives a payment, it issues a small send to the source account of the incoming send, treating that send as an on-chain receipt.
-
-Useful properties:
-
-- Visible to the original payer and to indexers.
-- Does not require an off-chain channel.
-
-Failure modes:
-
-- Inherits all failure modes of Source Account Attribution: the source account may be a custodial hot wallet, an exchange, or a shared service, in which case the "receipt" is delivered to the wrong party.
-- Inherits the involuntary-receive failure modes of Receive Acknowledgement and Pending Receivable Marker.
-- Creates unsolicited receivables for the source-account controller.
-- May be misinterpreted as a refund or a fresh payment.
-
-Recommendation:
-
-Applications SHOULD NOT use Reply-with-Send Receipts as a default acknowledgement mechanism. Where on-chain acknowledgement is genuinely required, applications SHOULD restrict it to source accounts that have explicitly registered as the payer's identity, and SHOULD prefer an off-chain signed receipt otherwise.
+**Verdict:** Acceptable for low-frequency, application-controlled anchoring on a dedicated account. Do not use ordinary user account frontiers as a messaging channel.
 
 ### Representative-Based Patterns
 
 #### Representative Tagging
 
-Classification: Harmful if generalized
+Nano accounts have a representative field used for voting. Some applications abuse this field as a metadata slot — setting the representative to a specific account that encodes application-level meaning. This is harmful because the representative field has governance meaning, and overloading it confuses wallets, users, and vote-weight distribution.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Rep-as-Message
 
-- Representative Field Abuse
-- Rep Tagging
-- Representative-as-Metadata
-- Rep-as-Message
+**How it works:** The application sets the account representative to an account chosen to encode a tag, state value, or pointer. Observers interpret the representative as application data.
 
-Problem addressed:
-
-An application wants to store or signal a value using the representative field.
-
-Mechanism:
-
-The account representative is set to an account chosen to encode application-level meaning. Observers interpret the representative account as a tag, state value, or pointer.
-
-Useful properties:
-
-- Representative changes are visible on-chain.
-- The field is persistent in account state.
-- It may appear to provide a convenient account-level metadata slot.
-
-Failure modes:
-
-- The representative field has voting and governance meaning.
-- Misuse can confuse users about their representative choice.
-- It can interfere with representative UX and vote-weight distribution.
-- Wallets may warn, hide, restrict, or automatically manage representative changes.
+**Risks:**
+- Misrepresents the account's governance intent — wallets and users may be confused about the representative choice.
+- Wallets may warn, hide, restrict, or auto-manage representative changes.
+- Repeated changes create unnecessary account-chain activity.
 - Representative accounts used as tags may be mistaken for legitimate representatives.
-- Repeated changes create unnecessary account-chain activity; see also Representative Change Pulse.
 
-Network-health considerations:
+**Network-health considerations:** Application-level overloading of the representative field creates ecosystem confusion around governance, even when consensus remains valid.
 
-Representative behavior affects the social and operational layer of Nano's delegated voting model. Application-level overloading of this field can create ecosystem confusion even when consensus remains valid.
-
-Recommendation:
-
-Applications SHOULD NOT use the representative field as metadata, a memo substitute, an invoice tag, or a general signaling channel.
+**Verdict:** Do not use the representative field as metadata, a memo substitute, or an invoice tag.
 
 #### Representative as dApp Tag
 
-Classification: Harmful if generalized
+A variant of [Representative Tagging](#representative-tagging) where a project asks users to set their representative to a project-controlled account as a signal of opt-in or affiliation. The project then enumerates delegators to determine the participant set. This concentrates vote weight on a non-consensus operator and pressures users to choose between governance hygiene and application participation.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Project Rep Opt-in, Affiliation Rep
 
-- Project Rep Opt-in
-- Branded Representative
-- Affiliation Rep
+**How it works:** The project publishes a representative address. Users change their representative to that address to indicate participation. The project scans delegator lists to build the participant set.
 
-Problem addressed:
+**Risks:**
+- Concentrates vote weight on an operator that may not be a competent or trustworthy representative.
+- Pressures users to choose between good governance and application eligibility.
+- Lookalike representative accounts can spoof the opt-in signal.
+- Scales poorly: if many applications adopt this, the representative field becomes meaningless.
 
-An application wants users to signal opt-in, affiliation, eligibility for an airdrop, or membership in a project by setting their representative to a project-controlled account.
-
-Mechanism:
-
-The project publishes a representative account address. Users change their representative to that account to indicate participation. The application enumerates delegators of the chosen representative to determine the participant set.
-
-Useful properties:
-
-- Requires no token, no smart contract, and no separate registration system.
-- Lets users opt in or out by an action they can take in any wallet.
-- Is visible to anyone scanning vote weight or delegator lists.
-
-Failure modes:
-
-- Concentrates vote weight on a non-consensus-oriented operator. Even with small individual delegations, large participant sets can shift effective voting weight in ways that conflict with users' actual governance preferences.
-- Pressures users to choose between governance hygiene and application participation.
-- Can be copied or spoofed by lookalike representative accounts.
-- May induce wallet warnings about non-principal or non-voting representatives.
-- Encourages further overloading of the representative field across the ecosystem.
-
-Classification note:
-
-This is a specific subcase of Representative Tagging that some communities have argued is legitimate because it requires explicit user action. The view taken here is that the governance externalities still make it harmful if generalized, regardless of consent: a per-application convention scales poorly when many applications adopt it simultaneously.
-
-Recommendation:
-
-Applications SHOULD NOT use representative selection as an affiliation or opt-in mechanism. Off-chain registration, signed messages, or token-style opt-in on a dedicated application-controlled account chain are all preferable.
+**Verdict:** Do not use representative selection as an opt-in mechanism. Use off-chain registration, signed messages, or token-style opt-in on a dedicated account chain.
 
 #### Representative Change Pulse
 
-Classification: Harmful if generalized
+Some applications signal events by changing the account's representative — toggling between known representatives to create a visible on-chain "pulse." This creates unnecessary representative churn, clutters wallet history, and produces ledger activity solely for signaling.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Rep Churn Signal
 
-- Rep Change Pulse
-- Representative Pulse
-- Change Block Signal
-- Rep Churn Signal
+**How it works:** The application changes the account's representative, possibly back and forth between known addresses. Observers treat the change event as a signal.
 
-Problem addressed:
-
-An application wants to signal an event by publishing a representative-change block.
-
-Mechanism:
-
-The account changes its representative, possibly back and forth between known representatives, and observers treat the change event itself as a signal.
-
-Useful properties:
-
-- Produces a visible account-chain event.
-- Does not require value transfer.
-- Can be generated by the account owner.
-
-Failure modes:
-
-- Creates unnecessary representative churn; see also the network-health considerations under Representative Tagging.
-- Confuses wallet representative history.
-- May interfere with user expectations around voting.
-- Produces ledger activity solely for signaling.
+**Risks:**
+- Creates unnecessary representative churn that confuses wallet history and vote-weight tracking.
+- Produces ledger activity solely for signaling — no value transfer, no governance intent.
 - Can be abused as a low-capacity message channel.
 
-Recommendation:
+**Verdict:** Do not use representative-change events as signals, pulses, or messages.
 
-Applications SHOULD NOT use representative-change events as pulses, messages, or state transitions.
+### Address and Data Encoding
 
-### Address, Amount, and Hash-Based Conventions
-
-#### Block Hash Commitment
-
-Classification: Low-risk convention
-
-Other names:
-
-- Block Reference
-- Transaction Hash Reference
-- Payment Hash Commitment
-- Hash Anchor
-
-Problem addressed:
-
-An application needs to refer to a specific confirmed Nano payment or account-chain event from off-chain metadata.
-
-Mechanism:
-
-The application stores or communicates the hash of a confirmed Nano block off-chain. The hash identifies the relevant ledger event.
-
-Useful properties:
-
-- Does not alter Nano payment semantics.
-- Provides a compact reference to a confirmed block.
-- Works well with off-chain receipts, invoices, and audit logs.
-- Avoids encoding arbitrary metadata into the ledger.
-
-Failure modes:
-
-- Default Nano node configurations may retain only the frontier of each account chain. Intermediate block bodies may become unavailable from non-archival nodes even shortly after confirmation; consumers that require historical resolution MUST arrange access to archival nodes, explorers, or indexers.
-- A block hash alone does not describe application meaning; off-chain metadata must still be preserved.
-- Pruning and indexer availability vary across deployments.
-
-Classification note:
-
-Block Hash Commitment is low-risk as an identifier but becomes context-dependent when consumers require archival history or specific indexer behavior. Do not treat a block hash as carrying data beyond identifying a confirmed block.
-
-Recommendation:
-
-Applications SHOULD use block hashes as references to confirmed ledger events where useful, but SHOULD keep application meaning and metadata off-chain, and SHOULD document their archival assumptions.
+These patterns try to encode application-level meaning in addresses, amounts, timing, proof-of-work, or transaction ordering. None of them are recommended for general use.
 
 #### Address Payload Encoding
 
-Classification: Harmful if generalized
+Nano addresses are derived from public keys. Some applications try to encode data into the address itself — by searching for vanity addresses whose characters spell out a payload, or by constructing addresses from arbitrary bytes. This is fragile, low-capacity, and risks sending funds to addresses with no known private key.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Address-as-Data
 
-- Vanity Payload Encoding
-- Address-as-Data
-- Encoded Destination
-- Public-key Payload
+**How it works:** The application generates or selects destination accounts whose address characters encode application-level data. The encoded value is visible in the address.
 
-Problem addressed:
-
-An application wants to encode data into a Nano account address or public key.
-
-Mechanism:
-
-The application searches for, constructs, or selects destination accounts whose address characters or public key bytes encode an application-level payload.
-
-Useful properties:
-
-- The encoded value may be visible in the address or public key.
-- Does not require a memo field.
-- Can be discovered by observers without additional metadata.
-
-Failure modes:
-
-- Funds may be sent to accounts with unknown or unavailable private keys.
-- Payload addresses may be unspendable.
+**Risks:**
+- Constructing addresses from arbitrary payload bytes almost certainly produces an address with no known private key. Funds sent there are permanently lost.
+- Generating meaningful vanity addresses is computationally expensive.
 - Users may mistake encoded addresses for ordinary payment addresses.
-- Generating meaningful addresses may be computationally expensive or constrained.
-- Address encoding is low-capacity and fragile.
-- Encourages treating addresses as a data store.
+- Encourages treating addresses as a data store rather than as spendable accounts.
 
-Recommendation:
-
-Applications SHOULD NOT encode arbitrary data into destination addresses. If an address is used, it SHOULD correspond to a spendable account controlled by the intended receiver.
+**Verdict:** Do not encode arbitrary data into addresses. If an address is used, it must correspond to a spendable account controlled by the intended receiver.
 
 #### Vanity Prefix as Identity
 
-Classification: Context-dependent convention
+A recognizable address prefix (e.g., `nano_1project...`) gives users a visual cue that an address belongs to a specific organization. Unlike [Address Payload Encoding](#address-payload-encoding), the address is a real spendable account — the vanity is just branding. The risk: adversaries can generate lookalike prefixes for phishing.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Branded Address
 
-- Branded Address
-- Vanity Branding
-- Recognizable Prefix
+**How it works:** The operator generates an account whose address contains a recognizable prefix or substring. The address is published through authenticated channels as the canonical destination.
 
-Problem addressed:
+**Risks:**
+- Lookalike addresses are a well-known phishing vector. A prefix like `nano_1proj` can be approximated with a different suffix.
+- Users may rely on prefix recognition and skip full-address verification.
+- Wallets that truncate addresses may hide the discriminating portion.
 
-An application or organization wants users to be able to visually recognize an address as belonging to it, without relying on out-of-band verification.
-
-Mechanism:
-
-The operator generates an account whose address contains a recognizable prefix, suffix, or substring (for example, a project name fragment). The address is published as the canonical destination, and users are expected to verify the visible vanity component.
-
-Useful properties:
-
-- Provides a lightweight visual identity cue.
-- Does not encode data; the address is a real spendable account.
-- Works with any wallet that displays the full address.
-
-Failure modes:
-
-- Vanity components can be copied or approximated by adversaries; close-lookalike addresses are a well-known phishing vector.
-- Users may rely on prefix recognition alone and skip full-address verification.
-- Wallets that truncate addresses for display may hide the discriminating portion of the address.
-- Generation cost grows rapidly with the length of the desired pattern.
-
-Classification note:
-
-Vanity Prefix as Identity is distinct from Address Payload Encoding: it uses the address as a recognizable label rather than as a data channel, and the address remains spendable. The risks are user-interface and anti-phishing risks rather than data-storage risks.
-
-Recommendation:
-
-Applications MAY use vanity prefixes for branding when the address is published through authenticated channels and users are not expected to verify the address by prefix alone. Applications SHOULD NOT rely on vanity prefixes as a substitute for cryptographic authentication of payment destinations.
+**Verdict:** Acceptable for branding when published through authenticated channels. Never rely on vanity prefixes as a substitute for cryptographic authentication of payment destinations.
 
 #### Burn Signal
 
-Classification: Harmful if generalized
+Sending funds to an address with no known private key destroys them — provably, irreversibly (as far as anyone knows). Some applications use this as proof of commitment or sacrifice. The problem: you can never prove no private key exists, and the funds are genuinely wasted.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Proof-of-Burn Signal
 
-- Burn Address Signal
-- Proof-of-Burn Signal
-- Unspendable Destination Signal
+**How it works:** The sender sends Nano to an unspendable address. Observers interpret the payment as proof of intentional value destruction.
 
-Problem addressed:
-
-An application wants to prove commitment, sacrifice, or state transition by sending funds to an unspendable or effectively unowned account.
-
-Mechanism:
-
-The sender sends Nano to an address for which no private key is known, or to an address treated by convention as unspendable. Observers interpret the payment as a signal.
-
-Useful properties:
-
-- Creates a visible and irreversible-looking event.
-- May be used as proof that value was intentionally destroyed.
-
-Failure modes:
-
+**Risks:**
 - Wastes funds.
-- May be impossible to prove that no private key exists.
+- It's impossible to prove that no private key exists for a given address.
+- Encourages value destruction as a signaling mechanism.
 - Can confuse users and explorers.
-- Encourages value destruction as application signaling.
-- May be copied by applications that do not need irreversible sacrifice.
 
-Recommendation:
-
-Applications SHOULD NOT use burn payments as routine application signals. If proof of commitment is needed, applications SHOULD prefer signed off-chain commitments or ordinary payments to controlled accounts.
+**Verdict:** Do not use burn payments as routine signals. If proof of commitment is needed, use signed off-chain commitments or ordinary payments to controlled accounts.
 
 #### Account Index Signal
 
-Classification: Context-dependent convention
+If you use deterministic key derivation (like HD wallets), the index number itself can carry meaning — account type, invoice sequence, role. This is convenient but leaks information: sequential indexes reveal business volume, and gaps break account discovery.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Derivation Index Signal
 
-- Derivation Index Signal
-- HD Index Encoding
-- Account Number Signal
+**How it works:** The wallet derives accounts at specific indexes, and the index number maps to application-level meaning (e.g., index 0 = main account, index 1–1000 = invoice pool).
 
-Problem addressed:
+**Risks:**
+- Sequential indexes leak business volume (e.g., order count, user signups).
+- Gaps in the index sequence break automatic account discovery.
+- Different wallets use different derivation schemes — recovery depends on documenting the exact scheme.
+- Publishing extended public keys exposes future addresses.
 
-An application wants to assign meaning to deterministic account indexes or derivation paths.
-
-Mechanism:
-
-The wallet or application derives accounts at specific indexes, and the index number carries application-level meaning such as account type, invoice sequence, or role.
-
-Useful properties:
-
-- Can be deterministic and recoverable.
-- Avoids storing every private key independently.
-- May be convenient for application-controlled wallets.
-
-Failure modes:
-
-- Index meaning may leak business or user information (e.g., leaking sequential order volumes or user signup sequences).
-- Gaps can break account discovery.
-- Different wallets may use different derivation schemes.
-- Publishing extended public derivation material can expose future addresses.
-- Poorly designed derivation can cause recovery or privacy failures.
-
-Recommendation:
-
-Applications MAY use deterministic account indexes internally, but SHOULD document derivation paths, account discovery rules, gap limits, and privacy consequences. Applications SHOULD NOT expose sensitive derivation structure unnecessarily.
-
-#### Account Sweep Linkage
-
-Classification: Harmful if generalized
-
-Other names:
-
-- Hot-wallet Consolidation Linkage
-- Sweep Correlation
-- Consolidation Fingerprint
-
-Problem addressed:
-
-This entry catalogues the cross-cutting privacy anti-pattern that arises when funds from many distinct Invoice Deposit Accounts or Customer Deposit Accounts are consolidated into a small number of hot wallets.
-
-Mechanism:
-
-The service periodically sweeps balances from many accounts to one or a few destination accounts. The sweep blocks publicly link all swept accounts to a single controller.
-
-Useful properties:
-
-This pattern is not a useful technique; it is documented here to make its risks visible to applications that rely on per-invoice or per-customer accounts for unlinkability.
-
-Failure modes:
-
-- Retroactively links all swept accounts on a fully transparent ledger.
-- Defeats much of the per-invoice unlinkability gained by using Invoice Deposit Accounts in the first place.
-- Reveals aggregate business volume and timing to any observer.
-- Can be combined with timing analysis to deanonymize customers.
-
-Recommendation:
-
-Applications that consolidate funds SHOULD minimize the linkability introduced by sweeps. Options include batching consolidations, using multiple sweep destinations, separating user-visible deposit accounts from internal accounting accounts, and disclosing the linkability risk to users where relevant.
+**Verdict:** Use internally if needed, but document derivation paths, gap limits, and privacy consequences. Do not expose sensitive derivation structure.
 
 #### Timing Signal
 
-Classification: Context-dependent convention
+Nano blocks don't carry timestamps. The observed confirmation time depends on network propagation, node arrival order, and vote duration — two observers may disagree on when the same block was confirmed. Encoding meaning in timing or ordering between blocks is fragile and unauditable.
 
-Other names:
+**Classification:** Context-dependent · **AKA:** Temporal Encoding
 
-- Time-based Signal
-- Confirmation Timing Signal
-- Delay Encoding
-- Temporal Encoding
+**How it works:** The application assigns meaning to when blocks are published, confirmed, or observed relative to each other.
 
-Problem addressed:
-
-An application wants to infer meaning from when a block is published, confirmed, received, or observed.
-
-Mechanism:
-
-Meaning is assigned to timing, delay, ordering, or relative spacing between ledger events.
-
-Useful properties:
-
-- Does not require additional data fields.
-- May be useful for coarse application sequencing in controlled systems.
-
-Failure modes:
-
-- Nano blocks do not provide a strong application-level timestamp primitive.
-- Observation time differs across nodes, wallets, and indexers.
-- Network delays can alter apparent timing.
-- User wallet behavior can introduce unpredictable delays.
+**Risks:**
+- No authoritative timestamp exists — observation time differs across nodes, wallets, and indexers.
+- Network delays, wallet batching, and user behavior introduce unpredictable timing variation.
 - Timing signals are fragile and hard to audit.
 
-Recommendation:
-
-Applications SHOULD NOT rely on precise timing as a primary signal. If timing matters, applications SHOULD include timestamps and expirations in off-chain signed metadata.
+**Verdict:** Do not rely on timing as a primary signal. Include timestamps and expirations in off-chain signed metadata instead.
 
 #### Multi-send Ordering Signal
 
-Classification: Harmful if generalized
+Some applications encode data in the sequence of multiple sends — the order, amounts, or destinations carry meaning. This creates unnecessary ledger activity, is fragile under partial failure, and encourages using the ledger as a message bus.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Send Ordering Signal
 
-- Ordered Send Encoding
-- Transaction Sequence Encoding
-- Multi-payment Message
-- Send Ordering Signal
+**How it works:** The sender publishes several sends in sequence. Observers interpret the ordering, amount sequence, or destination sequence as an encoded message.
 
-Problem addressed:
-
-An application wants to encode a value or state transition using the order, grouping, or count of multiple sends.
-
-Mechanism:
-
-The sender publishes several Nano sends, and observers interpret their order, amount sequence, destination sequence, or grouping as an encoded message.
-
-Useful properties:
-
-- Can encode more information than a single payment amount.
-- Uses ordinary send blocks.
-
-Failure modes:
-
-- Creates unnecessary ledger activity.
+**Risks:**
 - Ordering assumptions may differ across observers and indexers.
-- Partial failure can corrupt the message.
-- Nano account chains are strictly serial, but multiple devices or services sharing a key can race for the next position in the chain, and interleaved receives can reorder events relative to the sender's intent.
-- Encourages use of the ledger as a message bus.
+- Partial failure corrupts the message.
+- Multiple devices sharing a key can race for the next block position. Incoming payments to the sender's own account mutate its balance between sends, altering block ordering.
+- Creates unnecessary ledger activity.
 
-Recommendation:
-
-Applications SHOULD NOT use multi-send ordering as a general-purpose encoding or signaling mechanism.
-
-### Harmful or Abusive Patterns
+**Verdict:** Do not use multi-send ordering as a general-purpose encoding mechanism.
 
 #### Dust Spray Signaling
 
-Classification: Harmful if generalized
+Sending tiny amounts to many accounts at once — a "dust spray" — forces those accounts to deal with unsolicited pending receivables. It's spam. It clutters wallets, enables tracking, and can deanonymize users when they sweep the dust into their main accounts.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Dust Spam
 
-- Dust Notifications
-- Dust Messaging
-- Spray Signaling
-- Dust Spam
+**How it works:** The sender sends tiny amounts to many accounts. The existence, amount, timing, or source of the sends is interpreted as a signal.
 
-Problem addressed:
-
-An application wants to notify, mark, track, or message many accounts.
-
-Mechanism:
-
-The sender sends tiny amounts to many accounts. The existence, amount, timing, or source of the sends is interpreted as a signal.
-
-Useful properties:
-
-- Visible to recipients, indexers, and observers.
-- Does not require recipient participation before the send.
-- Technically easy to automate.
-
-Failure modes:
-
-- Creates unwanted pending receivables.
-- Clutters wallets and account histories.
-- Enables spam and harassment.
-- Can be used for tracking and deanonymizing users by forcing them to link their accounts on sweeping.
+**Risks:**
+- Creates unwanted pending receivables that clutter wallets and histories.
+- Enables spam, harassment, and tracking.
+- When recipients sweep the dust into their main accounts, it links those accounts on-chain (see [Account Sweep Linkage](#account-sweep-linkage)).
 - Burdens wallets, indexers, explorers, and users.
-- May cause recipients to accidentally link accounts when sweeping; see Account Sweep Linkage.
 
-Recommendation:
-
-Applications MUST NOT use Dust Spray Signaling as a routine notification, messaging, marketing, tracking, or application-state mechanism.
+**Verdict:** Do not use dust spray for notifications, messaging, marketing, tracking, or application state.
 
 #### Arbitrary Data Encoding
 
-Classification: Harmful if generalized
+Nano's block lattice is not a data storage system. Some applications try to encode arbitrary data through combinations of amounts, addresses, representative fields, work values, account creation patterns, and transaction ordering. This creates ledger bloat, degrades infrastructure, and produces encoding that's fragile, low-capacity, and meaningless without custom decoders.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Ledger Data Storage
 
-- On-chain Data Storage
-- Ledger Data Encoding
-- Block-lattice Data Storage
-- Metadata Abuse
+**How it works:** The application encodes data through combinations of block fields, transaction patterns, and account creation. The data is visible to observers who know the encoding scheme.
 
-Problem addressed:
+**Risks:**
+- Creates permanent ledger growth and infrastructure burden.
+- Degrades wallet, explorer, and indexer usability.
+- Data capacity is extremely low and encoding is fragile.
+- Application meaning is lost without the custom decoder.
 
-An application wants to store arbitrary data on the Nano block lattice.
-
-Mechanism:
-
-The application encodes data through combinations of amounts, addresses, representative fields, work values, account creation, send ordering, receive behavior, or repeated transactions.
-
-Useful properties:
-
-- Data may become visible to observers.
-- Does not require a separate storage network.
-- May appear attractive because Nano is feeless to users.
-
-Failure modes:
-
-- Nano is not designed as arbitrary data storage.
-- Creates ledger growth and infrastructure burden.
-- Encourages spam-like behavior.
-- May degrade wallet, explorer, and indexer usability.
-- Data capacity is low and encoding is fragile.
-- Application meaning may be lost without custom decoders.
-
-Recommendation:
-
-Applications MUST NOT use the Nano block lattice as a general-purpose data storage layer. Arbitrary metadata SHOULD be stored off-chain and referenced or authenticated using explicit cryptographic commitments where needed.
+**Verdict:** Do not use the block lattice as a data storage layer. Store metadata off-chain and reference it via cryptographic commitments.
 
 #### Work-field / Overwork Signaling
 
-Classification: Harmful if generalized
+Each Nano block includes a proof-of-work value. Some applications try to encode meaning in that value — selecting specific work values or computing work beyond what's required. This wastes computation, has extremely low data capacity, and critically: the work value is not part of the block hash. It can be recomputed by nodes or wallets when republishing, destroying any "signal" placed in it.
 
-Other names:
+**Classification:** Harmful if generalized · **AKA:** Proof-of-work Tagging
 
-- Work Signaling
-- Overwork Encoding
-- Proof-of-work Tagging
-- Work-as-Message
+**How it works:** The sender selects a specific work value, or computes unusually high work, and observers interpret the work pattern as data.
 
-Problem addressed:
-
-An application wants to encode meaning in the work value attached to a block, or in the amount of proof-of-work performed beyond what is required.
-
-Mechanism:
-
-The sender selects a work value, or computes unusually high work, and observers interpret the work pattern as application-level data.
-
-Useful properties:
-
-- Does not alter the amount or destination.
-- May be visible to low-level parsers.
-
-Failure modes:
-
-- Wastes computation.
-- Very low data capacity.
+**Risks:**
+- Wastes computation for negligible data capacity.
+- The work value has no cryptographic binding to the block — it can be recomputed at any time.
 - Poor wallet and tooling support.
 - Observers may ignore or discard the distinction.
-- Encourages inefficient signaling.
-- Can create misleading incentives around proof-of-work generation.
-- The work value is not part of the block hash and may be recomputed by representatives or wallets when republishing. Any "signal" placed in the work field therefore has no cryptographic binding to the block itself.
 
-Recommendation:
-
-Applications SHOULD NOT use work values or overwork as an application signaling channel.
+**Verdict:** Do not use work values as a signaling channel.
 
 ### Payment Correlation Guidance
 
@@ -1055,28 +465,39 @@ This section is the normative summary referenced by the triage list under Paymen
 
 For ordinary payment correlation, applications SHOULD prefer:
 
-1. Off-chain Payment References, especially when rich metadata or authentication is required.
-2. Invoice Deposit Accounts, especially when the receiver can generate unique destination accounts.
-3. Customer Deposit Accounts, when repeated deposits are needed and address reuse is acceptable.
+1. [Off-chain Payment References](#off-chain-payment-reference), especially when rich metadata or authentication is required.
+2. [Invoice Deposit Accounts](#invoice-deposit-account), especially when the receiver can generate unique destination accounts.
+3. [Customer Deposit Accounts](#customer-deposit-account), when repeated deposits are needed and address reuse is acceptable.
 
-Applications MAY use Source Account Attribution only after authenticating or registering the payer's source account, and only when the payer is not expected to send from custodial or shared infrastructure.
+Applications MAY use [Source Account Attribution](#source-account-attribution) only after authenticating or registering the payer's source account, and only when the payer is not expected to send from custodial or shared infrastructure.
 
-Applications SHOULD treat Raw Dust Tagging as a controlled integration technique, not as a general wallet-compatible convention.
+Applications SHOULD treat [Raw Dust Tagging](#raw-dust-tagging) as a controlled integration technique, not as a general wallet-compatible convention.
 
-Applications SHOULD NOT use Representative Tagging, Representative as dApp Tag, Representative Change Pulse, Pending Receivable Markers, Burn Signals, Dust Spray Signaling, Address Payload Encoding, Multi-send Ordering Signals, or Arbitrary Data Encoding for ordinary invoice correlation.
+Applications SHOULD NOT use [Representative Tagging](#representative-tagging), [Representative as dApp Tag](#representative-as-dapp-tag), [Representative Change Pulse](#representative-change-pulse), [Pending Receivable Markers](#pending-receivable-marker), [Burn Signals](#burn-signal), [Dust Spray Signaling](#dust-spray-signaling), [Address Payload Encoding](#address-payload-encoding), [Multi-send Ordering Signals](#multi-send-ordering-signal), or [Arbitrary Data Encoding](#arbitrary-data-encoding) for ordinary invoice correlation.
 
-While correlation conventions map payments to invoices, secure transaction processing requires rigorous software engineering guidelines. Developers and exchanges building payment integration systems SHOULD consult [ORIS-008 (Nano Integration and Reliable Payment Processing Standard)](file:///Users/conny/Developer/nano/OpenRai/Standards/rfcs/ORIS-008.md) for normative requirements on transaction isolation, idempotency constraints, database concurrency, automated reconciliation audits, and payment lifecycle edge-case handling (underpayments, overpayments, duplicate payments, indexer lag).
+While correlation conventions map payments to invoices, secure transaction processing requires rigorous software engineering guidelines. Developers and exchanges building payment integration systems SHOULD consult [ORIS-008 (Nano Integration and Reliable Payment Processing Standard)](./ORIS-008.md) for normative requirements on transaction isolation, idempotency constraints, database concurrency, automated reconciliation audits, and payment lifecycle edge-case handling (underpayments, overpayments, duplicate payments, indexer lag).
 
 ### Glossary
 
-The following terms are used throughout this document. Definitions are intentionally brief; consult current Nano protocol documentation for authoritative definitions.
+Definitions are intentionally brief; consult current Nano protocol documentation for authoritative definitions.
 
 - Account chain: The strictly serial sequence of blocks belonging to a single Nano account. Each account maintains its own chain.
+- Application-level meaning: Meaning assigned by software above the protocol layer.
+- Archival node: A node configuration that retains full block history for all account chains, rather than pruning to frontiers only.
 - Block lattice: The overall data structure formed by all individual account chains in Nano.
+- Change block: A block that changes an account's representative without transferring value.
+- Dust: A negligibly small amount of Nano (typically less than ~0.000001 XNO). The exact threshold is application-dependent.
 - Frontier: The latest confirmed block on a given account chain. Many node configurations retain only the frontier and discard or prune older block bodies.
+- Nano block fields: Each block contains `account`, `previous`, `representative`, `balance`, `link`, `work`, and `signature`. There is no generic data, memo, or payload field.
+- Off-chain: Data exchanged outside the Nano P2P network.
 - Open block: The first block on an account chain, which receives the account's initial incoming send and establishes its first representative.
-- Receivable (pending): An incoming send that has been published by the sender but not yet acknowledged by a receive block on the destination account.
-- Representative: The voting account designated by an account holder; representatives participate in Open Representative Voting on behalf of their delegators.
 - Open Representative Voting (ORV): Nano's consensus mechanism, in which representatives weighted by delegated balance vote to confirm blocks.
 - Raw: The smallest indivisible Nano unit, with $1\ \text{XNO} = 10^{30}\ \text{raw}$.
+- Receivable (pending): An incoming send that has been published by the sender but not yet acknowledged by a receive block on the destination account.
+- Receive block: A block that claims a pending send and credits the balance to the receiving account.
+- Representative: The voting account designated by an account holder; representatives participate in Open Representative Voting on behalf of their delegators.
+- Send block: A block that debits a balance from an account and creates a pending receivable on a destination account.
+- Signal: A ledger event or state interpreted by an application.
 - XNO: The Nano user-facing unit.
+
+Some patterns include optional subsections: **Network-health considerations** describes impact on Nano consensus or infrastructure; **Classification note** clarifies edge cases or rationale for the assigned risk level.
