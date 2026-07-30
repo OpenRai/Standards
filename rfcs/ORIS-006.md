@@ -41,8 +41,7 @@ Two alternatives were rejected:
 The selected `nano%5F...` form keeps the prefix, address body, and checksum. It
 also converts back to the native address without a separate mapping.
 
-> [!NOTE]
-> **Possible CAIP evolution**
+> **Possible CAIP evolution:**
 >
 > A future CAIP-10 revision could permit `_` in `account_address`. Nano could
 > then use its native address without percent-encoding.
@@ -109,8 +108,7 @@ After percent-decoding the account component, the decoded value is the ordinary 
 nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 ```
 
-> [!TIP]
-> **Implementation Guidance**
+> **Implementation guidance:**
 >
 > Wallets and libraries MAY use native `nano_` or `xrb_` addresses internally.
 > They MUST apply the canonical form when producing a CAIP-10 account ID.
