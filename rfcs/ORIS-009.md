@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 009
 
 # The `payto:` URI Scheme for Nano
 
-> Status: Draft
+> Status: Working Draft
 > Category: Application Interface
 
 ## Abstract

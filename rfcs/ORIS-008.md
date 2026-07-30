@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 008
 
 # Nano Integration and Reliable Payment Processing Standard
 
-> Status: Draft
+> Status: Working Draft
 > Category: Informational / Application Guidance
 
 ## Abstract

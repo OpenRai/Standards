@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 002
 
 # NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano
 
-> Status: Draft
+> Status: Implementation Draft
 > Category: Application Interface
 
 ## Abstract

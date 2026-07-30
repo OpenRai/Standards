@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 001
 
 # Nano Off-chain Message Signing (NOMS)
 
-> Status: Implementation
+> Status: Implementation Draft
 > Category: Cryptographic Primitive / Application Interface
 
 ## Abstract

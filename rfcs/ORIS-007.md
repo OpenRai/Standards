@@ -2,12 +2,12 @@
 OpenRai Initiative Standard: 007
 ```
 
-## Nano Application-Level Metadata, Correlation, and Signaling Patterns
+# Nano Application-Level Metadata, Correlation, and Signaling Patterns
 
-> Status: Draft
+> Status: Working Draft
 > Category: Informational / Application Guidance
 
-### Abstract
+## Abstract
 
 Nano has a minimal block-lattice design with no native memo, smart-contract, or arbitrary-data fields. To correlate payments, pass metadata, or signal state, developers have repeatedly found ways to assign application-level meaning to ordinary ledger behavior. 
 
@@ -17,13 +17,13 @@ Inclusion of a pattern here does not imply endorsement, protocol support, or wal
 
 ---
 
-### Conventions
+## Conventions
 
 Addresses use the `nano_` prefix. Amounts are given in `XNO` (the user-facing unit) or `raw` (the smallest indivisible unit, $1\ \text{XNO} = 10^{30}\ \text{raw}$). See the [Glossary](#glossary) for block-level terms.
 
 ---
 
-### Risk Classification System
+## Risk Classification System
 
 This catalog uses broad **risk** and **compatibility** labels to describe how each pattern interacts with general wallets, user expectations, privacy, infrastructure, and network health:
 
@@ -33,7 +33,7 @@ This catalog uses broad **risk** and **compatibility** labels to describe how ea
 
 ---
 
-### Payment Correlation Patterns
+## Payment Correlation Patterns
 
 Nano has no memo field, so correlating an incoming payment to an invoice, order, or session is the most common signaling challenge developers face. The patterns below are ordered by preference.
 
@@ -43,7 +43,7 @@ Nano has no memo field, so correlating an incoming payment to an invoice, order,
 4. If both sides use controlled wallet code or [`nano:` URIs](https://docs.nano.org/integration-guides/the-basics/#uri-and-qr-code-standards) with embedded `amount`, [**Raw Dust Tagging**](#raw-dust-tagging) may work, but remains fragile.
 5. Avoid representative-field signaling, arbitrary address payloads, burn signals, and unsolicited dust for payment correlation.
 
-#### Off-chain Payment Reference
+### Off-chain Payment Reference
 
 Nano has no memo field, so there's no way to attach an invoice number to a payment on-chain. The simplest workaround: don't try. Instead, generate a payment request off-chain — with a destination account, amount, invoice ID, and optional expiration — and have the payer send to that request. Match the incoming payment by destination and amount. If you need to prove the request came from you, sign it.
 
@@ -58,7 +58,7 @@ Nano has no memo field, so there's no way to attach an invoice number to a payme
 
 **Verdict:** Use this as the default approach for invoice correlation. Always sign the reference and include nonce, amount, destination, and expiration.
 
-#### Block Hash Commitment
+### Block Hash Commitment
 
 Every confirmed Nano block has a unique hash. Storing that hash off-chain gives you a compact, immutable reference to a specific payment or account-chain event — useful for receipts, audit logs, and reconciliation.
 
@@ -72,7 +72,7 @@ Every confirmed Nano block has a unique hash. Storing that hash off-chain gives 
 
 **Verdict:** Safe and useful as an off-chain reference. Document your archival assumptions if you need to resolve historical block bodies.
 
-#### Invoice Deposit Account
+### Invoice Deposit Account
 
 When you can't coordinate a payment reference off-chain, or when you want the ledger itself to carry the correlation, generate a fresh Nano account for each invoice. Any payment to that account is payment for that invoice — no ambiguity, no amount-matching, no memo field needed.
 
@@ -89,7 +89,7 @@ When you can't coordinate a payment reference off-chain, or when you want the le
 
 **Verdict:** One of the simplest and most reliable correlation patterns. Use it when you can generate and monitor unique destinations.
 
-#### Customer Deposit Account
+### Customer Deposit Account
 
 Some services need to identify repeat deposits from the same user over time. Instead of generating a new account per invoice, assign each user a single deposit address. Payments to that address are always attributed to that user.
 
@@ -105,7 +105,7 @@ Some services need to identify repeat deposits from the same user over time. Ins
 
 **Verdict:** Simple and effective for repeated deposits, but offers weaker privacy than per-invoice accounts. Use [Invoice Deposit Accounts](#invoice-deposit-account) when unlinkability matters. Do not use a stable deposit address as a reusable public identity without explicit consent.
 
-#### Account Sweep Linkage
+### Account Sweep Linkage
 
 When you consolidate funds from many invoice or user deposit accounts into a single hot wallet, the sweep transactions publicly link all those accounts to one controller. This retroactively defeats the unlinkability you gained by using per-invoice accounts in the first place.
 
@@ -122,7 +122,7 @@ This is not a technique to adopt — it is an unavoidable consequence of consoli
 
 **Verdict:** If you consolidate funds, minimize linkability. Options: batch consolidations, use multiple sweep destinations, separate user-facing deposit accounts from internal accounting.
 
-#### Source Account Attribution
+### Source Account Attribution
 
 If you know which Nano account a user controls, you can attribute incoming payments by watching where the funds come from. The user registers their source account with your application once; subsequent payments from that account are attributed to them.
 
@@ -138,7 +138,7 @@ If you know which Nano account a user controls, you can attribute incoming payme
 
 **Verdict:** Only use when the source account is explicitly registered and authenticated. Never assume a source account identifies a human — most exchange withdrawals come from shared wallets.
 
-#### Reply-with-Send Receipt
+### Reply-with-Send Receipt
 
 When your application receives a payment, you might want to send a small amount back to the payer as an on-chain "receipt." The problem: you're sending to the source account of the incoming payment, which may be a custodial hot wallet, an exchange, or a shared service — not the actual payer.
 
@@ -154,7 +154,7 @@ When your application receives a payment, you might want to send a small amount 
 
 **Verdict:** Do not use as a default acknowledgement mechanism. If on-chain acknowledgement is required, restrict to explicitly registered source accounts. Prefer off-chain signed receipts.
 
-#### Raw Dust Tagging
+### Raw Dust Tagging
 
 Nano's raw unit is incredibly small ($1\ \text{XNO} = 10^{30}\ \text{raw}$). By varying the last few digits of a payment amount, you can encode a small tag — an invoice number, a discriminator, a state value — directly in the amount field. The receiver reads the suffix and interprets it.
 
@@ -179,11 +179,11 @@ The trailing digits encode the value 123 in raw units. The receiver extracts the
 
 **Verdict:** Viable only when both sides use application-controlled wallet code and exact raw amounts are preserved. For most invoice correlation, prefer [Invoice Deposit Accounts](#invoice-deposit-account) or [Off-chain Payment References](#off-chain-payment-reference). Do not use dust-level amount tags as a public messaging layer.
 
-### State Signaling Patterns
+## State Signaling Patterns
 
 These patterns use ledger events — receive blocks, open blocks, balance changes, frontier updates — as application-level signals. They all share a common risk: wallet behavior (auto-receive, batching, delay) can make the signal meaningless or involuntary.
 
-#### Receive Acknowledgement
+### Receive Acknowledgement
 
 In Nano, incoming funds sit as "pending" until the receiver publishes a receive block. Some applications interpret that receive block as more than a balance update — as a signal that the receiver has accepted a ticket, claimed a deposit, or committed to something. This only works if the receiving account is application-controlled and the wallet's receive behavior is predictable.
 
@@ -199,7 +199,7 @@ In Nano, incoming funds sit as "pending" until the receiver publishes a receive 
 
 **Verdict:** Only use with dedicated application-controlled accounts where receive behavior is deterministic. Never interpret a normal user's receive as consent.
 
-#### Pending Receivable Marker
+### Pending Receivable Marker
 
 You can send a small amount to someone's account and leave it pending — unreceived. The idea is that the existence of the pending amount itself is the signal, and the recipient doesn't need to do anything. In practice, this is spam.
 
@@ -215,7 +215,7 @@ You can send a small amount to someone's account and leave it pending — unrece
 
 **Verdict:** Do not use. This pattern pushes unsolicited state onto accounts that didn't opt in.
 
-#### Open Block as Registration
+### Open Block as Registration
 
 The first block on a Nano account is the "open" block. Some applications use this as a registration signal: if a derived account publishes an open block, the application interprets it as the user activating or enrolling. The catch: an open block requires incoming funds, so someone has to send to the account first — and anyone can do that, forcing registration against the user's intent.
 
@@ -231,7 +231,7 @@ The first block on a Nano account is the "open" block. Some applications use thi
 
 **Verdict:** Only use when both the derivation and funding flow are application-controlled. Always pair with off-chain consent to prevent involuntary registration.
 
-#### Balance State Signal
+### Balance State Signal
 
 Some applications encode state directly in an account's balance — specific balance values or ranges correspond to application states. This is extremely fragile: any send or receive changes the balance, so a single unwanted incoming payment irreversibly corrupts the encoded state.
 
@@ -246,7 +246,7 @@ Some applications encode state directly in an account's balance — specific bal
 
 **Verdict:** Only viable for fully application-controlled accounts where every send and receive is audited. Do not use with user accounts.
 
-#### Frontier Signal
+### Frontier Signal
 
 The frontier is the latest block on an account chain. Some applications use it as a publication pointer: each new block is a new "version" of the application state, and observers watch the frontier for updates. The actual metadata lives off-chain; the frontier just anchors it.
 
@@ -262,9 +262,9 @@ The frontier is the latest block on an account chain. Some applications use it a
 
 **Verdict:** Acceptable for low-frequency, application-controlled anchoring on a dedicated account. Do not use ordinary user account frontiers as a messaging channel.
 
-### Representative-Based Patterns
+## Representative-Based Patterns
 
-#### Representative Tagging
+### Representative Tagging
 
 Nano accounts have a representative field used for voting. Some applications abuse this field as a metadata slot — setting the representative to a specific account that encodes application-level meaning. This is harmful because the representative field has governance meaning, and overloading it confuses wallets, users, and vote-weight distribution.
 
@@ -282,7 +282,7 @@ Nano accounts have a representative field used for voting. Some applications abu
 
 **Verdict:** Do not use the representative field as metadata, a memo substitute, or an invoice tag.
 
-#### Representative as dApp Tag
+### Representative as dApp Tag
 
 A variant of [Representative Tagging](#representative-tagging) where a project asks users to set their representative to a project-controlled account as a signal of opt-in or affiliation. The project then enumerates delegators to determine the participant set. This concentrates vote weight on a non-consensus operator and pressures users to choose between governance hygiene and application participation.
 
@@ -298,7 +298,7 @@ A variant of [Representative Tagging](#representative-tagging) where a project a
 
 **Verdict:** Do not use representative selection as an opt-in mechanism. Use off-chain registration, signed messages, or token-style opt-in on a dedicated account chain.
 
-#### Representative Change Pulse
+### Representative Change Pulse
 
 Some applications signal events by changing the account's representative — toggling between known representatives to create a visible on-chain "pulse." This creates unnecessary representative churn, clutters wallet history, and produces ledger activity solely for signaling.
 
@@ -313,11 +313,11 @@ Some applications signal events by changing the account's representative — tog
 
 **Verdict:** Do not use representative-change events as signals, pulses, or messages.
 
-### Address and Data Encoding
+## Address and Data Encoding
 
 These patterns try to encode application-level meaning in addresses, amounts, timing, proof-of-work, or transaction ordering. None of them are recommended for general use.
 
-#### Address Payload Encoding
+### Address Payload Encoding
 
 Nano addresses are derived from public keys. Some applications try to encode data into the address itself — by searching for vanity addresses whose characters spell out a payload, or by constructing addresses from arbitrary bytes. This is fragile, low-capacity, and risks sending funds to addresses with no known private key.
 
@@ -333,7 +333,7 @@ Nano addresses are derived from public keys. Some applications try to encode dat
 
 **Verdict:** Do not encode arbitrary data into addresses. If an address is used, it must correspond to a spendable account controlled by the intended receiver.
 
-#### Vanity Prefix as Identity
+### Vanity Prefix as Identity
 
 A recognizable address prefix (e.g., `nano_1project...`) gives users a visual cue that an address belongs to a specific organization. Unlike [Address Payload Encoding](#address-payload-encoding), the address is a real spendable account — the vanity is just branding. The risk: adversaries can generate lookalike prefixes for phishing.
 
@@ -348,7 +348,7 @@ A recognizable address prefix (e.g., `nano_1project...`) gives users a visual cu
 
 **Verdict:** Acceptable for branding when published through authenticated channels. Never rely on vanity prefixes as a substitute for cryptographic authentication of payment destinations.
 
-#### Burn Signal
+### Burn Signal
 
 Sending funds to an address with no known private key destroys them — provably, irreversibly (as far as anyone knows). Some applications use this as proof of commitment or sacrifice. The problem: you can never prove no private key exists, and the funds are genuinely wasted.
 
@@ -364,7 +364,7 @@ Sending funds to an address with no known private key destroys them — provably
 
 **Verdict:** Do not use burn payments as routine signals. If proof of commitment is needed, use signed off-chain commitments or ordinary payments to controlled accounts.
 
-#### Account Index Signal
+### Account Index Signal
 
 If you use deterministic key derivation (like HD wallets), the index number itself can carry meaning — account type, invoice sequence, role. This is convenient but leaks information: sequential indexes reveal business volume, and gaps break account discovery.
 
@@ -380,7 +380,7 @@ If you use deterministic key derivation (like HD wallets), the index number itse
 
 **Verdict:** Use internally if needed, but document derivation paths, gap limits, and privacy consequences. Do not expose sensitive derivation structure.
 
-#### Timing Signal
+### Timing Signal
 
 Nano blocks don't carry timestamps. The observed confirmation time depends on network propagation, node arrival order, and vote duration — two observers may disagree on when the same block was confirmed. Encoding meaning in timing or ordering between blocks is fragile and unauditable.
 
@@ -395,7 +395,7 @@ Nano blocks don't carry timestamps. The observed confirmation time depends on ne
 
 **Verdict:** Do not rely on timing as a primary signal. Include timestamps and expirations in off-chain signed metadata instead.
 
-#### Multi-send Ordering Signal
+### Multi-send Ordering Signal
 
 Some applications encode data in the sequence of multiple sends — the order, amounts, or destinations carry meaning. This creates unnecessary ledger activity, is fragile under partial failure, and encourages using the ledger as a message bus.
 
@@ -411,7 +411,7 @@ Some applications encode data in the sequence of multiple sends — the order, a
 
 **Verdict:** Do not use multi-send ordering as a general-purpose encoding mechanism.
 
-#### Dust Spray Signaling
+### Dust Spray Signaling
 
 Sending tiny amounts to many accounts at once — a "dust spray" — forces those accounts to deal with unsolicited pending receivables. It's spam. It clutters wallets, enables tracking, and can deanonymize users when they sweep the dust into their main accounts.
 
@@ -427,7 +427,7 @@ Sending tiny amounts to many accounts at once — a "dust spray" — forces thos
 
 **Verdict:** Do not use dust spray for notifications, messaging, marketing, tracking, or application state.
 
-#### Arbitrary Data Encoding
+### Arbitrary Data Encoding
 
 Nano's block lattice is not a data storage system. Some applications try to encode arbitrary data through combinations of amounts, addresses, representative fields, work values, account creation patterns, and transaction ordering. This creates ledger bloat, degrades infrastructure, and produces encoding that's fragile, low-capacity, and meaningless without custom decoders.
 
@@ -443,7 +443,7 @@ Nano's block lattice is not a data storage system. Some applications try to enco
 
 **Verdict:** Do not use the block lattice as a data storage layer. Store metadata off-chain and reference it via cryptographic commitments.
 
-#### Work-field / Overwork Signaling
+### Work-field / Overwork Signaling
 
 Each Nano block includes a proof-of-work value. Some applications try to encode meaning in that value — selecting specific work values or computing work beyond what's required. This wastes computation, has extremely low data capacity, and critically: the work value is not part of the block hash. It can be recomputed by nodes or wallets when republishing, destroying any "signal" placed in it.
 
@@ -459,7 +459,7 @@ Each Nano block includes a proof-of-work value. Some applications try to encode 
 
 **Verdict:** Do not use work values as a signaling channel.
 
-### Payment Correlation Guidance
+## Payment Correlation Guidance
 
 This section is the normative summary referenced by the triage list under Payment Correlation Patterns.
 
@@ -477,7 +477,7 @@ Applications SHOULD NOT use [Representative Tagging](#representative-tagging), [
 
 While correlation conventions map payments to invoices, secure transaction processing requires rigorous software engineering guidelines. Developers and exchanges building payment integration systems SHOULD consult [ORIS-008 (Nano Integration and Reliable Payment Processing Standard)](./ORIS-008.md) for normative requirements on transaction isolation, idempotency constraints, database concurrency, automated reconciliation audits, and payment lifecycle edge-case handling (underpayments, overpayments, duplicate payments, indexer lag).
 
-### Glossary
+## Glossary
 
 Definitions are intentionally brief; consult current Nano protocol documentation for authoritative definitions.
 

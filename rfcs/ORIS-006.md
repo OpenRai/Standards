@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 006
 
 # Nano CAIP Identifiers
 
-> Status: Implementation
+> Status: Implementation Draft
 > Category: Application Interface
 
 ## Abstract

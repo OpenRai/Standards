@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 005
 
 # Utilizing NanoNyms for x402 Exact Pre-payment Verification
 
-> Status: Draft
+> Status: Working Draft
 > Category: Application Interface
 
 ## Abstract

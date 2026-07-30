@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 003
 
 # NanoNym Payment Event Schema
 
-> Status: Draft
+> Status: Working Draft
 > Category: Application Interface
 
 ## Abstract

@@ -4,7 +4,7 @@ OpenRai Initiative Standard: xyz
 
 # (Title of this document)
 
-> Status: Draft
+> Status: Working Draft
 > Category: Cryptographic Primitive / Application Interface
 
 ## Abstract

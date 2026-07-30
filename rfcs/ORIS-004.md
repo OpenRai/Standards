@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 004
 
 # Nostr Transport Profile for NanoNym Payment Notifications
 
-> Status: Draft
+> Status: Working Draft
 > Category: Application Interface
 
 ## Abstract
