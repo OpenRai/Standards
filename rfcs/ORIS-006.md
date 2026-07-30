@@ -4,42 +4,47 @@ OpenRai Initiative Standard: 006
 
 # Nano CAIP Identifiers
 
-> Status: Draft\
+> Status: Implementation Draft
 > Category: Application Interface
 
 ## Abstract
 
-This document defines the CAIP identifiers applications SHOULD use when referring to Nano in CAIP-based wallet and application protocols.
-
-It defines:
-
-- the CAIP-2 namespace and chain ID for Nano mainnet
-- the CAIP-10 account ID form for Nano accounts
+This document defines Nano identifiers for Chain Agnostic Improvement Proposals
+(CAIP). It specifies the CAIP-2 chain ID for Nano mainnet and the canonical
+CAIP-10 form for Nano accounts.
 
 ## Motivation
 
-Wallets and applications increasingly use CAIP identifiers to negotiate multi-chain sessions without hard-coding chain-specific transport behavior.
+Multi-chain protocols need a common string for each chain and account. Without
+one Nano profile, applications can choose incompatible namespaces, chain
+references, or account encodings.
 
-Nano needs one small, stable reference for those identifiers. This avoids each application choosing its own namespace, chain reference, or account string format.
-
-Nano test and beta networks serve development, staging, and release-testing purposes, but they are out of scope for public wallet interoperability in this document. Because Nano is feeless, public wallet interoperability does not require a fee-bearing-chain-style public testnet identifier for ordinary payment and signing integration testing. This document therefore defines only Nano mainnet.
+This document defines only Nano mainnet. Test, beta, development, and local
+networks remain out of scope until an interoperability use case requires shared
+identifiers for them.
 
 ## Rationale
 
 ### Choice of Account ID Format
 
-Two alternative designs were considered for the CAIP-10 account address component:
-1. **Raw Hex Public Keys:** Using the 64-character hex-encoded public key. While this natively fits the CAIP-10 grammar without requiring percent-encoding, it was rejected because raw public keys lack the built-in safety of Nano address checksums, are unfamiliar to end-users, and are rarely exposed directly by user-facing block explorers or wallets.
-2. **Stripping the Underscore or Prefix:** Omitting the prefix (e.g., `3noms...`) or stripping the underscore (e.g., `nano3noms...`). This was rejected because it yields non-standard address representations that break compatibility with existing native address parsers and validation tools.
+CAIP-10 does not allow `_` in its `account_address` production. This document
+therefore percent-encodes the underscore as `%5F` and preserves the rest of the
+native Nano address.
 
-**Percent-encoding the standard address (`nano%5F...`)** was selected because it fully preserves the standard, recognizable Nano address (including its prefix and checksum), guarantees unambiguous round-trip conversion, and achieves 100% compliance with the CAIP-10 grammar via standard percent-encoding (`%5F` for the underscore).
+Two alternatives were rejected:
 
-> [!NOTE]
-> **Future CAIP Evolution**
+1. A 64-character public key fits the grammar, but removes the Nano address
+   checksum and the form users recognize.
+2. Removing the prefix or underscore creates a non-standard Nano address that
+   existing address parsers cannot validate directly.
+
+The selected `nano%5F...` form keeps the prefix, address body, and checksum. It
+also converts back to the native address without a separate mapping.
+
+> **Possible CAIP evolution:**
 >
-> The Chain Agnostic community should consider a future CAIP-10 revision that natively includes `_`, and potentially other common safe characters, in the `account_address` production.
->
-> Such an update would improve human readability and reduce encoding overhead for multiple namespaces, including Nano.
+> A future CAIP-10 revision could permit `_` in `account_address`. Nano could
+> then use its native address without percent-encoding.
 
 ## Conventions
 
@@ -85,14 +90,17 @@ nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 
 Requirements:
 
-- the chain ID prefix MUST be `nano:mainnet`
-- the account component MUST conform to the CAIP-10 account-address grammar
-- the underscore in a Nano address prefix MUST be percent-encoded as `%5F`
-- emitters SHOULD use a `nano%5F` address prefix
-- wallets MAY accept equivalent legacy `xrb%5F` account addresses for compatibility
-- implementations that accept `xrb%5F` input MUST treat it as equivalent to the corresponding `nano%5F` account ID after validating that both forms decode to the same public key
-- implementations MAY accept unencoded `nano_` or `xrb_` account addresses as non-strict legacy input, but MUST NOT emit them as CAIP-10 account IDs
-- implementations MUST NOT place a raw public key, private key, seed, wallet ID, representative, or account index in the account component
+- The chain ID MUST be `nano:mainnet`.
+- The account component MUST satisfy the CAIP-10 `account_address` grammar.
+- The prefix underscore MUST be encoded as uppercase `%5F`.
+- Emitters SHOULD use the `nano%5F` prefix.
+- Parsers MAY accept `xrb%5F` for compatibility.
+- A parser that accepts `xrb%5F` MUST canonicalize it to `nano%5F` after
+  validating the address.
+- Parsers MAY accept native `nano_` or `xrb_` input, but emitters MUST NOT
+  produce those forms in a CAIP-10 account ID.
+- The account component MUST NOT contain a raw key, seed, wallet ID,
+  representative, or account index.
 
 After percent-decoding the account component, the decoded value is the ordinary Nano address:
 
@@ -100,12 +108,14 @@ After percent-decoding the account component, the decoded value is the ordinary 
 nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 ```
 
-> [!TIP]
-> **Implementation Guidance**
+> **Implementation guidance:**
 >
-> Wallets and libraries MAY store and process the native `nano_` or `xrb_` prefixed address internally. Percent-encoding to `nano%5F...` MUST be applied when constructing a CAIP-10 account ID for use in any protocol expecting strict CAIP-10 compliance, including future session protocols.
+> Wallets and libraries MAY use native `nano_` or `xrb_` addresses internally.
+> They MUST apply the canonical form when producing a CAIP-10 account ID.
 >
-> On receipt of a CAIP-10 Nano account ID, implementations SHOULD percent-decode the address component and validate it as a valid Nano address, including prefix, length, and checksum. Systems that key accounts, permissions, sessions, or balances by CAIP-10 account ID MUST apply the canonicalization rules below before comparison or storage.
+> A parser SHOULD percent-decode the account component and validate the Nano
+> prefix, length, alphabet, and checksum. Systems MUST canonicalize accepted
+> input before using it as a storage or permission key.
 
 ### Canonicalization
 
@@ -117,17 +127,21 @@ nano:mainnet:nano%5F<account-body>
 
 Where `<account-body>` is the 60-character Nano address body after the `nano_` prefix.
 
-For internal storage, indexing, permission checks, session matching, and account comparison, implementations MUST map all accepted equivalent forms to the canonical CAIP-10 form before comparison or persistence.
+Implementations MUST canonicalize every accepted form before comparison or
+storage.
 
 This includes:
 
-- replacing any accepted legacy `xrb_` or `xrb%5F` prefix with the canonical `nano%5F` prefix
-- percent-encoding the underscore (as `%5F`) when emitting a CAIP-10 account ID
-- rejecting any form that fails standard Nano address validation (invalid characters, length, or checksum) after decoding
+- Replace an accepted `xrb_` or `xrb%5F` prefix with `nano%5F`.
+- Encode the prefix underscore as `%5F`.
+- Reject a decoded address with an invalid prefix, length, alphabet, or
+  checksum.
 
 ### Session Protocols
 
-This document does not define a CAIP-25, WalletConnect, or other session-protocol profile for Nano. Future ORIS documents MAY define Nano session scope keys, request and response shapes, method names, notification or event names, and account encoding rules for specific session protocols.
+This document does not define a CAIP-25, WalletConnect, or other session
+profile. A later ORIS may define scopes, methods, events, and request or response
+objects for a specific protocol.
 
 Protocols that carry Nano accounts in strict CAIP-10 fields MUST use the canonical CAIP-10 form defined above.
 
@@ -144,7 +158,8 @@ xno:mainnet
 nanocurrency:mainnet
 ```
 
-If future applications require additional Nano chain references, they SHOULD be standardized in a new ORIS document before being used in production protocols.
+Applications SHOULD standardize any additional public chain references before
+using them in production protocols.
 
 ## Published Test Vectors
 
@@ -204,10 +219,8 @@ nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 
 ## Reference Implementation
 
-Open Wallet Standard uses `nano:mainnet` for Nano chain identification:
+[Open Wallet Standard](https://github.com/OpenRai/ows-core/blob/84fd50ad1760653cdc66dfa4c5ced229555adbb8/ows/crates/ows-core/src/chain.rs)
+uses `nano:mainnet`.
 
-https://github.com/OpenRai/ows-core/blob/84fd50ad1760653cdc66dfa4c5ced229555adbb8/ows/crates/ows-core/src/chain.rs
-
-Reference implementations are informative only and do not override the normative requirements in this document.
-
-
+Reference implementations are informative. This document defines the
+interoperability requirements.

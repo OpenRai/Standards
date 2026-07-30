@@ -53,10 +53,29 @@ jobs:
                   continue
               title = title_match.group(1).strip()
 
-              entries.append(f"- [ORIS-{doc_id}: {title}]({filepath})")
+              # Extract the document status from its metadata block.
+              status_match = re.search(
+                  r"^> Status:\s*(.+?)\s*\\?$",
+                  text,
+                  re.MULTILINE,
+              )
+              if not status_match:
+                  print(f"WARNING: could not extract status from {filepath}, skipping.")
+                  continue
+              status = status_match.group(1).strip()
+
+              entries.append(
+                  f"| [ORIS-{doc_id}: {title}]({filepath}) | {status} |"
+              )
 
           if entries:
-              index_content = "\n".join(entries)
+              index_content = "\n".join(
+                  [
+                      "| Standard | Status |",
+                      "| --- | --- |",
+                      *entries,
+                  ]
+              )
           else:
               index_content = "_No standards documents found yet._"
 
