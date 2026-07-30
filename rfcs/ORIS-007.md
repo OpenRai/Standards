@@ -207,11 +207,13 @@ compatibility.
 
 ## State Signaling Patterns
 
-These patterns use ledger events — receive blocks, open blocks, balance changes, frontier updates — as application-level signals. They all share a common risk: wallet behavior (auto-receive, batching, delay) can make the signal meaningless or involuntary.
+These patterns treat a receive, open block, balance, or frontier as application
+state. Wallet automation can trigger the same ledger event without user intent.
 
 ### Receive Acknowledgement
 
-In Nano, incoming funds sit as "pending" until the receiver publishes a receive block. Some applications interpret that receive block as more than a balance update — as a signal that the receiver has accepted a ticket, claimed a deposit, or committed to something. This only works if the receiving account is application-controlled and the wallet's receive behavior is predictable.
+Treat a receive block as acceptance of a ticket, deposit, or state transition.
+This has meaning only when the application controls when the account receives.
 
 **Classification:** Context-dependent · **AKA:** Receive-as-Commit, Claim Signal
 
@@ -221,13 +223,16 @@ In Nano, incoming funds sit as "pending" until the receiver publishes a receive 
 - Most user wallets auto-receive, so a receive block on a normal account means nothing about user intent.
 - Even application-controlled wallets may delay or batch receives, making timing unreliable.
 - A pending send received hours later can trigger a stale state transition.
-- Auto-receive can collapse this pattern into a [Pending Receivable Marker](#pending-receivable-marker) — the receive happens without intent, making the signal meaningless.
+- Auto-receive can publish the signal without user intent.
 
-**Verdict:** Only use with dedicated application-controlled accounts where receive behavior is deterministic. Never interpret a normal user's receive as consent.
+**Recommendation:** Use this only with a dedicated application account and
+deterministic receive behavior. Never treat a normal wallet's receive block as
+consent.
 
 ### Pending Receivable Marker
 
-You can send a small amount to someone's account and leave it pending — unreceived. The idea is that the existence of the pending amount itself is the signal, and the recipient doesn't need to do anything. In practice, this is spam.
+Send a small amount and treat the resulting receivable as a notification. The
+recipient did not request this ledger state.
 
 **Classification:** Harmful if generalized · **AKA:** Pending-as-Message, Receivable Notification
 
@@ -237,13 +242,15 @@ You can send a small amount to someone's account and leave it pending — unrece
 - Creates unwanted receivables that clutter wallets and account state.
 - Wallets with auto-receive will convert the pending amount into a receive block, destroying the intended "unreceived" signal.
 - Easily abused for spam, harassment, and tracking.
-- Does not convey consent or awareness — the recipient never agreed to receive a signal.
+- Does not establish consent or awareness.
 
-**Verdict:** Do not use. This pattern pushes unsolicited state onto accounts that didn't opt in.
+**Recommendation:** Do not use this pattern. It creates unsolicited account
+state and can be used for spam or tracking.
 
 ### Open Block as Registration
 
-The first block on a Nano account is the "open" block. Some applications use this as a registration signal: if a derived account publishes an open block, the application interprets it as the user activating or enrolling. The catch: an open block requires incoming funds, so someone has to send to the account first — and anyone can do that, forcing registration against the user's intent.
+Treat the first block on a derived account as registration. An open block
+requires a receivable, and another party can create that receivable.
 
 **Classification:** Context-dependent · **AKA:** Account Activation Signal
 
@@ -253,28 +260,32 @@ The first block on a Nano account is the "open" block. Some applications use thi
 - Anyone who can send to the deterministic address can force an open block, triggering registration against the user's intent.
 - Sequential derivation indexes leak business volume (e.g., order count).
 - Recovery depends on the same derivation scheme and gap-limit assumptions.
-- Wallet account-discovery behavior varies; the open block may not surface in time.
+- Wallet account discovery can delay or miss the derived account.
 
-**Verdict:** Only use when both the derivation and funding flow are application-controlled. Always pair with off-chain consent to prevent involuntary registration.
+**Recommendation:** Use this only when the application controls derivation and
+funding. Require separate consent before recording registration.
 
 ### Balance State Signal
 
-Some applications encode state directly in an account's balance — specific balance values or ranges correspond to application states. This is extremely fragile: any send or receive changes the balance, so a single unwanted incoming payment irreversibly corrupts the encoded state.
+Assign application states to exact account balances or balance ranges. Any send
+or receive can change the encoded value.
 
 **Classification:** Context-dependent · **AKA:** Balance-as-State
 
 **How it works:** The application controls an account and sets its balance to a specific value that encodes application state. Observers read the balance and interpret it.
 
 **Risks:**
-- Any incoming payment — even an unwanted one — changes the balance and corrupts the state irreversibly.
+- Any incoming payment can change the state without authorization.
 - Requires exact balance tracking and confirmation at every step.
 - Wallet operations may alter balances in unexpected ways.
 
-**Verdict:** Only viable for fully application-controlled accounts where every send and receive is audited. Do not use with user accounts.
+**Recommendation:** Use only on an application-controlled account where every
+block is checked. Do not use a user account.
 
 ### Frontier Signal
 
-The frontier is the latest block on an account chain. Some applications use it as a publication pointer: each new block is a new "version" of the application state, and observers watch the frontier for updates. The actual metadata lives off-chain; the frontier just anchors it.
+Use the latest block on a dedicated account as a pointer to the current
+off-chain state. Observers watch the frontier for changes.
 
 **Classification:** Context-dependent · **AKA:** Head Block Signal
 
@@ -284,9 +295,11 @@ The frontier is the latest block on an account chain. Some applications use it a
 - Unrelated wallet activity on the same account changes the frontier, confusing observers.
 - High-frequency updates create unnecessary ledger activity.
 - Historical interpretation requires archival nodes or indexers.
-- The block itself carries only ordinary Nano fields — the actual data is off-chain.
+- The block contains no metadata unless the application defines a separate
+  commitment convention.
 
-**Verdict:** Acceptable for low-frequency, application-controlled anchoring on a dedicated account. Do not use ordinary user account frontiers as a messaging channel.
+**Recommendation:** Use only for low-frequency commitments on a dedicated
+application account. Do not interpret a user's normal frontier as a message.
 
 ## Representative-Based Patterns
 
