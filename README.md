@@ -16,7 +16,7 @@ A collection of technical specifications designed to promote interoperability ac
 | [ORIS-007: Nano Application-Level Metadata, Correlation, and Signaling Patterns](rfcs/ORIS-007.md) | Working Draft |
 | [ORIS-008: Reliable Nano Payment Integration](rfcs/ORIS-008.md) | Working Draft |
 | [ORIS-009: Nano Payment Targets for `payto:`](rfcs/ORIS-009.md) | Working Draft |
-| [ORIS-010: Nano RPC API-Key Authentication](rfcs/ORIS-010.md) | Working Draft |
+| [ORIS-010: API-Key Authentication for Nano RPC](rfcs/ORIS-010.md) | Working Draft |
 <!-- ORIS-INDEX-END -->
 
 ## Document Statuses

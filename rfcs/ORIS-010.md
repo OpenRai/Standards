@@ -2,62 +2,37 @@
 OpenRai Initiative Standard: 010
 ```
 
-# Nano RPC API-Key Authentication
+# API-Key Authentication for Nano RPC
 
 > Status: Working Draft
 > Category: Application Interface
 
 ## Abstract
 
-ORIS-010 defines a minimal API-key authentication convention for Nano RPC clients and Nano RPC providers.
-
-The normative authentication method is HTTP Bearer authentication:
+This document defines one API-key authentication method for Nano RPC:
 
 ```http
 Authorization: Bearer <API_KEY>
 ```
 
-This standard applies to wallets, wallet UIs, SDKs, server-side applications, hosted services, proof-of-work providers, and other applications communicating with Nano RPC-compatible endpoints.
-
-Credential-bearing URLs, such as:
-
-```text
-https://API_KEY@rpc.example
-```
-
-MAY be supported as an optional configuration shorthand, but they are not the normative HTTP authentication method. Clients that support this shorthand SHOULD extract the API key from the URL and send it using the Bearer authentication method.
+It applies to wallets, SDKs, backend services, hosted RPC gateways, and
+proof-of-work providers. A client may accept a credential-bearing URL as
+configuration, but it always sends the key in the HTTP `Authorization` header.
 
 ## Motivation
 
-Nano applications commonly communicate with hosted RPC providers instead of directly operating a local node.
+Hosted Nano RPC services use incompatible authentication conventions. A client
+may currently need a JSON `key`, a custom header, Basic authentication, URL
+credentials, or a Bearer token.
 
-Common use cases include:
-
-- wallet account lookup;
-- block lookup;
-- block broadcasting;
-- representative lookup;
-- network status checks;
-- application backend RPC access;
-- proof-of-work generation using`work_generate`.
-
-Today, RPC provider authentication is inconsistent. Providers may support one or more of:
-
-- adding`"key": "<API_KEY>"` to the JSON RPC body;
-- sending a custom HTTP header such as`Key: <API_KEY>`;
-- using HTTP Basic authentication;
-- embedding credentials in the endpoint URL;
-- using HTTP Bearer authentication.
-
-This creates interoperability problems across wallets, SDKs, browser applications, mobile applications, and server-side applications.
-
-ORIS-010 standardizes the interoperable on-wire authentication method:
+One header lets the same client authenticate account queries, block
+publication, and `work_generate` requests:
 
 ```http
 Authorization: Bearer <API_KEY>
 ```
 
-Credential-bearing URLs MAY be accepted by clients for configuration convenience, but they are only a shorthand for configuring Bearer authentication.
+Legacy methods may remain available, but they are outside ORIS-010.
 
 ## Conventions
 
@@ -65,39 +40,23 @@ The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, **MAY**, and *
 
 Definitions:
 
-- **Client**: Any wallet, wallet UI, SDK, application, backend service, script, or tool making Nano RPC requests.
-- **Wallet UI**: A user-facing wallet client, including web, desktop, mobile, and browser-extension wallets.
-- **Server-side application**: A backend service, worker, indexer, exchange service, merchant service, automation script, or other non-user-facing application.
-- **RPC provider**: A hosted Nano RPC endpoint, proof-of-work provider, gateway, or service compatible with Nano RPC requests.
-- **API key**: An opaque credential issued by an RPC provider.
-- **Credential-bearing URL**: A URL containing an API key in the userinfo component, such as`https://API_KEY@rpc.example`.
-- **PoW RPC**: Proof-of-work generation using Nano RPC, especially the`work_generate` action.
+- **Client:** Software that sends Nano RPC requests.
+- **RPC provider:** A service that receives Nano RPC-compatible requests.
+- **API key:** A bearer credential issued by an RPC provider.
+- **Credential-bearing URL:** A configuration URL with an API key in its
+  username component, such as `https://API_KEY@rpc.example`.
 
 ## Specification
 
 ### 1. Scope
 
-ORIS-010 applies to any Nano RPC-compatible client or provider that wants a simple interoperable API-key authentication method.
-
-This includes, but is not limited to:
-
-- wallet UIs;
-- wallet backends;
-- SDKs;
-- command-line tools;
-- application servers;
-- hosted services;
-- proof-of-work providers;
-- exchanges;
-- merchant services;
-- explorers;
-- monitoring tools.
-
-Wallet UI interoperability is a primary goal, but the standard is not limited to wallets.
+This document covers API-key transport, optional URL configuration, TLS, secret
+handling, and authentication errors. It does not define key issuance, account
+management, authorization scopes, quotas, or Nano RPC actions.
 
 ### 2. Required On-Wire Authentication Method
 
-Clients implementing ORIS-010 MUST authenticate by sending the API key using the HTTP`Authorization` header with the Bearer scheme:
+Clients MUST send the API key in the HTTP `Authorization` header:
 
 ```http
 Authorization: Bearer <API_KEY>
@@ -114,33 +73,34 @@ Authorization: Bearer nano_rpc_key_example
 {"action":"block_count"}
 ```
 
-The API key is an opaque provider-issued string.
+Providers MUST issue keys compatible with the RFC 6750 `b64token` grammar:
 
-Clients MUST NOT transform, hash, sign, or otherwise modify the API key before placing it in the Bearer header unless explicitly required by the provider outside this standard.
+```abnf
+b64token = 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
+```
+
+Clients MUST place the issued value in the header without transformation.
 
 ### 3. Provider Requirements
 
 An RPC provider implementing ORIS-010:
 
-- MUST accept`Authorization: Bearer <API_KEY>`;
-- MUST support Bearer authentication for general authenticated RPC requests;
-- MUST support Bearer authentication for`work_generate` if authenticated proof-of-work generation is offered;
-- MUST NOT require the API key to be present in the JSON RPC body;
-- MUST NOT require a custom`Key` header;
-- MUST NOT require HTTP Basic authentication;
-- MUST NOT require credentials embedded in the URL.
+- MUST accept `Authorization: Bearer <API_KEY>`.
+- MUST use the same method for `work_generate` when it offers authenticated
+  proof-of-work generation.
+- MUST NOT require the key in the JSON body, a custom header, Basic
+  authentication, or the request URL.
 
-A provider MAY support additional legacy authentication methods, but the Bearer method is the required interoperable ORIS-010 method.
+A provider MAY support legacy methods in addition to Bearer authentication.
 
 ### 4. Client Requirements
 
 A client implementing ORIS-010:
 
-- MUST be able to send`Authorization: Bearer <API_KEY>`;
-- SHOULD allow the API key to be configured separately from the RPC URL;
-- MUST NOT inject the API key into the Nano RPC JSON body for ORIS-010 authentication;
-- SHOULD NOT rely on HTTP Basic authentication;
-- SHOULD NOT rely on the underlying HTTP client automatically converting URL credentials into Basic authentication.
+- MUST send `Authorization: Bearer <API_KEY>`.
+- SHOULD configure the endpoint and key separately.
+- MUST NOT add the key to the Nano RPC JSON object.
+- MUST NOT depend on automatic Basic authentication from URL userinfo.
 
 ### 5. Optional Credential-Bearing URL Shorthand
 
