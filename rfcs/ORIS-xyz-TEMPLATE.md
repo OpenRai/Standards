@@ -4,7 +4,7 @@ OpenRai Initiative Standard: xyz
 
 # (Title of this document)
 
-> Status: Draft\
+> Status: Draft
 > Category: Cryptographic Primitive / Application Interface
 
 ## Abstract
@@ -22,5 +22,3 @@ OpenRai Initiative Standard: xyz
 ## Reference Implementation
 
 (prioritize links to a repository URL of minimal, non-normative reference implementations, over inline code samples)
-
-

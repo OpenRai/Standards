@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 005
 
 # Utilizing NanoNyms for x402 Exact Pre-payment Verification
 
-> Status: Draft\
+> Status: Draft
 > Category: Application Interface
 
 ## Abstract
@@ -305,5 +305,3 @@ No published test vectors are defined in this document yet.
 - <https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md>
 - <https://github.com/x402-foundation/x402/blob/main/specs/schemes/exact/scheme_exact.md>
 - <https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md>
-
-

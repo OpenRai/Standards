@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 003
 
 # NanoNym Payment Event Schema
 
-> Status: Draft\
+> Status: Draft
 > Category: Application Interface
 
 ## Abstract
@@ -131,5 +131,3 @@ No published test vectors are defined in this document yet.
 
 - <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0002-nanonym-payment-event-schema.md>
 - <https://github.com/cbrunnkvist/NanoNymNault>
-
-

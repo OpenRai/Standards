@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 001
 
 # Nano Off-chain Message Signing (NOMS)
 
-> Status: Draft\
+> Status: Implementation
 > Category: Cryptographic Primitive / Application Interface
 
 ## Abstract
@@ -64,7 +64,7 @@ A NOMS payload is the concatenation of three fields:
 payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE
 ```
 
-### MAGIC_HEADER
+### MAGIC\_HEADER
 
 `MAGIC_HEADER` is a fixed 25-byte constant used for domain separation.
 
@@ -82,17 +82,17 @@ Hexadecimal representation:
 
 Implementations MUST use this exact byte sequence.
 
-### MESSAGE_LENGTH
+### MESSAGE\_LENGTH
 
-`MESSAGE_LENGTH` is a 4-byte unsigned integer encoding the exact byte length of`MESSAGE`.
+`MESSAGE_LENGTH` is a 4-byte unsigned integer encoding the exact byte length of `MESSAGE`.
 
 Requirements:
 
-- it MUST be encoded as`uint32`
+- it MUST be encoded as `uint32`
 - it MUST use big-endian byte order
 - it represents the length of the UTF-8 byte sequence, not the number of characters
 
-The maximum encodable message length is`4294967295` bytes.
+The maximum encodable message length is `4294967295` bytes.
 
 Example:
 
@@ -115,7 +115,7 @@ Requirements:
 
 ## Hashing
 
-The complete`payload` is hashed using Blake2b with a 32-byte output.
+The complete `payload` is hashed using Blake2b with a 32-byte output.
 
 ```text
 message_hash = Blake2b256(payload)
@@ -128,9 +128,9 @@ Implementations MUST use the same Blake2b-256 behavior used by Nano for block ha
 To produce a NOMS signature, an implementation MUST perform the following steps:
 
 1. Encode the application message as UTF-8 bytes.
-2. Construct`payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE`.
-3. Compute`message_hash = Blake2b256(payload)`.
-4. Sign`message_hash` using the same account-signing behavior used by Nano for block hashes.
+2. Construct `payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE`.
+3. Compute `message_hash = Blake2b256(payload)`.
+4. Sign `message_hash` using the same account-signing behavior used by Nano for block hashes.
 
 Formally:
 
@@ -140,9 +140,11 @@ signature = NanoAccountSign(private_key, message_hash)
 
 Where:
 
--`private_key` is the 32-byte Nano account private key
--`message_hash` is the 32-byte Blake2b-256 digest of the NOMS payload
--`signature` is the resulting Ed25519-compatible signature
+- `private_key` is the 32-byte Nano account private key
+
+- `message_hash` is the 32-byte Blake2b-256 digest of the NOMS payload
+
+- `signature` is the resulting Ed25519-compatible signature
 
 Implementations:
 
@@ -157,8 +159,8 @@ To verify a NOMS signature, an implementation MUST:
 1. Obtain the signer's public key or account identifier.
 2. Encode the application message as UTF-8 bytes.
 3. Construct the payload exactly as specified.
-4. Compute`message_hash = Blake2b256(payload)`.
-5. Verify the signature against`message_hash` using Nano-compatible account-signature verification.
+4. Compute `message_hash = Blake2b256(payload)`.
+5. Verify the signature against `message_hash` using Nano-compatible account-signature verification.
 
 Formally:
 
@@ -183,7 +185,7 @@ A NOMS signature SHOULD be represented as:
 
 - 128 hexadecimal characters
 - lowercase
-- no`0x` prefix
+- no `0x` prefix
 
 Each byte of the 64-byte signature MUST be encoded as exactly two lowercase hexadecimal characters, zero-padded where necessary. Variable-length or bignum-style hex encoding MUST NOT be used.
 
@@ -193,10 +195,10 @@ Verifiers MAY accept uppercase hexadecimal as input for compatibility, but emitt
 
 An account identifier SHOULD be represented as:
 
-- a lowercase`nano_` address
+- a lowercase `nano_` address
 - encoding the public key used for verification
 
-Verifiers MAY accept equivalent legacy forms, such as`xrb_`, for compatibility. If an account string is supplied, it MUST decode to the same public key used in signature verification.
+Verifiers MAY accept equivalent legacy forms, such as `xrb_`, for compatibility. If an account string is supplied, it MUST decode to the same public key used in signature verification.
 
 ## Interoperability Conventions
 
@@ -220,7 +222,7 @@ NOMS does not define or require a recovery identifier.
 
 ### Domain Separation
 
-The fixed binary header provides domain separation between NOMS payloads and other signed data. Implementations MUST use the exact`MAGIC_HEADER` defined in this document.
+The fixed binary header provides domain separation between NOMS payloads and other signed data. Implementations MUST use the exact `MAGIC_HEADER` defined in this document.
 
 ### Replay Protection
 
@@ -242,14 +244,14 @@ Implementations MUST preserve the exact message bytes. Any normalization or tran
 
 ### Resource Limits
 
-Although`MESSAGE_LENGTH` permits very large messages, implementations SHOULD apply practical size limits before allocation, parsing, or hashing, according to local policy.
+Although `MESSAGE_LENGTH` permits very large messages, implementations SHOULD apply practical size limits before allocation, parsing, or hashing, according to local policy.
 
 ## Implementation Notes
 
 NOMS has a constant framing overhead of 29 bytes:
 
-- 25 bytes for`MAGIC_HEADER`
-- 4 bytes for`MESSAGE_LENGTH`
+- 25 bytes for `MAGIC_HEADER`
+- 4 bytes for `MESSAGE_LENGTH`
 
 This allows straightforward incremental processing. A verifier or parser can:
 
@@ -315,5 +317,3 @@ signature              : 8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f34900
 ## Reference Implementation
 
 (to be added) Any reference implementation is informative only and does not override the normative requirements in this document.
-
-

@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 006
 
 # Nano CAIP Identifiers
 
-> Status: Draft\
+> Status: Implementation
 > Category: Application Interface
 
 ## Abstract
@@ -209,5 +209,3 @@ Open Wallet Standard uses `nano:mainnet` for Nano chain identification:
 https://github.com/OpenRai/ows-core/blob/84fd50ad1760653cdc66dfa4c5ced229555adbb8/ows/crates/ows-core/src/chain.rs
 
 Reference implementations are informative only and do not override the normative requirements in this document.
-
-

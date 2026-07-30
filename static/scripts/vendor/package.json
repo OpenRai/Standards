@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@toast-ui/editor": "3.2.2",
+    "remark": "15.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-lint": "10.0.1",
+    "remark-preset-lint-recommended": "7.0.1"
+  }
+}

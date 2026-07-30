@@ -4,7 +4,7 @@ OpenRai Initiative Standard: 004
 
 # Nostr Transport Profile for NanoNym Payment Notifications
 
-> Status: Draft\
+> Status: Draft
 > Category: Application Interface
 
 ## Abstract
@@ -124,7 +124,7 @@ The scanning model is blind in the following sense:
 Because `nostr:npub1...` lacks relay hints, senders MUST be able to discover the recipient's preferred inbox relays. Senders SHOULD resolve the recipient's `npub` using NIP-65 (Relay List Metadata) events fetched from standard directory relays (e.g., `purplepag.es`, `relay.nostr.band`). NanoNym wallets MUST publish NIP-65 `10002` events for their notification keys to enable this discovery.
 
 **Design Rationale on Permanence (Tier 1 vs Tier 2):**
-NanoNym defines Nostr gift-wraps as "Tier 1" notifications. The design goal is for Tier 1 storage to be a permanent, complete historical record of incoming payments. However, because public Nostr relays are sovereign and often aggressively prune old events, guaranteed permanence is difficult without paid or archival relays. 
+NanoNym defines Nostr gift-wraps as "Tier 1" notifications. The design goal is for Tier 1 storage to be a permanent, complete historical record of incoming payments. However, because public Nostr relays are sovereign and often aggressively prune old events, guaranteed permanence is difficult without paid or archival relays.
 
 It is this practical reality of Nostr pruning that necessitates "Tier 2" fallback mechanisms (scanning the Nano ledger directly to recover historical stealth events). Wallets SHOULD treat Nostr notifications as permanent records and MAY use specialized archival relays to preserve them.
 
@@ -154,5 +154,3 @@ No published test vectors are defined in this document yet.
 
 - <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0003-nostr-notification-transport-profile.md>
 - <https://github.com/cbrunnkvist/NanoNymNault>
-
-
