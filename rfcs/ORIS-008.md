@@ -38,7 +38,7 @@ The closest concepts are:
 | Confirmation | "Included in a block with N confirmations" | "Cemented by ORV consensus" — check `confirmed` field |
 | Unconfirmed work | Transactions wait in a public mempool | Nodes track blocks and active elections |
 | Account model | UTXO set or account state | Each account has its own blockchain |
-| Pending transactions | Visible in mempool | "Pending receivables" — sends that haven't been received yet |
+| Pending transactions | Visible in mempool | Receivables: sends not yet received |
 | Application finality | Usually based on a confirmation count | Based on Nano confirmation |
 
 For deposits, act on the confirmed send to a managed destination. The later
@@ -252,7 +252,7 @@ Define application policy for at least these cases:
 | **Exchange Source** | Deposit from shared hot wallet | Do NOT assume source address = user |
 | **Notification downtime** | WebSocket events were missed | Rescan managed accounts and process idempotently |
 | **Receive Delay** | Delay between send confirmation and your receive | Credit based on confirmed send, not on your receive timing |
-| **Confirmation delay** | Block is not confirmed | Do not credit; show pending state |
+| **Confirmation delay** | Block is not confirmed | Do not credit. Show pending state |
 
 Crediting and receiving are separate operations. Commit the credit and enqueue
 the receive task in one database transaction. A worker can then create, sign,
@@ -262,38 +262,48 @@ and publish the receive block. Retry that worker by send-block hash.
 
 ### 6. End-to-End Deposit Flow
 
-Complete walkthrough of one deposit, from invoice to dispatch:
+One deposit moves through these steps.
 
-**Step 1: Create invoice**
-- Generate unique deposit account (see ORIS-007: Invoice Deposit Account)
-- Store invoice in database: `{invoice_id, deposit_account, amount, status: "pending"}`
+**Step 1: Create the invoice.**
 
-**Step 2: Subscribe to confirmations**
+- Choose a correlation method from ORIS-007.
+- Store the expected destination, amount, expiration, and status.
+
+**Step 2: Subscribe to confirmations.**
+
 ```json
-{"action": "subscribe", "topic": "confirmation", "options": {"accounts": ["<deposit_account>"]}}
+{"action": "subscribe", "topic": "confirmation", "ack": true, "options": {"accounts": ["<deposit_account>"]}}
 ```
 
-**Step 3: Confirmation arrives**
-- Check `message.block.subtype == "send"`
-- Check `message.block.link_as_account == deposit_account`
-- Check `message.hash` not already processed (idempotency)
+Request an acknowledgement and verify that the node accepted the subscription.
 
-**Step 4: Verify amount**
-- Compare `message.block.amount` to invoice amount
-- Apply Section 5 lifecycle rules
+**Step 3: Validate the confirmation.**
 
-**Step 5: Credit and receive**
-- Begin database transaction
-- Update invoice status
-- Credit user balance
-- Commit transaction
-- Publish receive block via `process` RPC
+- Require `message.block.subtype == "send"`.
+- Match `message.block.link_as_account` to the invoice destination.
+- Reject a `message.hash` that was already processed.
+- Compare `message.amount` with the expected amount.
 
-**Step 6: Dispatch**
-- Trigger application event (ship goods, grant access, etc.)
+**Step 4: Commit the application state.**
 
-**Fallback: RPC polling**
-If WebSocket misses a confirmation, poll `block_info` for pending invoice hashes every 5–10 seconds.
+- Begin one database transaction.
+- Insert the unique send-block hash.
+- Apply the lifecycle policy.
+- Credit the application balance when applicable.
+- Enqueue receive and fulfillment work.
+- Commit.
+
+**Step 5: Run side effects.**
+
+Workers publish the receive block and fulfill the order. Each worker uses its own
+idempotency key and records success or a retryable failure.
+
+**Fallback: rescan managed accounts.**
+
+An invoice does not reveal its future send-block hash, so `block_info` alone
+cannot discover a missed payment. Use `receivable` and account history to find
+unseen sends to managed destinations. Use `block_info` after a block hash is
+known.
 
 ### 7. Confirmation Tracking Decision Tree
 
@@ -315,21 +325,23 @@ When a WebSocket message arrives:
 5. Is the invoice for this deposit account still active?
    No → route to duplicate/late payment queue (Section 5)
 
-6. Compare message.block.amount to invoice amount:
+6. Compare message.amount to invoice amount:
    Exact → credit, publish receive, dispatch
    Under → hold, notify user, await remainder
    Over → credit invoice, track excess
 
-7. Publish receive block via "process" RPC
-8. Trigger application event
+7. Commit credit and enqueue receive/fulfillment work
+8. Run queued side effects idempotently
 ```
 
-**RPC fallback (if WebSocket missed it):**
+**RPC fallback:**
+
 ```
-For each pending invoice (status == "pending", created > 5 seconds ago):
-    Call block_info(invoice.expected_block_hash)
-    If confirmed == true:
-        Process via steps 4–8 above
+For each managed deposit account:
+    list confirmed receivables and recent account history
+    for each unseen send hash:
+        validate with block_info
+        process via steps 4–8 above
 ```
 
 ### 8. Integration Checklist
@@ -342,8 +354,8 @@ Before going live:
 - [ ] Subtype filter (only process `subtype: "send"`)
 - [ ] Lock-and-debit-before-broadcast for withdrawals (Section 2)
 - [ ] Unique constraint on withdrawal transaction keys (Section 2)
-- [ ] Handlers for all 12 payment lifecycle scenarios (Section 5)
-- [ ] Reconciliation engine running every 60 seconds (Section 4)
+- [ ] Policy for every payment lifecycle case in Section 5
+- [ ] Reconciliation running on a documented interval
 - [ ] Circuit breaker triggers halt + alert on deficit
 - [ ] RPC fallback polling for missed WebSocket confirmations
 - [ ] Refund logic handles exchange/custodial sources (Section 5)
@@ -351,27 +363,34 @@ Before going live:
 
 ## Architectural Hygiene and Privacy Guidelines
 
-**Bound ledger footprint.** Don't create massive pools of unused accounts. Don't generate unsolicited dust.
+**Bound ledger footprint.** Keep unused account pools bounded. Do not generate
+unsolicited dust.
 
-**Keep metadata off-chain.** Invoices, user data, and order details belong in your database, not on the ledger. Bind them to ledger events via block hashes or deposit accounts.
+**Keep metadata off-chain.** Store invoices, users, and orders in the application
+database. Bind them to ledger events with block hashes or deposit accounts.
 
-**Design for wallet diversity.** Your users' wallets may display only 6 decimal places, may auto-receive, may delay receives, and may hide dust amounts. Base your credit logic on confirmed send blocks, not on the user's receive behavior.
+**Design for wallet diversity.** Wallets can round displayed amounts,
+auto-receive, or delay receives. Base credit logic on confirmed sends rather
+than the recipient's receive timing.
 
-**Prevent on-chain linkage.** When consolidating deposits from per-invoice accounts to your hot wallet, the sweep transactions link all those accounts on-chain. Use batched sweeps and multiple destinations to reduce linkability. Never expose your extended public keys to clients.
+**Account for public linkage.** Sweeping invoice accounts into a hot wallet
+links those accounts on-chain. Scheduling or splitting sweeps does not remove
+that linkage. Do not expose extended public keys to clients.
 
 ## Glossary
 
-- **Block lattice** — Nano's data structure where each account has its own blockchain
-- **Cemented** / **Confirmed** — permanently locked by network consensus; check via WebSocket or `block_info` RPC
-- **Circuit breaker** — automated halt of withdrawals when reconciliation detects a deficit
-- **Cold wallet** — offline storage for the majority of funds
-- **Confirmation height** — the cemented chain length; only blocks at or below this height are irreversible
-- **Hot wallet** — online wallet used for automated deposits/withdrawals
-- **Pending receivable** — a confirmed send that hasn't been claimed by a receive block
-- **Receive block** — the block the receiver publishes to claim a pending send
-- **Send block** — the block the sender publishes to initiate a transfer
-- **`account_info`** — RPC command returning account balance, frontier, and representative
-- **`block_info`** — RPC command returning block details including `confirmed` status
-- **`receivable`** — RPC command listing pending incoming sends for an account
-- **`process`** — RPC command that publishes a signed block to the network
-- **WebSocket confirmation topic** — real-time notifications of confirmed blocks
+- **Block lattice:** Nano's collection of per-account chains.
+- **Confirmed or cemented:** Accepted by Nano consensus and recorded in
+  confirmation height.
+- **Circuit breaker:** An automated pause triggered by an accounting deficit.
+- **Cold wallet:** Key storage kept outside the automated payment service.
+- **Confirmation height:** The confirmed length of one account chain.
+- **Hot wallet:** An online wallet used by the payment service.
+- **Receivable:** A send that the destination account has not claimed.
+- **Receive block:** A block that claims a receivable.
+- **Send block:** A block that creates a receivable.
+- **`account_info`:** Returns account balance, frontier, and representative.
+- **`block_info`:** Returns block details and confirmation status.
+- **`receivable`:** Lists unclaimed sends for an account.
+- **`process`:** Publishes a signed block to the node.
+- **WebSocket confirmation topic:** Emits notifications for confirmed blocks.
