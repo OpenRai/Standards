@@ -104,146 +104,78 @@ A client implementing ORIS-010:
 
 ### 5. Optional Credential-Bearing URL Shorthand
 
-Clients MAY support credential-bearing URLs as a configuration convenience.
-
-The following form MAY be accepted by clients:
+Clients MAY accept this configuration form:
 
 ```text
 https://API_KEY@rpc.example
 ```
 
-A client that supports this shorthand SHOULD interpret it as:
+A supporting client MUST extract:
 
 ```text
 RPC URL: https://rpc.example
 API key: API_KEY
 ```
 
-and then send the request using Bearer authentication:
+It then sends:
 
 ```http
 Authorization: Bearer API_KEY
 ```
 
-Credential-bearing URLs are supported optional configuration shorthand, not the normative HTTP authentication method.
-
-In other words, this:
-
-```text
-https://API_KEY@rpc.example
-```
-
-is only a shorthand for configuring this:
-
-```http
-Authorization: Bearer API_KEY
-```
+The URL is a configuration shorthand. It is not the request authentication
+method, and the provider never needs to parse URL credentials.
 
 ### 6. Credential-Bearing URL Processing
 
-If a client supports credential-bearing URLs, it SHOULD process them as follows.
+When a client supports the shorthand, it MUST:
 
-Given:
+1. Parse the URL without making a request.
+2. Reject an empty username.
+3. Reject a non-empty password.
+4. Percent-decode the username exactly once.
+5. Validate the decoded key against the `b64token` grammar.
+6. Remove all userinfo from the endpoint URL.
+7. Store the endpoint and key separately.
+8. Add the Bearer header to each authenticated request.
 
-```text
-https://API_KEY@rpc.example/path
-```
-
-the client extracts:
-
-```text
-API key: API_KEY
-RPC URL: https://rpc.example/path
-```
-
-The client then sends:
-
-```http
-Authorization: Bearer API_KEY
-```
-
-The client SHOULD remove the credential from the URL before:
-
-- storing the normalized endpoint URL;
-- displaying the endpoint URL;
-- logging the endpoint URL;
-- passing the URL to a lower-level HTTP client;
-- showing diagnostics or error messages.
-
-The client SHOULD NOT rely on the runtime, browser, standard library, or HTTP client to handle URL userinfo automatically.
+The client MUST remove userinfo before passing the endpoint to an HTTP library.
+It MUST NOT depend on automatic Basic authentication.
 
 ### 7. URL Username and Password Handling
 
-For maximum compatibility with existing API-key URL formats, ORIS-010 defines the API key as the URL username component.
-
-The following form is the RECOMMENDED credential-bearing URL shorthand:
-
-```text
-https://API_KEY@rpc.example
-```
-
-The following form MAY also be accepted:
+The username component contains the API key. A client MAY accept an explicitly
+empty password:
 
 ```text
 https://API_KEY:@rpc.example
 ```
 
-Clients MAY reject URLs that contain both a username and a non-empty password:
+A client MUST reject a non-empty password:
 
 ```text
 https://USERNAME:PASSWORD@rpc.example
 ```
 
-If a client chooses to accept this form, the behavior is implementation-defined and outside the scope of ORIS-010.
+This document does not define password authentication.
 
-ORIS-010 does not define password-based RPC provider authentication.
+### 8. URL Credential Exposure
 
-### 8. Credential-Bearing URLs Are Configuration Only
-
-Credential-bearing URLs are intended only as a convenience for configuration.
-
-They SHOULD NOT be considered a provider authentication requirement.
-
-An ORIS-010-compliant provider is not required to receive or parse credentials from the URL.
-
-An ORIS-010-compliant client that accepts a credential-bearing URL SHOULD convert it into a Bearer-authenticated request before sending the HTTP request.
-
-This avoids depending on inconsistent behavior across URL parsers, browsers, runtimes, SDKs, and HTTP clients.
-
-### 9. Security Considerations for URL Credentials
-
-Embedding credentials in URLs is convenient but risky.
-
-Clients and applications SHOULD prefer separate configuration fields:
+Clients SHOULD prefer separate fields:
 
 ```text
 RPC URL
 RPC API key
 ```
 
-over a single credential-bearing URL.
+Credential-bearing URLs can leak through shell history, logs, crash reports,
+screenshots, analytics, proxy logs, and copied configuration. A client that
+accepts them MUST redact the username in display, logs, diagnostics, and error
+messages.
 
-Credential-bearing URLs may leak through:
+### 9. Legacy Authentication Methods
 
-- logs;
-- shell history;
-- crash reports;
-- browser history;
-- screenshots;
-- analytics;
-- proxy logs;
-- error messages;
-- copied configuration files.
-
-Wallet UIs SHOULD avoid encouraging end users to paste API keys into URLs unless there is a clear UX reason.
-
-Server-side applications MAY choose to support credential-bearing URLs for deployment convenience, but SHOULD normalize and redact them as early as possible.
-
-### 10. JSON Body Authentication
-
-Clients implementing ORIS-010 MUST NOT add the API key to the Nano RPC JSON body for authentication.
-
-This form is not ORIS-010-compliant:
+An ORIS-010 client MUST NOT put the key in the Nano RPC JSON object:
 
 ```json
 {
@@ -253,89 +185,17 @@ This form is not ORIS-010-compliant:
 }
 ```
 
-Providers MAY continue accepting JSON-body API keys for legacy compatibility, but clients SHOULD NOT generate this format when using ORIS-010.
-
-### 11. Custom Headers
-
-Clients implementing ORIS-010 MUST NOT rely on custom provider-specific authentication headers such as:
+It also MUST NOT use a provider-specific header:
 
 ```http
 Key: API_KEY
 ```
 
-Providers MAY support such headers for legacy compatibility, but they MUST support Bearer authentication to claim ORIS-010 compatibility.
+An ORIS-010 client SHOULD NOT use HTTP Basic authentication. Providers MAY keep
+any of these methods for legacy clients, but MUST also support Bearer
+authentication.
 
-### 12. HTTP Basic Authentication
-
-HTTP Basic authentication is not the ORIS-010 authentication method.
-
-A provider MAY support Basic authentication for backwards compatibility.
-
-A client MAY support Basic authentication in an explicit legacy compatibility mode.
-
-However, ORIS-010 clients SHOULD NOT rely on Basic authentication for interoperability.
-
-In particular, clients SHOULD NOT depend on this URL form being passed unchanged to an HTTP library:
-
-```text
-https://API_KEY@rpc.example
-```
-
-because some HTTP clients may strip, ignore, reject, mask, or reinterpret URL credentials.
-
-### 13. General RPC Example
-
-Request:
-
-```http
-POST / HTTP/1.1
-Host: rpc.example
-Content-Type: application/json
-Authorization: Bearer test_api_key
-
-{"action":"account_info","account":"nano_..."}
-```
-
-### 14. Proof-of-Work Example
-
-Request:
-
-```http
-POST / HTTP/1.1
-Host: rpc.example
-Content-Type: application/json
-Authorization: Bearer test_api_key
-
-{
-  "action": "work_generate",
-  "hash": "718CC2121C3E641059BC1C2CFC45666C99E8AE922F7A807B7D07B62C995D79E2"
-}
-```
-
-### 15. Credential-Bearing URL Example
-
-A client MAY allow this configuration value:
-
-```text
-https://test_api_key@rpc.example
-```
-
-The client SHOULD internally normalize it to:
-
-```text
-RPC URL: https://rpc.example
-API key: test_api_key
-```
-
-and send:
-
-```http
-Authorization: Bearer test_api_key
-```
-
-The provider receives a normal Bearer-authenticated request.
-
-### 16. Wallet UI Guidance
+### 10. Wallet UI Guidance
 
 Wallet UIs SHOULD provide separate fields for:
 
@@ -348,91 +208,88 @@ PoW API key
 
 Wallet UIs MAY additionally accept credential-bearing URLs as an advanced shortcut, but SHOULD normalize them into separate endpoint and API-key values.
 
-Wallet UIs SHOULD redact API keys after entry.
+After configuration, a wallet SHOULD show only a redacted key and a URL without
+userinfo.
 
-Wallet UIs SHOULD NOT display credential-bearing URLs containing API keys after configuration.
+### 11. Server-Side Configuration
 
-### 17. Server-Side Application Guidance
-
-Server-side applications MAY support either of the following configuration styles.
-
-Separate configuration:
+Use separate secrets when the deployment system supports them:
 
 ```env
 NANO_RPC_URL=https://rpc.example
 NANO_RPC_API_KEY=test_api_key
 ```
 
-Credential-bearing URL shorthand:
+An application MAY also accept:
 
 ```env
 NANO_RPC_URL=https://test_api_key@rpc.example
 ```
 
-If the credential-bearing URL shorthand is used, the application SHOULD extract the API key and send:
+It MUST normalize that value before making a request.
 
-```http
-Authorization: Bearer test_api_key
-```
-
-The application SHOULD NOT pass the credential-bearing URL directly to an HTTP client and rely on automatic Basic authentication behavior.
-
-### 18. Transport Security
+### 12. Transport Security
 
 Clients MUST use HTTPS when connecting to remote RPC providers.
 
-Plain HTTP MAY be used for local development or local node access, such as:
+Plain HTTP MAY be used only for a loopback endpoint:
 
 ```text
 http://127.0.0.1
+http://[::1]
 http://localhost
 ```
 
-Providers offering authenticated public RPC endpoints MUST support HTTPS.
+Public providers MUST support HTTPS and MUST NOT accept ORIS-010 credentials
+over plain HTTP.
 
-### 19. API Key Handling
+### 13. API Key Handling
 
-API keys are bearer credentials.
-
-Any party with access to the API key may be able to use the associated RPC provider account.
+Anyone who obtains the key can use its permissions.
 
 Clients:
 
-- MUST treat API keys as secrets;
-- SHOULD redact API keys in logs and diagnostics;
-- SHOULD avoid displaying full API keys after entry;
-- SHOULD avoid exporting API keys unless the user explicitly requests it.
+- MUST treat keys as secrets.
+- MUST redact keys from logs, diagnostics, and errors.
+- SHOULD hide keys after entry.
+- SHOULD NOT export a key without an explicit user action.
 
 Providers:
 
-- SHOULD allow API keys to be revoked;
-- SHOULD allow API keys to be rotated;
-- SHOULD rate-limit authenticated requests;
-- SHOULD avoid revealing whether a specific API key exists;
-- SHOULD provide users with visibility into API key usage where practical.
+- SHOULD support revocation and rotation.
+- SHOULD let operators restrict a key's permissions.
+- SHOULD rate-limit requests.
+- SHOULD record enough usage data to investigate abuse.
 
-### 20. Error Responses
+### 14. Error Responses
 
-If authentication is missing or invalid, providers SHOULD return:
+When the request has no credentials, the provider MUST return:
 
 ```http
 HTTP/1.1 401 Unauthorized
-WWW-Authenticate: Bearer
+WWW-Authenticate: Bearer realm="nano-rpc"
 ```
 
-If authentication succeeds but the authenticated key is not authorized for the requested action, providers SHOULD return:
+For an invalid or revoked key, the provider SHOULD return:
+
+```http
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="nano-rpc", error="invalid_token"
+```
+
+For insufficient permission, the provider SHOULD return:
 
 ```http
 HTTP/1.1 403 Forbidden
+WWW-Authenticate: Bearer realm="nano-rpc", error="insufficient_scope"
 ```
 
-Providers SHOULD avoid returning error messages that reveal sensitive information about API keys, account status, or internal authentication rules.
+An error MUST NOT echo the key or reveal whether another specific key exists.
 
 ## Published Test Vectors
 
-This standard does not define cryptographic test vectors.
-
-The following are interoperability examples.
+This document has no cryptographic vectors. The following examples define
+observable interoperability behavior.
 
 ### Example 1: Separate URL and API Key
 
@@ -454,11 +311,7 @@ Authorization: Bearer test_api_key
 {"action":"block_count"}
 ```
 
-Expected behavior:
-
-```text
-Provider authenticates using the Bearer token.
-```
+The provider authenticates the request with the Bearer token.
 
 ### Example 2: Credential-Bearing URL Shorthand
 
@@ -486,14 +339,8 @@ Authorization: Bearer test_api_key
 {"action":"block_count"}
 ```
 
-Expected behavior:
-
-```text
-Client extracts the API key from the URL.
-Client removes the credential from the URL.
-Client sends the API key using Authorization: Bearer.
-Provider authenticates using the Bearer token.
-```
+The client extracts the key, removes userinfo from the URL, and sends the
+Bearer header.
 
 ### Example 3: Authenticated PoW Request
 
@@ -518,22 +365,13 @@ Authorization: Bearer test_api_key
 }
 ```
 
-Expected behavior:
-
-```text
-Provider authenticates using the Bearer token.
-Provider processes the request as an authenticated work_generate request.
-```
+The provider authenticates the request before processing `work_generate`.
 
 ## Reference Implementation
 
-A reference implementation SHOULD demonstrate:
+No reference implementation is nominated yet.
 
-- sending Bearer-authenticated Nano RPC requests;
-- configuring an RPC URL and API key separately;
-- optionally parsing`https://API_KEY@rpc.example` as a configuration shorthand;
-- normalizing credential-bearing URLs;
-- redacting API keys in logs;
-- making a general Nano RPC request;
-- making an authenticated`work_generate` request.
-```
+## References
+
+- [RFC 6750 — OAuth 2.0 Bearer Token Usage](https://www.rfc-editor.org/rfc/rfc6750)
+- [Nano RPC protocol](https://docs.nano.org/commands/rpc-protocol/)
