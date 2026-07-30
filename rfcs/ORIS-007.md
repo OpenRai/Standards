@@ -96,7 +96,8 @@ invoice without an on-chain memo.
 **Risks:**
 - Each invoice adds an account that the application must monitor and recover.
 - Reusing a supposedly one-time account creates ambiguity about which invoice was paid.
-- Sweeping funds from many invoice accounts into a hot wallet links them on-chain; see [Account Sweep Linkage](#account-sweep-linkage).
+- Sweeping many invoice accounts into one hot wallet links them on-chain. See
+  [Account Sweep Linkage](#account-sweep-linkage).
 - Recovery requires either deterministic derivation or stored metadata mapping accounts to invoices.
 - Unbounded account generation increases wallet and application state.
 
@@ -363,27 +364,32 @@ as an event.
 
 ## Address and Data Encoding
 
-These patterns try to encode application-level meaning in addresses, amounts, timing, proof-of-work, or transaction ordering. None of them are recommended for general use.
+These patterns encode meaning in an address, derivation index, timing, block
+order, or proof of work. None is suitable as a general-purpose data channel.
 
 ### Address Payload Encoding
 
-Nano addresses are derived from public keys. Some applications try to encode data into the address itself — by searching for vanity addresses whose characters spell out a payload, or by constructing addresses from arbitrary bytes. This is fragile, low-capacity, and risks sending funds to addresses with no known private key.
+Search for an address containing chosen characters, or interpret arbitrary bytes
+as a public key. The second form can create an address with no known private
+key.
 
 **Classification:** Harmful if generalized · **AKA:** Address-as-Data
 
 **How it works:** The application generates or selects destination accounts whose address characters encode application-level data. The encoded value is visible in the address.
 
 **Risks:**
-- Constructing addresses from arbitrary payload bytes almost certainly produces an address with no known private key. Funds sent there are permanently lost.
+- An arbitrary payload does not provide the private key needed to spend funds.
 - Generating meaningful vanity addresses is computationally expensive.
 - Users may mistake encoded addresses for ordinary payment addresses.
 - Encourages treating addresses as a data store rather than as spendable accounts.
 
-**Verdict:** Do not encode arbitrary data into addresses. If an address is used, it must correspond to a spendable account controlled by the intended receiver.
+**Recommendation:** Do not encode payloads as destination addresses. Every
+payment destination must belong to the intended receiver.
 
 ### Vanity Prefix as Identity
 
-A recognizable address prefix (e.g., `nano_1project...`) gives users a visual cue that an address belongs to a specific organization. Unlike [Address Payload Encoding](#address-payload-encoding), the address is a real spendable account — the vanity is just branding. The risk: adversaries can generate lookalike prefixes for phishing.
+Generate a spendable address with a recognizable prefix for branding. An
+attacker can generate a similar prefix.
 
 **Classification:** Context-dependent · **AKA:** Branded Address
 
@@ -394,11 +400,14 @@ A recognizable address prefix (e.g., `nano_1project...`) gives users a visual cu
 - Users may rely on prefix recognition and skip full-address verification.
 - Wallets that truncate addresses may hide the discriminating portion.
 
-**Verdict:** Acceptable for branding when published through authenticated channels. Never rely on vanity prefixes as a substitute for cryptographic authentication of payment destinations.
+**Recommendation:** Publish vanity addresses through an authenticated channel.
+Do not treat a recognizable prefix as authentication.
 
 ### Burn Signal
 
-Sending funds to an address with no known private key destroys them — provably, irreversibly (as far as anyone knows). Some applications use this as proof of commitment or sacrifice. The problem: you can never prove no private key exists, and the funds are genuinely wasted.
+Send funds to an address for which no private key is known, then interpret the
+payment as a commitment or sacrifice. Observers cannot prove that nobody knows
+the private key.
 
 **Classification:** Harmful if generalized · **AKA:** Proof-of-Burn Signal
 
@@ -406,62 +415,69 @@ Sending funds to an address with no known private key destroys them — provably
 
 **Risks:**
 - Wastes funds.
-- It's impossible to prove that no private key exists for a given address.
+- Cannot prove that no party controls the address.
 - Encourages value destruction as a signaling mechanism.
 - Can confuse users and explorers.
 
-**Verdict:** Do not use burn payments as routine signals. If proof of commitment is needed, use signed off-chain commitments or ordinary payments to controlled accounts.
+**Recommendation:** Do not use burn payments as routine signals. Use a signed
+off-chain commitment instead.
 
 ### Account Index Signal
 
-If you use deterministic key derivation (like HD wallets), the index number itself can carry meaning — account type, invoice sequence, role. This is convenient but leaks information: sequential indexes reveal business volume, and gaps break account discovery.
+Assign application meaning to deterministic derivation indexes, such as account
+roles or invoice ranges.
 
 **Classification:** Context-dependent · **AKA:** Derivation Index Signal
 
 **How it works:** The wallet derives accounts at specific indexes, and the index number maps to application-level meaning (e.g., index 0 = main account, index 1–1000 = invoice pool).
 
 **Risks:**
-- Sequential indexes leak business volume (e.g., order count, user signups).
+- Observable derivation sequences can reveal account or invoice counts.
 - Gaps in the index sequence break automatic account discovery.
-- Different wallets use different derivation schemes — recovery depends on documenting the exact scheme.
+- Recovery depends on the wallet's exact derivation scheme.
 - Publishing extended public keys exposes future addresses.
 
-**Verdict:** Use internally if needed, but document derivation paths, gap limits, and privacy consequences. Do not expose sensitive derivation structure.
+**Recommendation:** Keep index meaning internal. Document derivation paths and
+gap limits for recovery.
 
 ### Timing Signal
 
-Nano blocks don't carry timestamps. The observed confirmation time depends on network propagation, node arrival order, and vote duration — two observers may disagree on when the same block was confirmed. Encoding meaning in timing or ordering between blocks is fragile and unauditable.
+Nano blocks do not contain timestamps. Nodes can record different arrival and
+confirmation times for the same block.
 
 **Classification:** Context-dependent · **AKA:** Temporal Encoding
 
 **How it works:** The application assigns meaning to when blocks are published, confirmed, or observed relative to each other.
 
 **Risks:**
-- No authoritative timestamp exists — observation time differs across nodes, wallets, and indexers.
+- No authoritative block timestamp exists.
 - Network delays, wallet batching, and user behavior introduce unpredictable timing variation.
 - Timing signals are fragile and hard to audit.
 
-**Verdict:** Do not rely on timing as a primary signal. Include timestamps and expirations in off-chain signed metadata instead.
+**Recommendation:** Do not use observed timing as a primary signal. Put a
+timestamp and expiration in signed off-chain data.
 
 ### Multi-send Ordering Signal
 
-Some applications encode data in the sequence of multiple sends — the order, amounts, or destinations carry meaning. This creates unnecessary ledger activity, is fragile under partial failure, and encourages using the ledger as a message bus.
+Encode data in a sequence of sends, amounts, or destinations.
 
 **Classification:** Harmful if generalized · **AKA:** Send Ordering Signal
 
 **How it works:** The sender publishes several sends in sequence. Observers interpret the ordering, amount sequence, or destination sequence as an encoded message.
 
 **Risks:**
-- Ordering assumptions may differ across observers and indexers.
+- One account chain has a defined order, but blocks across accounts have no
+  shared total order.
 - Partial failure corrupts the message.
 - Multiple devices sharing a key can race for the next block position. Incoming payments to the sender's own account mutate its balance between sends, altering block ordering.
 - Creates unnecessary ledger activity.
 
-**Verdict:** Do not use multi-send ordering as a general-purpose encoding mechanism.
+**Recommendation:** Do not use send sequences as a data encoding.
 
 ### Dust Spray Signaling
 
-Sending tiny amounts to many accounts at once — a "dust spray" — forces those accounts to deal with unsolicited pending receivables. It's spam. It clutters wallets, enables tracking, and can deanonymize users when they sweep the dust into their main accounts.
+Send small amounts to many accounts and interpret the recipients' later actions
+as a signal. This creates unsolicited receivables.
 
 **Classification:** Harmful if generalized · **AKA:** Dust Spam
 
@@ -473,11 +489,13 @@ Sending tiny amounts to many accounts at once — a "dust spray" — forces thos
 - When recipients sweep the dust into their main accounts, it links those accounts on-chain (see [Account Sweep Linkage](#account-sweep-linkage)).
 - Burdens wallets, indexers, explorers, and users.
 
-**Verdict:** Do not use dust spray for notifications, messaging, marketing, tracking, or application state.
+**Recommendation:** Do not use dust spray for notifications, marketing,
+tracking, or application state.
 
 ### Arbitrary Data Encoding
 
-Nano's block lattice is not a data storage system. Some applications try to encode arbitrary data through combinations of amounts, addresses, representative fields, work values, account creation patterns, and transaction ordering. This creates ledger bloat, degrades infrastructure, and produces encoding that's fragile, low-capacity, and meaningless without custom decoders.
+Combine amounts, addresses, representatives, work values, accounts, and block
+order into a custom data encoding. Every write adds permanent ledger state.
 
 **Classification:** Harmful if generalized · **AKA:** Ledger Data Storage
 
@@ -489,11 +507,14 @@ Nano's block lattice is not a data storage system. Some applications try to enco
 - Data capacity is extremely low and encoding is fragile.
 - Application meaning is lost without the custom decoder.
 
-**Verdict:** Do not use the block lattice as a data storage layer. Store metadata off-chain and reference it via cryptographic commitments.
+**Recommendation:** Store metadata outside the ledger. Use a cryptographic
+commitment when the application must bind that metadata to a ledger event.
 
 ### Work-field / Overwork Signaling
 
-Each Nano block includes a proof-of-work value. Some applications try to encode meaning in that value — selecting specific work values or computing work beyond what's required. This wastes computation, has extremely low data capacity, and critically: the work value is not part of the block hash. It can be recomputed by nodes or wallets when republishing, destroying any "signal" placed in it.
+Select a proof-of-work value with a chosen pattern, or compute more work than the
+network requires. Work is not part of the block hash and can be replaced without
+changing the block identity.
 
 **Classification:** Harmful if generalized · **AKA:** Proof-of-work Tagging
 
@@ -501,15 +522,15 @@ Each Nano block includes a proof-of-work value. Some applications try to encode 
 
 **Risks:**
 - Wastes computation for negligible data capacity.
-- The work value has no cryptographic binding to the block — it can be recomputed at any time.
+- Another implementation can replace the work value.
 - Poor wallet and tooling support.
 - Observers may ignore or discard the distinction.
 
-**Verdict:** Do not use work values as a signaling channel.
+**Recommendation:** Do not use work values as a signaling channel.
 
 ## Payment Correlation Guidance
 
-This section is the normative summary referenced by the triage list under Payment Correlation Patterns.
+This section summarizes the recommended choices.
 
 For ordinary payment correlation, applications SHOULD prefer:
 
@@ -523,19 +544,22 @@ Applications SHOULD treat [Raw Dust Tagging](#raw-dust-tagging) as a controlled 
 
 Applications SHOULD NOT use [Representative Tagging](#representative-tagging), [Representative as dApp Tag](#representative-as-dapp-tag), [Representative Change Pulse](#representative-change-pulse), [Pending Receivable Markers](#pending-receivable-marker), [Burn Signals](#burn-signal), [Dust Spray Signaling](#dust-spray-signaling), [Address Payload Encoding](#address-payload-encoding), [Multi-send Ordering Signals](#multi-send-ordering-signal), or [Arbitrary Data Encoding](#arbitrary-data-encoding) for ordinary invoice correlation.
 
-While correlation conventions map payments to invoices, secure transaction processing requires rigorous software engineering guidelines. Developers and exchanges building payment integration systems SHOULD consult [ORIS-008 (Nano Integration and Reliable Payment Processing Standard)](./ORIS-008.md) for normative requirements on transaction isolation, idempotency constraints, database concurrency, automated reconciliation audits, and payment lifecycle edge-case handling (underpayments, overpayments, duplicate payments, indexer lag).
+ORIS-008 covers confirmation, idempotency, reconciliation, and payment lifecycle
+handling after the application chooses a correlation method.
 
 ## Glossary
 
-Definitions are intentionally brief; consult current Nano protocol documentation for authoritative definitions.
+These definitions describe how this document uses Nano terms.
 
 - Account chain: The strictly serial sequence of blocks belonging to a single Nano account. Each account maintains its own chain.
 - Application-level meaning: Meaning assigned by software above the protocol layer.
 - Archival node: A node configuration that retains full block history for all account chains, rather than pruning to frontiers only.
 - Block lattice: The overall data structure formed by all individual account chains in Nano.
 - Change block: A block that changes an account's representative without transferring value.
-- Dust: A negligibly small amount of Nano (typically less than ~0.000001 XNO). The exact threshold is application-dependent.
-- Frontier: The latest confirmed block on a given account chain. Many node configurations retain only the frontier and discard or prune older block bodies.
+- Dust: An amount small enough that an application treats it as uneconomical or
+  unwanted. The threshold is application-specific.
+- Frontier: The latest confirmed block on an account chain. A pruned node may
+  discard older block bodies.
 - Nano block fields: Each block contains `account`, `previous`, `representative`, `balance`, `link`, `work`, and `signature`. There is no generic data, memo, or payload field.
 - Off-chain: Data exchanged outside the Nano P2P network.
 - Open block: The first block on an account chain, which receives the account's initial incoming send and establishes its first representative.
@@ -543,9 +567,8 @@ Definitions are intentionally brief; consult current Nano protocol documentation
 - Raw: The smallest indivisible Nano unit, with $1\ \text{XNO} = 10^{30}\ \text{raw}$.
 - Receivable (pending): An incoming send that has been published by the sender but not yet acknowledged by a receive block on the destination account.
 - Receive block: A block that claims a pending send and credits the balance to the receiving account.
-- Representative: The voting account designated by an account holder; representatives participate in Open Representative Voting on behalf of their delegators.
+- Representative: The account designated to vote with an account holder's
+  delegated weight.
 - Send block: A block that debits a balance from an account and creates a pending receivable on a destination account.
 - Signal: A ledger event or state interpreted by an application.
 - XNO: The Nano user-facing unit.
-
-Some patterns include optional subsections: **Network-health considerations** describes impact on Nano consensus or infrastructure; **Classification note** clarifies edge cases or rationale for the assigned risk level.
