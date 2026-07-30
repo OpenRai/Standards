@@ -13,6 +13,10 @@ This document defines the `nano` payment target type for the `payto:` URI scheme
 in RFC 8905. It specifies the account path, Nano amount formats, canonical
 generation, and safe parsing.
 
+The `nano` target type is not yet listed in the GANA Payto Payment Target Types
+registry. RFC 8905 recommends that applications allow unregistered target types,
+so implementations can test this Working Draft before registration.
+
 ## Motivation
 
 Community documentation and wallet implementations use more than one Nano
@@ -89,7 +93,8 @@ invent a query option for another Nano network.
 
 ### ABNF Syntax
 
-The generic grammar below is RFC 8905 §2, reproduced for reference; the `nano`-specific additions are new in this document.
+The generic grammar below comes from RFC 8905 Section 2. The Nano additions are
+defined here.
 
 ```abnf
 ; Generic payto grammar (RFC 8905 §2)
@@ -130,30 +135,63 @@ NOT generate that form.
 
 | Name | Source | Requirement | Notes |
 |---|---|---|---|
-| `amount` | generic-opt | MAY be present | See [Amount Representation](#amount-representation) |
+| `amount` | generic option | MAY appear once | XNO amount, defined below |
+| `nano-raw` | Nano option | MAY appear once | Exact amount in raw |
 | `receiver-name` | generic-opt | MAY be present | Canonical hyphenated form |
-| `sender-name` | generic-opt | MAY be present | Defined by RFC 8905; not yet exercised by existing Nano wallet docs |
+| `sender-name` | generic-opt | MAY be present | Sender-supplied name |
 | `message` | generic-opt | MAY be present | Free-text, producer-supplied, unauthenticated |
-| `instruction` | generic-opt | MAY be present | Defined by RFC 8905; no Nano-specific semantics assigned yet |
+| `instruction` | generic-opt | MAY be present | Reconciliation instructions |
 
-Producers MUST NOT emit underscore-separated option names (e.g. `receiver_name`) — the RFC 8905 `opt-name` grammar only permits `ALPHA`, `DIGIT`, `-`, and `.`; underscores are not legal. Consumers MAY accept underscore variants for backward compatibility with non-conformant producers, but MUST treat the hyphenated form as canonical when generating.
+Producers MUST use hyphenated generic option names. They MUST NOT emit
+underscore forms such as `receiver_name`. Consumers MAY accept an underscore
+form as legacy input.
 
-No `nano`-specific `authority-specific-opt` values are defined by this document. Consumers MUST ignore unrecognized authority-specific options that do not affect address resolution or amount, to preserve forward compatibility with future extensions (e.g. NanoNym targets, correlation identifiers per ORIS-007).
+This document defines only one Nano-specific option: `nano-raw`. Consumers MUST
+ignore other unrecognized authority-specific options unless they change address
+or amount resolution.
 
 ### Amount Representation
 
-- Format per RFC 8905: `amount=[<currency>:]<value>`.
-- When no currency prefix is given, `<value>` MUST be interpreted as raw units, and MUST be an unsigned base-10 integer string — no decimal point, no scientific notation, no separators. Producers MUST NOT emit floating-point-formatted raw amounts.
-- When a currency prefix is given (an ISO 4217 code, or the literal token `XNO`), consumers MUST convert to raw using 1 XNO = 10^30 raw, performed with arbitrary-precision/bigint arithmetic. Consumers MUST NOT perform this conversion using native IEEE-754 double-precision floats — that representation cannot hold 10^30 exactly, and this exact class of bug has caused fund-loss incidents in other ecosystems.
-- Fiat-denominated amounts require an exchange-rate lookup that is inherently non-atomic between URI generation and consumption. Producers SHOULD prefer emitting raw or `XNO`-denominated amounts directly, and MAY omit `amount` entirely for open-ended requests (tips, donations).
+RFC 8905 requires `amount=<currency>:<unit>[.<fraction>]`. It reserves
+three-letter currency names for ISO 4217, limits `unit` to values below 2^53,
+and permits at most eight fractional digits. The three-letter ticker `XNO`
+therefore cannot be assigned custom semantics in this field.
+
+This profile defines the four-letter currency name `NANO`:
+
+```text
+amount=NANO:<unit>[.<fraction>]
+```
+
+Requirements:
+
+- Consumers MUST ignore commas in `unit` and `fraction`, as RFC 8905 requires.
+- After removing commas, `unit` MUST contain base-10 digits and be less than
+  2^53.
+- After removing commas, `fraction` MAY contain one to eight base-10 digits.
+- Producers MUST NOT emit commas, signs, exponents, or trailing decimal points.
+- Consumers MUST interpret the value as XNO.
+- Consumers MUST convert XNO to raw with exact decimal or integer arithmetic.
+
+For an exact raw amount, use:
+
+```text
+nano-raw=<unsigned-base-10-integer>
+```
+
+`nano-raw` has no 2^53 limit. Its value MUST contain digits only, with no
+leading zero unless the value is `0`.
+
+A producer MUST NOT include both `amount` and `nano-raw`. A consumer MUST reject
+a URI containing both. A producer MAY omit both for an open amount.
 
 ### Generation Rules (Producer Requirements)
 
 Producers:
 
 - MUST emit `payto://nano/<nano-address>`, `nano_`-prefixed, double-slash form.
-- MUST percent-encode option values per RFC 3986 `pchar` rules (in particular, spaces in `receiver-name` and `message`).
-- MUST NOT emit float-formatted raw amounts.
+- MUST percent-encode option values according to RFC 3986.
+- MUST use `amount=NANO:...` or `nano-raw=...` for a fixed amount.
 - SHOULD also emit a companion `nano:` URI when the display context is Nano-specific (see [Relationship to the `nano:` Scheme](#relationship-to-the-nano-uri-scheme)).
 - SHOULD include `receiver-name` where a stable, meaningful recipient identity exists.
 
@@ -162,25 +200,30 @@ Producers:
 Consumers:
 
 - MUST accept options in any order.
+- MUST reject repeated `amount` or `nano-raw` options.
 - MUST validate the address checksum before treating a URI as actionable.
-- MUST reject the URI outright if the `amount` value or address fails validation; MUST NOT silently coerce, truncate, or round.
-- MUST ignore unrecognized authority-specific options that don't affect address or amount resolution.
-- MUST NOT prefill and auto-submit a transaction without explicit user review — the confirmation UI MUST display the full, untruncated destination address and the resolved amount (in both raw and a human-readable unit) before any signing occurs. This extends RFC 8905 §8's general prohibition on unreviewed transaction initiation with a Nano-specific requirement: because Nano sends are irrevocable and confirm in under a second, an ellipsized or truncated address in the confirmation dialog is a distinct phishing vector from the ones RFC 8905 already addresses.
-- MUST NOT present `receiver-name` or `message` in a way that could be mistaken for consumer-verified identity (e.g., a verified badge) — these fields are producer-supplied and unauthenticated.
+- MUST reject an invalid address or amount without coercion, truncation, or
+  rounding.
+- MUST ignore unknown options that do not affect the destination or amount.
+- MUST require user review before signing or submitting a transaction.
+- MUST let the user inspect the complete destination and exact resolved amount.
+- MUST NOT present `receiver-name` or `message` as verified identity.
 
 ### URI Handler Registration (Informative)
 
-This section is non-normative; verify exact mechanisms against current platform documentation before implementing.
+This section is non-normative. Verify each mechanism against current platform
+documentation.
 
 - **Android**: register an `intent-filter` with `android:scheme="payto"` (and separately `"nano"`).
 - **iOS / macOS**: register `"payto"` and `"nano"` under `CFBundleURLSchemes`.
-- **Web**: `navigator.registerProtocolHandler()` has partial and inconsistent browser support for custom schemes; treat as supplementary, not primary. This is a distinct integration surface from the W3C Payment Request / Payment Handler API path and is out of scope here.
+- **Web**: Browser support for `navigator.registerProtocolHandler()` and custom
+  schemes varies. Treat it as an optional integration.
 
 ## Compatibility Matrix
 
 To be populated via a community survey (tracking issue TBD) rather than unilateral reverse-engineering. Wallet maintainers should confirm current behavior directly.
 
-| Wallet | `payto://` (double-slash) | `payto:` (single-slash) | `receiver-name` | `receiver_name` | raw integer amount | `XNO:`float amount | `nano:` companion | Source / notes |
+| Wallet | `payto://` | legacy single-slash | `receiver-name` | `receiver_name` | `nano-raw` | `NANO:` amount | `nano:` companion | Source / notes |
 |---|---|---|---|---|---|---|---|---|
 | Nautilus | TBD | TBD | TBD | TBD | TBD | TBD | TBD | |
 | Cake Wallet | TBD | TBD | TBD | TBD | TBD | TBD | TBD | |
@@ -189,9 +232,9 @@ To be populated via a community survey (tracking issue TBD) rather than unilater
 
 ## Open Questions
 
-- Single-slash vs. double-slash authority delimiter — resolve empirically via the compatibility matrix before this leaves Draft.
-- Whether `sender-name` and `instruction` (defined by RFC 8905, unused so far in Nano wallets) should be given Nano-specific semantics in v1 or explicitly deferred.
-- Whether a future NanoNym-based `payto:` target type (building on ORIS-002/ORIS-005) belongs in this document or a successor.
+- Which wallets require the legacy single-slash input form.
+- Whether `sender-name` and `instruction` need Nano-specific limits.
+- Whether a future NanoNyms target belongs here or in a separate profile.
 
 ## Published Test Vectors
 
@@ -224,9 +267,26 @@ payto://nano/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 nano:mainnet:nano%5F3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn
 ```
 
-Note the underscore is raw in the `payto:` form and percent-encoded (`%5F`) in the CAIP-10 form — both decode to the identical canonical address `nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn`.
+The underscore is raw in `payto:` and percent-encoded in CAIP-10. Both decode
+to the same native Nano address.
 
-Further vectors — in particular for the [open questions](#open-questions) around slash count and option-name casing — should be added once the compatibility matrix confirms the canonical forms in production use.
+### Vector 3 — XNO Amount
+
+```text
+payto://nano/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?amount=NANO:1.25
+```
+
+Resolved raw amount:
+
+```text
+1250000000000000000000000000000
+```
+
+### Vector 4 — Exact Raw Amount
+
+```text
+payto://nano/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?nano-raw=123
+```
 
 ## Reference Implementation
 
@@ -235,6 +295,7 @@ No reference implementation is nominated yet.
 ## References
 
 - [RFC 8905 — The 'payto' URI Scheme for Payments](https://www.rfc-editor.org/rfc/rfc8905)
+- [GANA — Payto Payment Target Types](https://gana.gnunet.org/payto-payment-target-types/payto_payment_target_types.html)
 - [docs.nano.org — URI and QR Code Standards](https://docs.nano.org/integration-guides/the-basics/#uri-and-qr-code-standards)
 - [nano.community — Integrations / URI Scheme Standards](https://nano.community/getting-started-devs/integrations#uri-scheme-standards)
 - [ORIS-006 — Nano CAIP Identifiers](./ORIS-006.md)
