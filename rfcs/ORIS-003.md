@@ -2,27 +2,31 @@
 OpenRai Initiative Standard: 003
 ```
 
-# NanoNym Payment Event Schema
+# NanoNyms Payment Event Schema
 
 > Status: Working Draft
 > Category: Application Interface
 
 ## Abstract
 
-This document defines the transport-agnostic, encryption-agnostic JSON structure used to represent a NanoNym stealth-payment notification. It is the canonical payload shared by all NanoNym transport and verification profiles.
+This document defines the JSON event that describes a payment to a NanoNym.
+Transport and verification profiles use the same event before applying their
+own encryption, delivery, or proof rules.
 
 ## Motivation
 
-NanoNym needs a single logical payment-event schema that remains stable across different transports, privacy models, and delivery methods.
+NanoNyms can use different transports without changing the meaning of a payment
+notification. A shared event lets senders, receivers, and verifiers reuse the
+same parser and validation rules.
 
-This document separates the invariant payload from profile-specific concerns such as:
+The base event does not define:
 
-- transport mechanism
-- encryption layer
-- push versus proof-based delivery
-- observer privacy model
+- the transport,
+- the encryption layer,
+- push or proof-based delivery, or
+- the observer privacy model.
 
-Profiles may vary those concerns, but they share the same base payload schema.
+Each profile defines those choices around the same event.
 
 ## Conventions
 
@@ -30,10 +34,10 @@ The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document indic
 
 Unless otherwise stated:
 
-- JSON objects are encoded using UTF-8
-- hexadecimal strings are lowercase and unprefixed
-- `R` denotes the ephemeral Ed25519 public key used as the stealth derivation input
-- profile-specific extensions MUST preserve base-schema validity
+- JSON uses UTF-8.
+- Hexadecimal strings are lowercase and do not include a prefix.
+- `R` is the ephemeral Ed25519 public key used for stealth derivation.
+- Profile extensions MUST preserve the validity of the base event.
 
 ## Specification
 
@@ -69,7 +73,8 @@ Optional fields:
 }
 ```
 
-The example above illustrates field shape only. It is not a cryptographic test vector and does not assert that `R` is a valid curve point.
+This example shows the JSON shape only. It is not a test vector, and its `R`
+value is not asserted to be a valid curve point.
 
 ### Validation Rules
 
@@ -82,13 +87,18 @@ The example above illustrates field shape only. It is not a cryptographic test v
 7. Implementations MUST reject payloads missing any required field.
 8. Implementations MUST ignore unrecognized fields for forward compatibility.
 
-Validation of `R` includes decoding the compressed Ed25519 point and rejecting malformed encodings. Implementations SHOULD also reject small-order points. Profile documents that use `R` for verification MAY impose stricter validation if their proof model requires it.
+Validation of `R` includes decoding the compressed Ed25519 point and rejecting
+malformed encodings. Implementations SHOULD also reject small-order points. A
+profile MAY require additional point checks for its proof model.
 
-`tx_hash` identifies the Nano send block that transferred funds to the derived stealth account. Chain validation of that block, including confirmation state, destination, and amount, is profile-specific and is not performed by base-schema validation.
+`tx_hash` identifies the Nano send block that paid the derived stealth account.
+Base-schema validation does not query the ledger. The active profile must define
+how to check confirmation, destination, and amount.
 
 ### Profile Extensibility
 
-A valid profile payload MUST be a valid base-schema payload. Profiles MAY add fields. Profiles MUST NOT remove or redefine base-schema fields.
+A profile event MUST satisfy the base schema. A profile MAY add fields, but it
+MUST NOT remove or redefine a base field.
 
 To reduce extension-field collisions:
 
@@ -101,27 +111,40 @@ The `r` field defined by ORIS-005 is the canonical example of the second rule.
 
 ### Versioning
 
-The schema version is `2`. This matches the NanoNym v2 address version defined in ORIS-002, but the two version numbers are independently governed.
+The event version is `2`. ORIS-002 also assigns version `2` to the NanoNyms
+payment-code format, but each version number changes independently.
 
-The value `2` is retained because it is already emitted by the existing implementation; changing it to `1` would introduce a breaking change without functional benefit.
+Existing implementations already emit event version `2`. Renumbering it would
+break those events without changing their meaning.
 
 ### Role of `R`
 
-`R` is an Ed25519 ephemeral public key corresponding to a per-payment ephemeral scalar `r`, such that `R = r * G` where `G` is the Ed25519 basepoint.
+`R` is the Ed25519 public key for the per-payment scalar `r`:
 
-This schema carries `R`, not `r`. The scalar remains secret to the payer and is disclosed only in profiles where the verifier lacks the recipient's view private key.
+```text
+R = r * G
+```
 
-The NanoNym v2 stealth derivation used by ORIS-002 defines the current scalar and point rules. A future stealth-math standard MAY factor those rules out, but it must preserve base-schema semantics for `R` unless it also defines a new schema version.
+`G` is the Ed25519 basepoint.
+
+The event contains `R`, not `r`. The payer keeps `r` secret unless a profile
+requires it as part of a proof.
+
+ORIS-002 defines the scalar and point rules for NanoNyms v2. A later standard
+may move those rules, but it MUST preserve the meaning of `R` or define a new
+event version.
 
 ### Relationship to Other Standards
 
-- ORIS-002 defines the NanoNym address format that carries the public keys and notification URI.
+- ORIS-002 defines the NanoNyms payment-code format.
 - ORIS-004 defines delivery of this payload via Nostr.
 - ORIS-005 defines use of this payload in an HTTP 402 verification flow.
 
 ### Package Boundary
 
-Schema validation such as structure, field types, hexadecimal format, and version checks belongs in `@nanonyms/protocol`. Stealth-specific validation such as on-curve verification for `R` and stealth-address derivation belongs in `@nanonyms/crypto`.
+`@nanonyms/protocol` validates the JSON structure, field types, hexadecimal
+format, and version. `@nanonyms/crypto` validates `R` as a curve point and
+performs stealth-account derivation.
 
 ## Published Test Vectors
 
@@ -129,5 +152,5 @@ No published test vectors are defined in this document yet.
 
 ## Reference Implementation
 
-- <https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0002-nanonym-payment-event-schema.md>
-- <https://github.com/cbrunnkvist/NanoNymNault>
+- [NanoNymNault payment-event specification](https://github.com/cbrunnkvist/NanoNymNault/blob/main/docs/rfcs/0002-nanonym-payment-event-schema.md)
+- [NanoNymNault source](https://github.com/cbrunnkvist/NanoNymNault)

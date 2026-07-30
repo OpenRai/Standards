@@ -9,7 +9,7 @@ A collection of technical specifications designed to promote interoperability ac
 | --- | --- |
 | [ORIS-001: Nano Off-chain Message Signing (NOMS)](rfcs/ORIS-001.md) | Implementation Draft |
 | [ORIS-002: NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano](rfcs/ORIS-002.md) | Implementation Draft |
-| [ORIS-003: NanoNym Payment Event Schema](rfcs/ORIS-003.md) | Working Draft |
+| [ORIS-003: NanoNyms Payment Event Schema](rfcs/ORIS-003.md) | Working Draft |
 | [ORIS-004: Nostr Transport Profile for NanoNym Payment Notifications](rfcs/ORIS-004.md) | Working Draft |
 | [ORIS-005: Utilizing NanoNyms for x402 Exact Pre-payment Verification](rfcs/ORIS-005.md) | Working Draft |
 | [ORIS-006: Nano CAIP Identifiers](rfcs/ORIS-006.md) | Implementation Draft |
