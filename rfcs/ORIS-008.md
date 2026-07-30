@@ -2,48 +2,56 @@
 OpenRai Initiative Standard: 008
 ```
 
-# Nano Integration and Reliable Payment Processing Standard
+# Reliable Nano Payment Integration
 
 > Status: Working Draft
 > Category: Informational / Application Guidance
 
 ## Abstract
 
-This document tells you how to build a reliable payment integration with Nano. If you're coming from UTXO (Bitcoin) or EVM (Ethereum) systems, Nano's block-lattice architecture will feel unfamiliar — there are no fees, no mempool in the traditional sense, and transactions are split into two separate blocks. This document explains what that means for your code, and provides the patterns, decision trees, and checklists you need to build a system that credits deposits correctly, handles withdrawals safely, and doesn't lose money.
+This document explains how to process Nano deposits and withdrawals without
+double-crediting, double-spending application balances, or losing events. It
+covers confirmation tracking, idempotency, reconciliation, and common payment
+exceptions.
 
 ## Motivation
 
-Nano is fast and feeless, but those properties create integration hazards that don't exist in fee-based systems:
+Nano differs from UTXO and EVM systems in ways that affect application code:
 
-- **No fees = no natural rate limiting.** In Bitcoin or Ethereum, transaction fees make spam expensive. In Nano, a malicious user can flood your system with withdrawal requests at zero cost. Your database must handle concurrent requests safely.
-- **Two-phase transactions.** A Nano transfer has two blocks: a `send` (sender creates it) and a `receive` (receiver creates it). If you're scanning for both, you'll double-count deposits.
-- **Confirmation = cemented, not "included in a block."** There's no "wait for 6 confirmations." A block is either cemented (irreversible) or it isn't. You must check the `confirmed` field.
-- **No mempool.** Blocks are processed immediately. There's no "pending in the mempool" state to monitor.
+- A transfer uses one send block and one receive block.
+- Applications act on confirmed blocks rather than a confirmation count.
+- A receivable is a confirmed send that the destination has not received.
+- Feeless transfers do not replace application-level rate limits.
+- WebSocket delivery can be duplicated or missed.
 
-This document shows you how to handle all of these correctly.
+The database must remain correct when requests race, the node is unavailable,
+or the same confirmation arrives more than once.
 
 ## Nano for UTXO/EVM Developers
 
-If you're coming from Bitcoin or Ethereum, here's what's different:
+The closest concepts are:
 
 | Concept | UTXO/EVM | Nano |
 |---|---|---|
 | Transaction fee | Required (gas/miner fee) | Zero |
 | Transaction structure | Single atomic transaction | Two separate blocks: `send` + `receive` |
 | Confirmation | "Included in a block with N confirmations" | "Cemented by ORV consensus" — check `confirmed` field |
-| Mempool | Transactions wait in mempool | No mempool — blocks are processed immediately |
+| Unconfirmed work | Transactions wait in a public mempool | Nodes track blocks and active elections |
 | Account model | UTXO set or account state | Each account has its own blockchain |
 | Pending transactions | Visible in mempool | "Pending receivables" — sends that haven't been received yet |
-| Block finality | Probabilistic (more confirmations = more final) | Deterministic — once cemented, irreversible |
+| Application finality | Usually based on a confirmation count | Based on Nano confirmation |
 
-**The key mental shift:** In Bitcoin/Ethereum, you wait for confirmations. In Nano, you check if a block is cemented. In Bitcoin/Ethereum, a transaction is atomic. In Nano, a transfer has two halves — the send and the receive — and you must only credit the deposit when you see the confirmed send block, not the receive block.
+For deposits, act on the confirmed send to a managed destination. The later
+receive block changes the destination account chain but does not create a second
+deposit.
 
 ## Conventions
 
-- `send block` — the block the sender creates to transfer value
-- `receive block` — the block the receiver creates to claim the value
-- `cemented` / `confirmed` — permanently locked by network consensus
-- `idempotent` — running the same operation twice has the same result as running it once
+- **Send block:** The sender's block that creates a receivable.
+- **Receive block:** The destination account's block that claims a receivable.
+- **Confirmed or cemented:** Accepted by Nano consensus and recorded in
+  confirmation height.
+- **Idempotent:** Repeating an operation has the same effect as running it once.
 
 ## Reference Documentation
 
@@ -53,22 +61,22 @@ This document assumes you're familiar with:
 - [WebSockets](https://docs.nano.org/integration-guides/websockets/) — real-time block notifications
 - [RPC Protocol](https://docs.nano.org/commands/rpc-protocol/) — node API commands
 
-## Specification & Integration Guidelines
+## Integration Guidelines
 
 ### 1. Confirm Before Acting
 
-**Never credit a deposit or ship goods based on an unconfirmed block.**
+Credit a deposit only after its send block is confirmed.
 
-A Nano node may see a block before the network has confirmed it. If there's a fork (rare but possible), only the cemented block survives.
+A node can observe a block before confirmation. WebSocket `confirmation` events
+provide the primary signal.
 
-**How to confirm:**
-
-Subscribe to the WebSocket `confirmation` topic. When a confirmation arrives, check:
+Subscribe with acknowledgements enabled:
 
 ```json
 {
   "action": "subscribe",
   "topic": "confirmation",
+  "ack": true,
   "options": {
     "accounts": ["nano_1depositaccount..."]
   }
@@ -97,19 +105,21 @@ The confirmation message looks like:
 }
 ```
 
-**Fallback:** If the WebSocket misses a confirmation (network issues, node restart), poll with the `block_info` RPC:
+WebSockets do not guarantee delivery and can repeat an event. Persist processed
+block hashes. When the application already knows a block hash, use `block_info`
+as a fallback:
 
 ```json
 {"action": "block_info", "hash": "ABC123..."}
 ```
 
-Response includes `"confirmed": "true"` when cemented.
+The response contains `"confirmed": "true"` after confirmation.
 
 **Reference:** [Block Confirmation Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/), [WebSockets Confirmations](https://docs.nano.org/integration-guides/websockets/#confirmations), [RPC block_info](https://docs.nano.org/commands/rpc-protocol/#block_info)
 
 ### 2. Transactional Isolation and Idempotency
 
-Nano is fast and feeless. If your database has race conditions, attackers will exploit them.
+Serialize withdrawals that spend the same application balance or Nano account.
 
 ```
 [Thread 1] ──► Check Balance (10 XNO) ──┐
@@ -117,19 +127,27 @@ Nano is fast and feeless. If your database has race conditions, attackers will e
 [Thread 3] ──► Check Balance (10 XNO) ──┘
 ```
 
-**Three rules:**
+Use three rules:
 
-**A. Lock and debit before broadcast.** Deduct the user's balance in your database, commit the transaction, *then* tell the Nano node to send. If the node fails, rollback the database.
+**A. Reserve before broadcast.** In one database transaction, lock the user
+balance, create a withdrawal with a unique key, and reserve or debit the amount.
+Commit that state before asking the node to send.
 
-**B. Use database locks.** Use `SELECT ... FOR UPDATE` (PostgreSQL) or equivalent. Never trust client-side balance checks.
+If the node call fails, do not roll back an already committed transaction.
+Record a retryable failure or restore the balance in a new transaction. The
+withdrawal key MUST prevent a retry from creating another send.
 
-**C. Unique transaction keys.** Every withdrawal must have a unique ID (UUID, invoice ID). If the same request comes twice, return the existing record — don't send again.
+**B. Lock application balances.** Use `SELECT ... FOR UPDATE` or an equivalent
+serializable update. A client-side balance check provides no concurrency
+control.
+
+**C. Require an idempotency key.** Every withdrawal MUST have a unique request
+key. A repeated key returns the existing withdrawal record.
 
 ### 3. Separation of Send/Receive Ledger State
 
-**Only credit deposits when you see a confirmed `send` block. Do NOT credit when you see a `receive` block.**
-
-Why: Your hot wallet will publish `receive` blocks to claim incoming sends. If your code processes both sends and receives as deposits, you'll double-credit.
+Credit only a confirmed send whose `link_as_account` is a managed deposit
+account. Ignore receive blocks for deposit accounting.
 
 The WebSocket confirmation message includes a `subtype` field:
 
@@ -160,7 +178,16 @@ The WebSocket confirmation message includes a `subtype` field:
 }
 ```
 
-**Filter rule:** Only process confirmations where `message.block.subtype == "send"` and `message.block.link_as_account` is one of your deposit accounts.
+Use these fields:
+
+```text
+message.block.subtype == "send"
+message.block.link_as_account in managed_deposit_accounts
+message.amount
+message.hash
+```
+
+`message.amount` is the transferred amount. It is not nested inside `block`.
 
 **Reference:** [WebSockets — Confirmation sample results](https://docs.nano.org/integration-guides/websockets/#sample-results)
 

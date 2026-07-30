@@ -14,7 +14,7 @@ A collection of technical specifications designed to promote interoperability ac
 | [ORIS-005: NanoNyms Profile for x402 Exact Payments](rfcs/ORIS-005.md) | Working Draft |
 | [ORIS-006: Nano CAIP Identifiers](rfcs/ORIS-006.md) | Implementation Draft |
 | [ORIS-007: Nano Application-Level Metadata, Correlation, and Signaling Patterns](rfcs/ORIS-007.md) | Working Draft |
-| [ORIS-008: Nano Integration and Reliable Payment Processing Standard](rfcs/ORIS-008.md) | Working Draft |
+| [ORIS-008: Reliable Nano Payment Integration](rfcs/ORIS-008.md) | Working Draft |
 | [ORIS-009: The `payto:` URI Scheme for Nano](rfcs/ORIS-009.md) | Working Draft |
 | [ORIS-010: Nano RPC API-Key Authentication](rfcs/ORIS-010.md) | Working Draft |
 <!-- ORIS-INDEX-END -->
