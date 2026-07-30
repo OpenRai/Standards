@@ -193,79 +193,70 @@ message.hash
 
 ### 4. Real-Time Balance Reconciliation
 
-Run this every 60 seconds:
+Reconcile on a fixed interval chosen for the integration's risk and volume. The
+job must run independently of WebSocket handling.
 
 ```
-1. Get all on-chain balances:
-   for each wallet in [hot_wallet, cold_wallet, ...]:
-       on_chain += account_info(wallet).balance
-       on_chain += receivable(wallet).pending
+1. Calculate controlled assets:
+   for each managed account:
+       assets += confirmed balance
+       assets += confirmed receivables
 
-2. Get all database balances:
-   db_total = sum(user.balance for all users)
+2. Calculate recorded liabilities:
+   liabilities = user balances
+   liabilities += other withdrawable application balances
 
 3. Compare:
-   if on_chain < db_total:
+   if assets < liabilities:
        TRIGGER CIRCUIT BREAKER
-       - Halt all withdrawals
-       - Alert engineering
-       - Log the deficit
+       - pause withdrawals
+       - record the measured deficit
+       - alert the operator
 ```
 
-**RPC calls:**
+The exact asset and liability sets depend on custody design. Define them once
+and test the accounting equation. Do not silently add an unknown account or
+exclude a pending withdrawal to make a discrepancy disappear.
+
+Use `account_info` for confirmed balances:
 
 ```json
-// Get account balance
 {"action": "account_info", "account": "nano_1hotwallet..."}
 ```
 
-Response includes `"balance"` in raw units.
+Use `receivable` for unclaimed incoming sends:
 
 ```json
-// Get pending receivables
 {"action": "receivable", "account": "nano_1hotwallet...", "source": true}
 ```
 
-Response includes a list of pending send block hashes and their amounts.
+The response maps send-block hashes to amounts. Include only confirmed
+receivables in credited assets.
 
 **Reference:** [RPC account_info](https://docs.nano.org/commands/rpc-protocol/#account_info), [RPC receivable](https://docs.nano.org/commands/rpc-protocol/#receivable)
 
-### 5. Normative Payment Lifecycle Guidance
+### 5. Payment Lifecycle
 
-Every scenario your system must handle:
+Define application policy for at least these cases:
 
 | Scenario | What happens | What to do |
 |---|---|---|
-| **Exact Payment** | Confirmed send matches invoice amount | Credit invoice, publish receive, dispatch |
+| **Exact payment** | Confirmed send matches invoice amount | Credit once, queue receive, then fulfill |
 | **Underpayment** | Confirmed send is less than invoice | Hold, notify user, await remainder or timeout |
 | **Overpayment** | Confirmed send exceeds invoice | Credit invoice, track excess for refund |
 | **Duplicate Payment** | Second send to one-time invoice account | Do NOT double-credit, route to manual review |
 | **Late Payment** | Send confirmed after invoice expiration | Do not auto-fulfill, queue for user decision |
-| **Expired Invoice** | No payment before expiration | Mark as "Expired", stop monitoring |
+| **Expired invoice** | No payment before expiration | Stop fulfillment, but retain late-payment detection |
 | **Partial Payment** | Multiple sends accumulating | Track total, apply underpayment rules on timeout |
 | **Refund** | Returning funds | Do NOT refund to source address (may be exchange), request verified address off-chain |
 | **Exchange Source** | Deposit from shared hot wallet | Do NOT assume source address = user |
-| **Indexer Downtime** | Your system missed blocks | Buffer notifications, process idempotently on recovery |
+| **Notification downtime** | WebSocket events were missed | Rescan managed accounts and process idempotently |
 | **Receive Delay** | Delay between send confirmation and your receive | Credit based on confirmed send, not on your receive timing |
-| **Confirmation Delay** | Block not yet cemented | Do NOT credit, show "Pending confirmation" in UI |
+| **Confirmation delay** | Block is not confirmed | Do not credit; show pending state |
 
-**Publishing a receive block:**
-
-```json
-{
-  "action": "process",
-  "json_block": true,
-  "subtype": "receive",
-  "block": {
-    "type": "state",
-    "account": "nano_1yourdeposit...",
-    "previous": "...",
-    "representative": "nano_1rep...",
-    "balance": "...",
-    "link": "ABC123..."
-  }
-}
-```
+Crediting and receiving are separate operations. Commit the credit and enqueue
+the receive task in one database transaction. A worker can then create, sign,
+and publish the receive block. Retry that worker by send-block hash.
 
 **Reference:** [RPC process](https://docs.nano.org/commands/rpc-protocol/#process)
 
