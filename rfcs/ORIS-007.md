@@ -9,89 +9,104 @@ OpenRai Initiative Standard: 007
 
 ## Abstract
 
-Nano has a minimal block-lattice design with no native memo, smart-contract, or arbitrary-data fields. To correlate payments, pass metadata, or signal state, developers have repeatedly found ways to assign application-level meaning to ordinary ledger behavior. 
+Nano blocks have no memo or arbitrary-data field. Applications nevertheless
+assign meaning to destinations, amounts, representatives, and block sequences.
 
-This document catalogs and classifies these signaling and correlation patterns to establish a **shared vocabulary** and document **common failure modes**—guiding developers toward safer, more network-friendly integrations.
-
-Inclusion of a pattern here does not imply endorsement, protocol support, or wallet compatibility.
-
----
+This document names those patterns, explains their failure modes, and recommends
+safer choices. Listing a pattern does not imply support from Nano, wallets, or
+this document.
 
 ## Conventions
 
-Addresses use the `nano_` prefix. Amounts are given in `XNO` (the user-facing unit) or `raw` (the smallest indivisible unit, $1\ \text{XNO} = 10^{30}\ \text{raw}$). See the [Glossary](#glossary) for block-level terms.
+Addresses use the `nano_` prefix. Amounts use either XNO or raw:
 
----
+```text
+1 XNO = 10^30 raw
+```
 
-## Risk Classification System
+The [Glossary](#glossary) defines Nano ledger terms.
 
-This catalog uses broad **risk** and **compatibility** labels to describe how each pattern interacts with general wallets, user expectations, privacy, infrastructure, and network health:
+## Risk Classification
 
-*   **Low-Risk**: Preserves ordinary payment semantics and imposes no unusual burden on wallets, representatives, or indexers.
-*   **Context-Dependent**: Workable in bounded, application-controlled environments, but relies on specific assumptions (wallet precision, user consent, scale) that fail in general use.
-*   **Harmful if Generalized**: High risk of user confusion, privacy loss, wallet misbehavior, ledger bloat, or excessive indexing overhead if used broadly.
-
----
+- **Low risk:** Preserves ordinary payment behavior and does not create unusual
+  work for wallets, representatives, or indexers.
+- **Context-dependent:** Works only when the application controls the relevant
+  accounts, software, scale, or user consent.
+- **Harmful if generalized:** Creates material risks such as user confusion,
+  privacy loss, unwanted ledger state, or infrastructure load.
 
 ## Payment Correlation Patterns
 
-Nano has no memo field, so correlating an incoming payment to an invoice, order, or session is the most common signaling challenge developers face. The patterns below are ordered by preference.
+Applications often need to match a payment to an invoice, order, or session.
+Use these options in order:
 
 1. If payment context can be exchanged off-chain, use an [**Off-chain Payment Reference**](#off-chain-payment-reference).
 2. If the receiver can generate a unique destination account, use an [**Invoice Deposit Account**](#invoice-deposit-account).
 3. If the payer has an authenticated source account, [**Source Account Attribution**](#source-account-attribution) may be acceptable.
-4. If both sides use controlled wallet code or [`nano:` URIs](https://docs.nano.org/integration-guides/the-basics/#uri-and-qr-code-standards) with embedded `amount`, [**Raw Dust Tagging**](#raw-dust-tagging) may work, but remains fragile.
+4. Use [**Raw Dust Tagging**](#raw-dust-tagging) only when both applications
+   preserve exact raw amounts.
 5. Avoid representative-field signaling, arbitrary address payloads, burn signals, and unsolicited dust for payment correlation.
 
 ### Off-chain Payment Reference
 
-Nano has no memo field, so there's no way to attach an invoice number to a payment on-chain. The simplest workaround: don't try. Instead, generate a payment request off-chain — with a destination account, amount, invoice ID, and optional expiration — and have the payer send to that request. Match the incoming payment by destination and amount. If you need to prove the request came from you, sign it.
+Create an off-chain payment request containing the destination, amount, invoice
+ID, and expiration. The receiver later matches the confirmed payment to that
+stored request.
 
 **Classification:** Low-risk · **AKA:** Signed Payment Reference, External Invoice Reference
 
-**How it works:** The application generates a payment context (destination, amount, invoice ID, nonce, expiration) and delivers it to the payer off-chain. The payer sends Nano to the specified destination. The application matches the incoming payment by destination and amount, then retrieves the full invoice context from its own database.
+**How it works:** The application sends the payer a destination and exact amount.
+It stores the invoice ID, nonce, and expiration outside the ledger. The
+application retrieves that context after matching the payment.
 
 **Risks:**
 - If the reference is not signed, a man-in-the-middle can substitute their own destination account.
 - If nonce and expiration are omitted, the same reference can be replayed.
-- The off-chain database is the single source of truth — if it's lost, payment-to-invoice mapping is unrecoverable.
+- Losing the off-chain mapping can make invoice recovery impossible.
 
-**Verdict:** Use this as the default approach for invoice correlation. Always sign the reference and include nonce, amount, destination, and expiration.
+**Recommendation:** Use this as the default when the payer can receive payment
+context. Sign the request when it crosses an untrusted channel. Include the
+destination, amount, nonce, and expiration in the signature.
 
 ### Block Hash Commitment
 
-Every confirmed Nano block has a unique hash. Storing that hash off-chain gives you a compact, immutable reference to a specific payment or account-chain event — useful for receipts, audit logs, and reconciliation.
+A confirmed block hash is a compact reference to one ledger event. Applications
+can store it with a receipt, audit record, or reconciliation entry.
 
 **Classification:** Low-risk · **AKA:** Block Reference, Hash Anchor
 
 **How it works:** After a payment confirms, the application stores the block hash in its own database or communicates it off-chain. The hash identifies the exact ledger event.
 
 **Risks:**
-- Default node configurations retain only the frontier of each account chain. Intermediate block bodies may become unavailable from non-archival nodes shortly after confirmation.
-- A block hash identifies a block but carries no application meaning — the metadata must be preserved separately.
+- A pruned node may not retain the historical block body.
+- The hash carries no application meaning. Store that meaning separately.
 
-**Verdict:** Safe and useful as an off-chain reference. Document your archival assumptions if you need to resolve historical block bodies.
+**Recommendation:** Use a block hash as an off-chain reference. Document how the
+application retrieves historical blocks.
 
 ### Invoice Deposit Account
 
-When you can't coordinate a payment reference off-chain, or when you want the ledger itself to carry the correlation, generate a fresh Nano account for each invoice. Any payment to that account is payment for that invoice — no ambiguity, no amount-matching, no memo field needed.
+Generate one Nano account for each invoice. The destination then identifies the
+invoice without an on-chain memo.
 
 **Classification:** Low-risk · **AKA:** Per-invoice Account, One-time Destination Account
 
 **How it works:** The receiver derives or generates a unique Nano address for a specific invoice, order, or session. The payer sends to that address. The application monitors the address for incoming payments and attributes them to the corresponding invoice.
 
 **Risks:**
-- Each invoice creates a new account that must be monitored and eventually swept. Unbounded account creation burdens wallet scanning and application state.
+- Each invoice adds an account that the application must monitor and recover.
 - Reusing a supposedly one-time account creates ambiguity about which invoice was paid.
 - Sweeping funds from many invoice accounts into a hot wallet links them on-chain; see [Account Sweep Linkage](#account-sweep-linkage).
 - Recovery requires either deterministic derivation or stored metadata mapping accounts to invoices.
-- Generating large numbers of unused accounts burdens node scanning. Keep account generation bounded.
+- Unbounded account generation increases wallet and application state.
 
-**Verdict:** One of the simplest and most reliable correlation patterns. Use it when you can generate and monitor unique destinations.
+**Recommendation:** Use this when the application can derive, monitor, and
+recover unique destinations.
 
 ### Customer Deposit Account
 
-Some services need to identify repeat deposits from the same user over time. Instead of generating a new account per invoice, assign each user a single deposit address. Payments to that address are always attributed to that user.
+Assign one deposit account to each customer. Every payment to that destination
+is then associated with the same customer record.
 
 **Classification:** Low-risk · **AKA:** Per-user Account, User Deposit Account
 
@@ -103,11 +118,14 @@ Some services need to identify repeat deposits from the same user over time. Ins
 - Payments from exchanges or custodial wallets may come from a shared hot wallet, requiring additional attribution logic.
 - If the address leaks or the mapping database is compromised, historical activity is exposed.
 
-**Verdict:** Simple and effective for repeated deposits, but offers weaker privacy than per-invoice accounts. Use [Invoice Deposit Accounts](#invoice-deposit-account) when unlinkability matters. Do not use a stable deposit address as a reusable public identity without explicit consent.
+**Recommendation:** Use this for repeat deposits when address reuse is
+acceptable. Prefer an [Invoice Deposit Account](#invoice-deposit-account) when
+payments should not share one public destination.
 
 ### Account Sweep Linkage
 
-When you consolidate funds from many invoice or user deposit accounts into a single hot wallet, the sweep transactions publicly link all those accounts to one controller. This retroactively defeats the unlinkability you gained by using per-invoice accounts in the first place.
+Consolidating many deposit accounts into one account creates a public
+many-to-one ownership signal.
 
 **Classification:** Harmful if generalized · **AKA:** Sweep Correlation
 
@@ -118,13 +136,14 @@ When you consolidate funds from many invoice or user deposit accounts into a sin
 - Reveals aggregate business volume and timing to any observer.
 - Combined with timing analysis, can deanonymize individual customers.
 
-This is not a technique to adopt — it is an unavoidable consequence of consolidating per-invoice accounts that applications must actively mitigate.
-
-**Verdict:** If you consolidate funds, minimize linkability. Options: batch consolidations, use multiple sweep destinations, separate user-facing deposit accounts from internal accounting.
+**Recommendation:** Treat sweep linkage as a privacy cost in the account model.
+No sweep schedule can remove the public transfers. Separate operational funds
+only when that separation has a real accounting or security purpose.
 
 ### Source Account Attribution
 
-If you know which Nano account a user controls, you can attribute incoming payments by watching where the funds come from. The user registers their source account with your application once; subsequent payments from that account are attributed to them.
+Register and authenticate a payer's source account. Later payments from that
+account can then be associated with the same application identity.
 
 **Classification:** Context-dependent · **AKA:** Sender Account Attribution
 
@@ -132,15 +151,17 @@ If you know which Nano account a user controls, you can attribute incoming payme
 
 **Risks:**
 - Exchange and custodial withdrawals come from shared hot wallets, not the user's own account. Attribution against a shared source is meaningless and may be actively misleading.
-- Users may change wallets, rotate accounts, or have their accounts swept — breaking attribution silently.
+- Wallet changes, account rotation, and sweeps can break attribution.
 - All payments from the same source account are linkable on the public ledger.
 - Without explicit registration and authentication, a source account does not identify a person.
 
-**Verdict:** Only use when the source account is explicitly registered and authenticated. Never assume a source account identifies a human — most exchange withdrawals come from shared wallets.
+**Recommendation:** Use this only for an authenticated source account. Do not
+infer a person's identity from an unregistered source account.
 
 ### Reply-with-Send Receipt
 
-When your application receives a payment, you might want to send a small amount back to the payer as an on-chain "receipt." The problem: you're sending to the source account of the incoming payment, which may be a custodial hot wallet, an exchange, or a shared service — not the actual payer.
+Send a small amount back to the source account as an on-chain receipt. That
+source may belong to an exchange or custodian rather than the payer.
 
 **Classification:** Context-dependent · **AKA:** Echo Send, Send-back Receipt
 
@@ -152,11 +173,13 @@ When your application receives a payment, you might want to send a small amount 
 - May be misinterpreted as a refund or a fresh payment.
 - Inherits the auto-receive problems of [Receive Acknowledgement](#receive-acknowledgement) and [Pending Receivable Marker](#pending-receivable-marker).
 
-**Verdict:** Do not use as a default acknowledgement mechanism. If on-chain acknowledgement is required, restrict to explicitly registered source accounts. Prefer off-chain signed receipts.
+**Recommendation:** Prefer an off-chain signed receipt. Send an on-chain receipt
+only to an explicitly registered source account.
 
 ### Raw Dust Tagging
 
-Nano's raw unit is incredibly small ($1\ \text{XNO} = 10^{30}\ \text{raw}$). By varying the last few digits of a payment amount, you can encode a small tag — an invoice number, a discriminator, a state value — directly in the amount field. The receiver reads the suffix and interprets it.
+Encode a small tag in the least-significant raw digits of the payment amount.
+The receiver extracts the suffix and maps it to application state.
 
 **Classification:** Context-dependent · **AKA:** Amount Tagging, Amount-as-Metadata, Raw Encoding
 
@@ -177,7 +200,10 @@ The trailing digits encode the value 123 in raw units. The receiver extracts the
 
 **Wallet compatibility:** Applications MUST NOT assume that a general-purpose wallet can display, preserve, send, or receive raw-level tags.
 
-**Verdict:** Viable only when both sides use application-controlled wallet code and exact raw amounts are preserved. For most invoice correlation, prefer [Invoice Deposit Accounts](#invoice-deposit-account) or [Off-chain Payment References](#off-chain-payment-reference). Do not use dust-level amount tags as a public messaging layer.
+**Recommendation:** Use this only when both applications preserve exact raw
+amounts. Prefer an [Invoice Deposit Account](#invoice-deposit-account) or
+[Off-chain Payment Reference](#off-chain-payment-reference) for general wallet
+compatibility.
 
 ## State Signaling Patterns
 
