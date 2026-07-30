@@ -303,54 +303,63 @@ application account. Do not interpret a user's normal frontier as a message.
 
 ## Representative-Based Patterns
 
+The representative field controls delegated voting. Application metadata in
+this field competes with that protocol purpose.
+
 ### Representative Tagging
 
-Nano accounts have a representative field used for voting. Some applications abuse this field as a metadata slot — setting the representative to a specific account that encodes application-level meaning. This is harmful because the representative field has governance meaning, and overloading it confuses wallets, users, and vote-weight distribution.
+Set the representative to an account that encodes a tag, state, or pointer.
+This changes the account's delegated vote weight as a side effect.
 
 **Classification:** Harmful if generalized · **AKA:** Rep-as-Message
 
 **How it works:** The application sets the account representative to an account chosen to encode a tag, state value, or pointer. Observers interpret the representative as application data.
 
 **Risks:**
-- Misrepresents the account's governance intent — wallets and users may be confused about the representative choice.
+- The selected representative may not reflect the account owner's voting choice.
 - Wallets may warn, hide, restrict, or auto-manage representative changes.
 - Repeated changes create unnecessary account-chain activity.
 - Representative accounts used as tags may be mistaken for legitimate representatives.
 
-**Network-health considerations:** Application-level overloading of the representative field creates ecosystem confusion around governance, even when consensus remains valid.
+**Network effect:** Widespread use changes vote-weight distribution for reasons
+unrelated to representative performance.
 
-**Verdict:** Do not use the representative field as metadata, a memo substitute, or an invoice tag.
+**Recommendation:** Do not use the representative field as metadata, a memo, or
+an invoice tag.
 
 ### Representative as dApp Tag
 
-A variant of [Representative Tagging](#representative-tagging) where a project asks users to set their representative to a project-controlled account as a signal of opt-in or affiliation. The project then enumerates delegators to determine the participant set. This concentrates vote weight on a non-consensus operator and pressures users to choose between governance hygiene and application participation.
+Ask users to select a project-controlled representative as an opt-in or
+affiliation signal. The project then enumerates delegators as participants.
 
 **Classification:** Harmful if generalized · **AKA:** Project Rep Opt-in, Affiliation Rep
 
 **How it works:** The project publishes a representative address. Users change their representative to that address to indicate participation. The project scans delegator lists to build the participant set.
 
 **Risks:**
-- Concentrates vote weight on an operator that may not be a competent or trustworthy representative.
-- Pressures users to choose between good governance and application eligibility.
+- Concentrates vote weight on the project operator.
+- Couples application eligibility to a consensus choice.
 - Lookalike representative accounts can spoof the opt-in signal.
-- Scales poorly: if many applications adopt this, the representative field becomes meaningless.
+- Multiple applications cannot use the same field independently.
 
-**Verdict:** Do not use representative selection as an opt-in mechanism. Use off-chain registration, signed messages, or token-style opt-in on a dedicated account chain.
+**Recommendation:** Do not use representative selection for opt-in. Use
+off-chain registration or a signed message.
 
 ### Representative Change Pulse
 
-Some applications signal events by changing the account's representative — toggling between known representatives to create a visible on-chain "pulse." This creates unnecessary representative churn, clutters wallet history, and produces ledger activity solely for signaling.
+Change an account's representative between known values and treat each change
+as an event.
 
 **Classification:** Harmful if generalized · **AKA:** Rep Churn Signal
 
 **How it works:** The application changes the account's representative, possibly back and forth between known addresses. Observers treat the change event as a signal.
 
 **Risks:**
-- Creates unnecessary representative churn that confuses wallet history and vote-weight tracking.
-- Produces ledger activity solely for signaling — no value transfer, no governance intent.
+- Changes delegated vote weight without a governance reason.
+- Adds blocks solely for application signaling.
 - Can be abused as a low-capacity message channel.
 
-**Verdict:** Do not use representative-change events as signals, pulses, or messages.
+**Recommendation:** Do not use representative changes as signals or messages.
 
 ## Address and Data Encoding
 
