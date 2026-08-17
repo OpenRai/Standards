@@ -663,38 +663,30 @@ processing rules, see [ORIS-008 confirmation and absolute finality](ORIS-008.md#
 
 These definitions describe how this document uses Nano terms.
 
-- **Account chain:** The strictly serial sequence of blocks belonging to a single
-  Nano account. Each account maintains its own chain.
+- **Account chain:** The strictly serial sequence of blocks belonging to a
+  single Nano account. Each account maintains its own chain.
 - **Application-level meaning:** Meaning assigned by software above the protocol
   layer.
-- **Archival node:** A node configuration that retains full block history for all
-  account chains, rather than pruning to frontiers only.
-- **Block lattice:** The overall data structure formed by all individual account
-  chains in Nano.
-- **Change block:** A block that changes an account's representative without
-  changing the account balance.
-- **Dust:** An amount small enough that an application treats it as uneconomical or
-  unwanted. The threshold is application-specific.
+- **Archival node:** A node configuration that retains full block history for
+  all account chains, rather than pruning to frontiers only.
+- **Dust:** An amount small enough that an application treats it as uneconomical
+  or unwanted. The threshold is application-specific.
 - **Frontier:** The latest block on an account chain. A confirmed frontier is
   the latest block at the account's confirmation height. A node configured for
   pruning may discard older block bodies.
-- **Nano block fields:** State blocks include `type`, `account`, `previous`,
-  `representative`, `balance`, `link`, `work`, and `signature`. There is no
-  generic data, memo, or payload field.
 - **Off-chain:** Data or state maintained outside the Nano ledger and P2P
   protocol.
-- **Open block:** The first block on an account chain, which receives the account's
-  initial incoming send and establishes its first representative.
-- **Open Representative Voting (ORV):** Nano's consensus mechanism, in which
-  representatives vote with weight delegated to them to confirm blocks.
+- **Open block:** The first block on an account chain, which receives the
+  account's initial incoming send and establishes its first representative.
 - **Raw:** The smallest indivisible Nano unit.
-- **Receivable (formerly pending):** An incoming send published by the sender
-  but not yet acknowledged by a receive block on the destination account.
+- **Receivable:** An incoming send published by the sender (formerly called
+  pending) but not yet acknowledged by a receive block on the destination
+  account.
 - **Receive block:** A block that claims a receivable and credits the balance to
   the receiving account.
 - **Representative:** The account designated to vote with an account holder's
   delegated weight.
-- **Send block:** A block that debits an account balance and creates a receivable
-  on a destination account.
+- **Send block:** A block that debits an account balance and creates a
+  receivable on a destination account.
 - **Signal:** A ledger event or state interpreted by an application.
 - **XNO:** Nano's user-facing unit of account.

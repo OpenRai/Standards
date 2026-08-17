@@ -400,11 +400,9 @@ that linkage. Do not expose extended public keys to clients.
 
 ## Glossary
 
-- **Block lattice:** Nano's collection of per-account chains.
 - **Confirmed or cemented:** Accepted by Nano consensus and recorded in
   confirmation height.
 - **Circuit breaker:** An automated pause triggered by an accounting deficit.
-- **Cold wallet:** Key storage kept outside the automated payment service.
 - **Confirmation height:** The confirmed length of one account chain.
 - **Hot wallet:** An online wallet used by the payment service.
 - **Receivable:** A send that the destination account has not claimed.
@@ -414,4 +412,3 @@ that linkage. Do not expose extended public keys to clients.
 - **`block_info`:** Returns block details and confirmation status.
 - **`receivable`:** Lists unclaimed sends for an account.
 - **`process`:** Publishes a signed block to the node.
-- **WebSocket confirmation topic:** Emits notifications for confirmed blocks.
