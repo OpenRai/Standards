@@ -10,14 +10,12 @@ OpenRai Initiative Standard: 003
 ## Abstract
 
 This document defines the JSON event that describes a payment to a NanoNym.
-Transport and verification profiles use the same event before applying their
-own encryption, delivery, or proof rules.
+Transport and verification profiles use the same event before applying their own encryption, delivery, or proof rules.
 
 ## Motivation
 
-NanoNyms can use different transports without changing the meaning of a payment
-notification. A shared event lets senders, receivers, and verifiers reuse the
-same parser and validation rules.
+NanoNyms can use different transports without changing the meaning of a payment notification.
+A shared event lets senders, receivers, and verifiers reuse the same parser and validation rules.
 
 The base event does not define:
 
@@ -47,19 +45,19 @@ A payment event is a JSON object.
 
 Required fields:
 
-| Field | Type | Description |
-|---|---|---|
-| `version` | integer | Schema version. MUST be `2`. |
-| `protocol` | string | Protocol identifier. MUST be `"nanonym"`. |
-| `R` | string | Hex-encoded Ed25519 ephemeral public key (64 hex characters). |
-| `tx_hash` | string | Hex-encoded hash of the on-chain send block (64 hex characters). |
+| Field      | Type    | Description                                                      |
+| ---------- | ------- | ---------------------------------------------------------------- |
+| `version`  | integer | Schema version. MUST be `2`.                                     |
+| `protocol` | string  | Protocol identifier. MUST be `"nanonym"`.                        |
+| `R`        | string  | Hex-encoded Ed25519 ephemeral public key (64 hex characters).    |
+| `tx_hash`  | string  | Hex-encoded hash of the on-chain send block (64 hex characters). |
 
 Optional fields:
 
-| Field | Type | Description |
-|---|---|---|
+| Field        | Type   | Description                                  |
+| ------------ | ------ | -------------------------------------------- |
 | `amount_raw` | string | Decimal string of the payment amount in raw. |
-| `memo` | string | Freeform UTF-8 text. |
+| `memo`       | string | Freeform UTF-8 text.                         |
 
 ### Example
 
@@ -73,8 +71,7 @@ Optional fields:
 }
 ```
 
-This example shows the JSON shape only. It is not a test vector, and its `R`
-value is not asserted to be a valid curve point.
+This example shows the JSON shape only. It is not a test vector, and its `R` value is not asserted to be a valid curve point.
 
 ### Validation Rules
 
@@ -87,18 +84,14 @@ value is not asserted to be a valid curve point.
 7. Implementations MUST reject payloads missing any required field.
 8. Implementations MUST ignore unrecognized fields for forward compatibility.
 
-Validation of `R` includes decoding the compressed Ed25519 point and rejecting
-malformed encodings. Implementations SHOULD also reject small-order points. A
-profile MAY require additional point checks for its proof model.
+Validation of `R` includes decoding the compressed Ed25519 point and rejecting malformed encodings. Implementations SHOULD also reject small-order points. A profile MAY require additional point checks for its proof model.
 
 `tx_hash` identifies the Nano send block that paid the derived stealth account.
-Base-schema validation does not query the ledger. The active profile must define
-how to check confirmation, destination, and amount.
+Base-schema validation does not query the ledger. The active profile must define how to check confirmation, destination, and amount.
 
 ### Profile Extensibility
 
-A profile event MUST satisfy the base schema. A profile MAY add fields, but it
-MUST NOT remove or redefine a base field.
+A profile event MUST satisfy the base schema. A profile MAY add fields, but it MUST NOT remove or redefine a base field.
 
 To reduce extension-field collisions:
 
@@ -111,11 +104,9 @@ The `r` field defined by ORIS-005 is the canonical example of the second rule.
 
 ### Versioning
 
-The event version is `2`. ORIS-002 also assigns version `2` to the NanoNyms
-payment-code format, but each version number changes independently.
+The event version is `2`. ORIS-002 also assigns version `2` to the NanoNyms payment-code format, but each version number changes independently.
 
-Existing implementations already emit event version `2`. Renumbering it would
-break those events without changing their meaning.
+Existing implementations already emit event version `2`. Renumbering it would break those events without changing their meaning.
 
 ### Role of `R`
 
@@ -127,12 +118,9 @@ R = r * G
 
 `G` is the Ed25519 basepoint.
 
-The event contains `R`, not `r`. The payer keeps `r` secret unless a profile
-requires it as part of a proof.
+The event contains `R`, not `r`. The payer keeps `r` secret unless a profile requires it as part of a proof.
 
-ORIS-002 defines the scalar and point rules for NanoNyms v2. A later standard
-may move those rules, but it MUST preserve the meaning of `R` or define a new
-event version.
+ORIS-002 defines the scalar and point rules for NanoNyms v2. A later standard may move those rules, but it MUST preserve the meaning of `R` or define a new event version.
 
 ### Relationship to Other Standards
 
@@ -142,9 +130,7 @@ event version.
 
 ### Package Boundary
 
-`@nanonyms/protocol` validates the JSON structure, field types, hexadecimal
-format, and version. `@nanonyms/crypto` validates `R` as a curve point and
-performs stealth-account derivation.
+`@nanonyms/protocol` validates the JSON structure, field types, hexadecimal format, and version. `@nanonyms/crypto` validates `R` as a curve point and performs stealth-account derivation.
 
 ## Published Test Vectors
 

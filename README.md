@@ -5,18 +5,16 @@ A collection of technical specifications designed to promote interoperability ac
 ## Standards Index
 
 <!-- ORIS-INDEX-START -->
-| Standard | Status |
-| --- | --- |
-| [ORIS-001: Nano Off-chain Message Signing (NOMS)](rfcs/ORIS-001.md) | Implementation Draft |
-| [ORIS-002: NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano](rfcs/ORIS-002.md) | Implementation Draft |
-| [ORIS-003: NanoNyms Payment Event Schema](rfcs/ORIS-003.md) | Working Draft |
-| [ORIS-004: Nostr Transport Profile for NanoNyms](rfcs/ORIS-004.md) | Working Draft |
-| [ORIS-005: NanoNyms Profile for x402 Exact Payments](rfcs/ORIS-005.md) | Working Draft |
-| [ORIS-006: Nano CAIP Identifiers](rfcs/ORIS-006.md) | Implementation Draft |
-| [ORIS-007: Nano Application-Level Metadata, Correlation, and Signaling Patterns](rfcs/ORIS-007.md) | Working Draft |
-| [ORIS-008: Reliable Nano Payment Integration](rfcs/ORIS-008.md) | Working Draft |
-| [ORIS-009: Nano Payment Targets for `payto:`](rfcs/ORIS-009.md) | Working Draft |
-| [ORIS-010: API-Key Authentication for Nano RPC](rfcs/ORIS-010.md) | Working Draft |
+- [ORIS-001: Nano Off-chain Message Signing (NOMS)](rfcs/ORIS-001.md) (Implementation Draft)
+- [ORIS-002: NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano](rfcs/ORIS-002.md) (Implementation Draft)
+- [ORIS-003: NanoNyms Payment Event Schema](rfcs/ORIS-003.md) (Working Draft)
+- [ORIS-004: Nostr Transport Profile for NanoNyms](rfcs/ORIS-004.md) (Working Draft)
+- [ORIS-005: NanoNyms Profile for x402 Exact Payments](rfcs/ORIS-005.md) (Working Draft)
+- [ORIS-006: Nano CAIP Identifiers](rfcs/ORIS-006.md) (Implementation Draft)
+- [ORIS-007: Nano Application-Level Metadata, Correlation, and Signaling Patterns](rfcs/ORIS-007.md) (Working Draft)
+- [ORIS-008: Reliable Nano Payment Integration](rfcs/ORIS-008.md) (Working Draft)
+- [ORIS-009: Nano Payment Targets for `payto:`](rfcs/ORIS-009.md) (Working Draft)
+- [ORIS-010: API-Key Authentication for Nano RPC](rfcs/ORIS-010.md) (Working Draft)
 <!-- ORIS-INDEX-END -->
 
 ## Document Statuses

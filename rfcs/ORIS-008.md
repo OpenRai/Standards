@@ -53,6 +53,26 @@ deposit.
   confirmation height.
 - **Idempotent:** Repeating an operation has the same effect as running it once.
 
+## Confirmation and Absolute Finality
+
+Nano has no confirmation-count threshold. A block becomes final for application
+purposes when Nano consensus confirms or cements it. Before that stage, a block
+may only have been published, accepted by a node, observed, or placed in an
+active election. See the official [Block Confirmation
+Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/)
+guide for the complete procedure.
+
+For a known block hash, use [`block_info`](https://docs.nano.org/commands/rpc-protocol/#block_info)
+or [`blocks_info`](https://docs.nano.org/commands/rpc-protocol/#blocks_info) and
+require the response field `confirmed` to equal the string `"true"` for that
+hash. A WebSocket `confirmation` event reports the same final state, but
+handlers MUST be idempotent and MUST reconcile with RPC after missed or repeated
+notifications. `account_info` with `include_confirmed: true` reports the
+confirmed account frontier and height in `confirmed_frontier` and
+`confirmed_height`; it does not certify an arbitrary block hash. `process`
+acceptance is not confirmation, and `block_confirm` returning `started: "1"`
+only means that the command did not error.
+
 ## Reference Documentation
 
 This document assumes you're familiar with:
@@ -65,7 +85,8 @@ This document assumes you're familiar with:
 
 ### 1. Confirm Before Acting
 
-Credit a deposit only after its send block is confirmed.
+Apply the [Confirmation and Absolute Finality](#confirmation-and-absolute-finality)
+rules. Credit a deposit only after its send block is confirmed.
 
 A node can observe a block before confirmation. WebSocket `confirmation` events
 provide the primary signal.
@@ -266,7 +287,7 @@ One deposit moves through these steps.
 
 **Step 1: Create the invoice.**
 
-- Choose a correlation method from ORIS-007.
+- Choose a correlation method from [Payment Correlation Patterns in ORIS-007](ORIS-007.md#payment-correlation-patterns).
 - Store the expected destination, amount, expiration, and status.
 
 **Step 2: Subscribe to confirmations.**

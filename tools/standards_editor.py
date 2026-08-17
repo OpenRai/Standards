@@ -36,11 +36,12 @@ INDEX_HTML = r"""<!doctype html>
     :root {
       color-scheme: light;
       --border: #d7dee8;
-      --panel: #f6f8fb;
+      --pane-border: #a9d2ef;
+      --pane-blue: #209ce9;
+      --pane-blue-dark: #3269ad;
+      --pane-glass: rgba(255, 255, 255, 0.62);
       --ink: #17202a;
       --muted: #5c6b7a;
-      --accent: #0b6bcb;
-      --accent-dark: #064f97;
       --danger: #a4382a;
     }
 
@@ -69,8 +70,10 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     aside {
-      border-right: 1px solid var(--border);
-      background: var(--panel);
+      border-right: 1px solid var(--pane-border);
+      background:
+        linear-gradient(145deg, rgba(32, 156, 233, 0.16), transparent 42%),
+        linear-gradient(180deg, #f4faff 0%, #e7f3fd 100%);
       min-width: 0;
       overflow: auto;
       padding: 14px;
@@ -85,9 +88,11 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .brand {
+      color: #164f7f;
       font-size: 15px;
       font-weight: 700;
       margin: 0 0 12px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
     .file-list {
@@ -111,31 +116,41 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .file-button:hover {
-      background: #ffffff;
-      border-color: var(--border);
+      background: var(--pane-glass);
+      border-color: rgba(50, 105, 173, 0.24);
     }
 
     .file-button.active {
-      background: #e7f1ff;
-      border-color: #9cc8f5;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), #d6ecfc);
+      border-color: #79bce8;
+      box-shadow: 0 3px 10px rgba(32, 113, 170, 0.1);
       color: #073f78;
       font-weight: 650;
     }
 
     .toolbar {
       align-items: center;
-      border-bottom: 1px solid var(--border);
+      background:
+        linear-gradient(110deg, rgba(32, 156, 233, 0.14), transparent 48%),
+        linear-gradient(180deg, #f7fbff, #e7f3fd);
+      border-bottom: 1px solid var(--pane-border);
       display: flex;
       gap: 10px;
       min-width: 0;
       padding: 10px 14px;
+      box-shadow: 0 2px 8px rgba(32, 105, 157, 0.08);
     }
 
     .path {
+      background: var(--pane-glass);
+      border: 1px solid rgba(50, 105, 173, 0.18);
+      border-radius: 999px;
+      color: #234f73;
       flex: 1;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       min-width: 0;
       overflow: hidden;
+      padding: 5px 10px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -152,32 +167,30 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .mode-toggle {
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      background: rgba(200, 222, 239, 0.62);
+      border: 1px solid rgba(50, 105, 173, 0.38);
+      border-radius: 999px;
       display: inline-flex;
       overflow: hidden;
+      padding: 2px;
     }
 
     .mode-toggle button {
-      background: #ffffff;
+      background: transparent;
       border: 0;
-      border-right: 1px solid var(--border);
       color: var(--muted);
       cursor: pointer;
       font: inherit;
       font-weight: 650;
       min-width: 86px;
-      padding: 7px 10px;
-    }
-
-    .mode-toggle button:last-child {
-      border-right: 0;
+      padding: 5px 10px;
     }
 
     .mode-toggle button.active {
-      background: #edf5ff;
-      box-shadow: inset 0 0 0 1px #79aee3;
-      color: #155f9e;
+      background: linear-gradient(135deg, var(--pane-blue), var(--pane-blue-dark));
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(32, 105, 157, 0.28);
+      color: #ffffff;
     }
 
     .mode-toggle button:disabled {
@@ -186,14 +199,15 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     button.save {
-      background: var(--accent);
-      border: 1px solid var(--accent-dark);
-      border-radius: 6px;
+      background: linear-gradient(135deg, #31518e, #1c1b3b);
+      border: 1px solid #1c2d59;
+      border-radius: 999px;
+      box-shadow: 0 2px 7px rgba(28, 27, 59, 0.24);
       color: #ffffff;
       cursor: pointer;
       font: inherit;
       font-weight: 700;
-      padding: 7px 12px;
+      padding: 7px 14px;
     }
 
     button.save:disabled {
@@ -318,7 +332,7 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       aside {
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--pane-border);
         border-right: 0;
         max-height: 36vh;
         overflow: auto;
@@ -670,7 +684,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Run the local Standards Markdown editor BFF. "
-            "Start with: uv run tools/standards_editor.py"
+            "Start with: make editor"
         )
     )
     parser.add_argument("--port", default=DEFAULT_PORT, type=int, help=f"port to bind, default {DEFAULT_PORT}")

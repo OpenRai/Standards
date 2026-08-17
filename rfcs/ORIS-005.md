@@ -9,21 +9,14 @@ OpenRai Initiative Standard: 005
 
 ## Abstract
 
-This document defines a NanoNyms payment profile for the x402 v2 `exact`
-scheme. The client first pays a stealth account derived from the resource
-server's NanoNym. It then submits the send-block hash and derivation proof in a
+This document defines a NanoNyms payment profile for the x402 v2 `exact` scheme. The client first pays a stealth account derived from the resource server's NanoNym. It then submits the send-block hash and derivation proof in a
 standard x402 `PaymentPayload`.
 
-The proof reveals the scalar `r` for that payment. A resource server or
-facilitator can therefore verify the destination without receiving the
-NanoNym owner's private keys.
+The proof reveals the scalar `r` for that payment. A resource server or facilitator can therefore verify the destination without receiving the NanoNym owner's private keys.
 
 ## Motivation
 
-The x402 `exact` scheme describes payment for a fixed amount. Existing EVM and
-SVM profiles submit an authorization or transaction for later settlement. Nano
-does not use that authorization model, so this profile uses a confirmed payment
-as its proof:
+The x402 `exact` scheme describes payment for a fixed amount. Existing EVM and SVM profiles submit an authorization or transaction for later settlement. Nano does not use that authorization model, so this profile uses a confirmed payment as its proof:
 
 - The client sends Nano before retrying the resource request.
 - The payload proves that the send paid the requested amount and destination.
@@ -48,33 +41,24 @@ Unless otherwise stated:
 
 This document covers:
 
-- NanoNyms as a Nano implementation of x402 `scheme: "exact"`,
-- payment requirements for a NanoNym,
-- the proof submitted after payment,
-- verifier and facilitator behavior, and
-- replay protection for a pay-first scheme.
+- NanoNyms as a Nano implementation of x402 `scheme: "exact"`
+- payment requirements for a NanoNym
+- the proof submitted after payment
+- verifier and facilitator behavior
+- replay protection for a pay-first scheme
 
 This document does not cover:
 
-- generic x402 HTTP behavior,
-- subscriptions or long-lived sessions, or
-- non-Nano assets.
+- generic x402 HTTP behavior
+- subscriptions or long-lived sessions
+- non-Nano assets
 
 ### Conceptual Model
 
-The resource server advertises a NanoNym. The client chooses `r`, derives the
-corresponding stealth account, and pays it. The client then discloses `r`, `R`,
-and `tx_hash` to the verifier.
+The resource server advertises a NanoNym. The client chooses `r`, derives the corresponding stealth account, and pays it. The client then discloses `r`, `R`, and `tx_hash` to the verifier.
 
-The verifier recomputes the destination and checks the confirmed send block.
-This proves that the submitted derivation matches the payment. It does not
-establish a persistent identity for the client.
-
-The resource server still declares an exact amount and recipient. Only the
-settlement timing differs:
-
-- A sign-first profile settles by executing an authorization.
-- This profile settles by accepting an already confirmed Nano payment.
+The resource server or verifier recomputes the destination and checks the confirmed send block.
+This proves that the submitted derivation matches the payment.
 
 ### Payment Requirements
 
@@ -82,15 +66,15 @@ A resource server that accepts NanoNym payments advertises them as an x402 `Paym
 
 The payment requirement fields are:
 
-| Field | Value |
-|---|---|
-| `scheme` | MUST be `"exact"`. |
-| `network` | MUST identify the Nano network using the x402 v2 CAIP-2-style network field. This profile uses `"nano:mainnet"` for Nano mainnet. |
-| `amount` | MUST be a decimal string containing the required amount in raw. |
-| `asset` | MUST be `"xno"`. |
-| `payTo` | MUST be a valid `nnym_` NanoNym address. |
-| `maxTimeoutSeconds` | MUST be the maximum time allowed to complete the payment. |
-| `extra` | MAY contain Nano-specific metadata. |
+| Field               | Value                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `scheme`            | MUST be `"exact"`.                                                                                                                |
+| `network`           | MUST identify the Nano network using the x402 v2 CAIP-2-style network field. This profile uses `"nano:mainnet"` for Nano mainnet. |
+| `amount`            | MUST be a decimal string containing the required amount in raw.                                                                   |
+| `asset`             | MUST be `"xno"`.                                                                                                                  |
+| `payTo`             | MUST be a valid `nnym_` NanoNym address.                                                                                          |
+| `maxTimeoutSeconds` | MUST be the maximum time allowed to complete the payment.                                                                         |
+| `extra`             | MAY contain Nano-specific metadata.                                                                                               |
 
 The resource server MUST include the normal x402 `resource` object in `PaymentRequired` to bind the quoted payment terms to the requested resource.
 
@@ -125,9 +109,7 @@ Example `PaymentRequired` object:
 The HTTP transport base64-encodes this object in the `PAYMENT-REQUIRED` header
 of a `402 Payment Required` response.
 
-The request header remains `PAYMENT-SIGNATURE` because x402 assigns that header
-to `PaymentPayload`. In this profile, the payload is a payment proof rather than
-a signature over a future transfer.
+The request header remains `PAYMENT-SIGNATURE` because x402 assigns that header to `PaymentPayload`. In this profile, the payload is a payment proof rather than a signature over a future transfer.
 
 ### Protocol Flow
 
@@ -211,9 +193,9 @@ The example above illustrates object shape only. It is not a cryptographic test 
 
 This profile extends the ORIS-003 base schema with one additional field:
 
-| Field | Type | Description |
-|---|---|---|
-| `r` | string | Hex-encoded Ed25519 ephemeral scalar as a 32-byte little-endian integer modulo the Ed25519 group order. |
+| Field | Type   | Description                                                                                             |
+| ----- | ------ | ------------------------------------------------------------------------------------------------------- |
+| `r`   | string | Hex-encoded Ed25519 ephemeral scalar as a 32-byte little-endian integer modulo the Ed25519 group order. |
 
 The verifier MUST check that `R = r * G` using the ORIS-002 scalar and point rules.
 
@@ -314,8 +296,8 @@ Replay protection:
 
 - The client voluntarily discloses `r`, `R`, `tx_hash`, and amount to the verifier.
 - The verifier learns the stealth address for that specific payment.
+- The verifier can correlate the protected HTTP request, payment proof, and corresponding on-chain send.
 - The proof does not reveal the NanoNym owner's private keys.
-- Reusing the same NanoNym for both this profile and the Nostr profile weakens cross-transport unlinkability.
 - TLS protects the proof contents in transit. It does not hide connection
   metadata.
 

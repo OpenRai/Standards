@@ -2,7 +2,7 @@
 OpenRai Initiative Standard: 002
 ```
 
-# NanoNyms: Privacy-Enhancing Reusable Payment Codes for Nano
+# NanoNyms: Privacy-Enhancing Reusable Payment Codes
 
 > Status: Implementation Draft
 > Category: Application Interface
@@ -53,19 +53,17 @@ Unless otherwise stated:
 
 ### Terminology
 
-- **NanoNyms protocol:** The encoding and derivation rules defined here.
-- **NanoNym:** One reusable payment code encoded as `nnym_...`.
-- **Tier 1 notification:** An off-chain payment notification delivered through
-  the URI stored in a NanoNym.
+- **NanoNyms protocol:** The encoding and derivation rules defined here. The protocol name contains a plural.
+- **NanoNym:** In singular, one reusable payment code encoded as `nnym_...`.
+- **Tier 1 notification:** An off-chain payment notification delivered through the URI stored in a NanoNym.
 - **Stealth account:** A one-time `nano_` account derived for one payment.
-- **Aggregated NanoNym account:** A wallet view that combines the stealth
-  accounts derived from one NanoNym.
+- **(Aggregated-) NanoNym account:** A logical wallet view that combines all known unspent stealth accounts derived from one NanoNym.
 
 ### Versioning
 
 This document defines only version 2.
 
-- NanoNymNault creates and consumes only v2 NanoNyms.
+- NanoNymNault (the tech preview implementation) creates and consumes only v2 NanoNyms.
 - `@nanonyms/protocol` encodes and decodes only v2 NanoNyms.
 - `@nanonyms/crypto` and `@nanonyms/core` expose only v2 behavior.
 - Version 1 is historical and is not implemented.
@@ -78,11 +76,9 @@ A NanoNym contains exactly three semantic values:
 - a view public key (`B_view`), and
 - a Tier 1 notification URI (`notificationUri`).
 
-It does not contain funds, balances, transaction history, relay client configuration, or any private-key material.
+It does not contain funds, balances, transaction history, relay client configuration, or any private-key material. The QR-code representation of one NanoNym account lends itself to being printed and displayed statically at any point-of-sales.
 
-The NanoNyms protocol treats the notification route as an opaque URI.
-NanoNymNault currently supports `nostr:...` through an adapter. Other
-implementations can provide adapters for other URI schemes.
+The NanoNyms protocol treats the notification route as an opaque URI. NanoNymNault currently supports `nostr:...` through an adapter. Other implementations can provide adapters for other URI schemes.
 
 ### Binary Layout
 
@@ -110,24 +106,22 @@ nnym_
 Human-readable encoding:
 
 - Prefix: `nnym_`
-- Body: Nano-style base32
+- Body: Nano-style base32 (see below)
+- For quick UI and form validation, implementations MAY use `^nnym_[13456789abcdefghijkmnopqrstuwxyz]+$` as a non-normative lexical prefilter.
 
-### Base32 Encoding
+### "Nano base32" Encoding
 
-The body uses Nano's account-address alphabet:
+The body uses the identical "RFC 4648-subset" as Nano's account-address alphabet:
 
 ```text
 13456789abcdefghijkmnopqrstuwxyz
 ```
 
-The binary payload is one big-endian bit stream. Encoders MUST read each byte
-most-significant bit first and emit 5-bit groups using the alphabet above. An
-encoder MUST pad an incomplete final group with zero bits. The encoded body MUST
-NOT contain separators or `=` padding.
+The binary payload is one big-endian bit stream.
 
-Decoders MUST reject characters outside the Nano alphabet. A decoder MAY
-normalize uppercase alphabet characters to lowercase. The decoder MUST validate
-the length declared by `notificationUriLen`. It MUST reject non-zero padding and
+**Encoders** MUST read each byte most-significant bit first and emit 5-bit groups using the alphabet above. An encoder MUST pad an incomplete final group with zero bits. The encoded body MUST NOT contain separators or `=` padding.
+
+**Decoders** MUST reject characters outside the Nano alphabet. A decoder MAY normalize uppercase alphabet characters to lowercase. The decoder MUST validate the length declared by `notificationUriLen`. It MUST reject non-zero padding and
 extra decoded bytes.
 
 ### Checksum
@@ -138,11 +132,9 @@ The checksum is a five-byte BLAKE2b digest over the payload prefix that excludes
 checksum = BLAKE2b(payload_without_checksum, digest_length = 5)
 ```
 
-The 5-byte checksum matches the checksum length of a standard Nano account. It
-detects accidental changes such as typing, scanning, or truncation errors. It
-does not protect against an attacker who replaces the complete payment code.
+The 5-byte checksum matches the checksum length of a standard Nano account. It detects accidental changes such as typing, scanning, or truncation errors. It does not protect against an attacker who replaces the complete payment code.
 
-`payload_without_checksum` is:
+The `payload_without_checksum` is:
 
 ```text
 version || B_spend || B_view || notificationUriLen || notificationUri
@@ -159,7 +151,7 @@ notification_uri = "nostr:npub1..."
 This means:
 
 - the NanoNyms protocol stores the URI without transport behavior,
-- NanoNymNault passes the URI to its Nostr adapter, and
+- The wallet implementation passes the URI to its Nostr adapter, and
 - ORIS-004 defines how that adapter delivers the notification.
 
 ### Address Test Vector
@@ -167,7 +159,7 @@ This means:
 This vector is for address encoding only. The keys are repeated bytes and are not production keys.
 
 ```text
-version         = 02
+version        = 02
 B_spend        = 0101010101010101010101010101010101010101010101010101010101010101
 B_view         = 0202020202020202020202020202020202020202020202020202020202020202
 notificationUri= nostr:npub1nanonymtest
@@ -192,6 +184,10 @@ Examples:
 - `nostr:nprofile1...`
 - `https://example.invalid/.well-known/nanonym/alice`
 
+### Tier 1 and Tier 2 Notifications
+
+Tier 1 notifications target near-real-time discovery and have no guaranteed permanent retention. A wallet can scan a Tier 2 payment-notification store with the Nano ledger when recovering from an HD wallet seed.
+
 ### Send Workflow
 
 When a sender inputs a `nnym_` address, the sender:
@@ -204,8 +200,7 @@ When a sender inputs a `nnym_` address, the sender:
 6. Builds a Tier 1 notification payload containing the ephemeral public key and transaction metadata.
 7. Hands the notification payload plus `notificationUri` to an adapter.
 
-NanoNymNault currently routes `nostr:...` URIs to its Nostr adapter. The adapter
-gift-wraps the payload and publishes it to Nostr relays as defined by ORIS-004.
+NanoNymNault currently routes `nostr:...` URIs to its Nostr adapter. The adapter gift-wraps the payload and publishes it to Nostr relays as defined by ORIS-004.
 
 ### Receive Workflow
 
@@ -218,25 +213,22 @@ For each active NanoNym, the receiver:
 5. Derives the stealth private key needed to spend from that destination.
 6. Verifies the payment against the chain and adds the resulting stealth account to wallet state.
 
-For offline or cold recovery, the wallet repeats the derivation from its seed.
-It then scans the configured notification transport and Nano ledger state.
+For offline or cold recovery, the wallet repeats the derivation from its seed. It then scans the configured notification transport and Nano ledger state.
 
 ### Stealth Derivation
 
-This section defines the derivation required for NanoNyms v2 interoperability.
-Implementations MUST follow these rules unless a later ORIS updates the v2
-profile.
+This section defines the derivation required for NanoNyms v2 interoperability. Implementations MUST follow these rules unless a later ORIS updates the v2 profile.
 
 Let:
 
-* `G` be the Ed25519 basepoint.
-* `L` be the Ed25519 group order, `2^252 + 27742317777372353535851937790883648493`.
-* `H_scalar(x)` be the scalar derivation function defined below.
-* `a_spend` and `a_view` be the recipient's spend and view private scalars derived from the recipient's private seed material.
-* `B_spend = a_spend * G`.
-* `B_view = a_view * G`.
-* `r` be the sender's per-payment ephemeral private scalar.
-* `R = r * G`.
+- `G` be the Ed25519 basepoint.
+- `L` be the Ed25519 group order, `2^252 + 27742317777372353535851937790883648493`.
+- `H_scalar(x)` be the scalar derivation function defined below.
+- `a_spend` and `a_view` be the recipient's spend and view private scalars derived from the recipient's private seed material.
+- `B_spend = a_spend * G`.
+- `B_view = a_view * G`.
+- `r` be the sender's per-payment ephemeral private scalar.
+- `R = r * G`.
 
 Private seed material is converted to a scalar by:
 
@@ -249,10 +241,7 @@ clamped[31] |= 64
 scalar = little_endian_integer(clamped) mod L
 ```
 
-Setting bit 254 with `|= 64` can produce an integer larger than `L`. The final
-`mod L` operation reduces that integer. This is compatible with point
-multiplication because `(s * G) == ((s mod L) * G)`. Implementations MUST keep
-both the clamping and reduction steps to produce the same scalar.
+Setting bit 254 with `|= 64` can produce an integer larger than `L`. The final `mod L` operation reduces that integer. This is compatible with point multiplication because `(s * G) == ((s mod L) * G)`. Implementations MUST keep both the clamping and reduction steps to produce the same scalar.
 
 In the current v2 derivation, long-term spend/view private keys and randomly generated ephemeral private keys are 32-byte seed inputs to this scalar conversion. Formulas below use the resulting scalars.
 
@@ -284,10 +273,7 @@ The recipient recovers the private scalar needed to spend from `destination` as:
 a_stealth = (a_spend + t) mod L
 ```
 
-Implementations MUST reject malformed Ed25519 points for `B_spend`, `B_view`,
-`R`, and `SA`. The curve library SHOULD reject invalid encodings and small-order
-points. Otherwise, the implementation MUST perform those checks before a
-shared-secret or point-addition operation.
+Implementations MUST reject malformed Ed25519 points for `B_spend`, `B_view`, `R`, and `SA`. The curve library SHOULD reject invalid encodings and small-order points. Otherwise, the implementation MUST perform those checks before a shared-secret or point-addition operation.
 
 ### Stealth Account Selection
 
@@ -344,8 +330,7 @@ NanoNymNault currently uses:
 - `@nanonyms/core` for application-independent payment flows, and
 - a Nostr adapter for Tier 1 notification delivery.
 
-The packages implement the NanoNyms protocol without requiring Nostr. The
-NanoNymNault application chooses Nostr as its current transport.
+The packages implement the NanoNyms protocol without requiring Nostr. The NanoNymNault tech preview application chooses Nostr as its current transport.
 
 ### Relationship to Other Standards
 
@@ -355,8 +340,7 @@ NanoNymNault application chooses Nostr as its current transport.
 
 ## Published Test Vectors
 
-The [Address Test Vector](#address-test-vector) is canonical for NanoNyms
-encoding. Stealth-derivation test vectors are not published yet.
+The [Address Test Vector](#address-test-vector) is canonical for NanoNyms encoding. Stealth-derivation test vectors are not published yet.
 
 ## Reference Implementation
 

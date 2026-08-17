@@ -553,7 +553,7 @@ const markdownProcessor = remark()
       }
 
       dirty = false;
-      saveEl.disabled = false;
+      saveEl.disabled = true;
       setModeButtonsEnabled(true);
       syncModeToggle();
       clearLintPanel();
@@ -561,6 +561,7 @@ const markdownProcessor = remark()
       setTimeout(() => {
         loadingPath = null;
         dirty = false;
+        saveEl.disabled = true;
         setStatus("Loaded");
       }, 50);
       return true;

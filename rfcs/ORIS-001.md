@@ -276,9 +276,9 @@ Rust implementations produce the same values.
 
 Both vectors below use the same keypair.
 
-The private key is a raw 32-byte account private key in the format produced by
+The private key is a raw 32-byte **account private key** in the format produced by
 [`PlasmaPower/nano-vanity`](https://github.com/PlasmaPower/nano-vanity). Some
-desktop wallets call this an "adhoc key."
+desktop wallets call this an "**adhoc key**."
 
 The private key is **not** a Nano wallet seed. Treating it as a seed produces a
 different keypair.
