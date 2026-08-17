@@ -20,7 +20,8 @@ Nano differs from UTXO and EVM systems in ways that affect application code:
 
 - A transfer uses one send block and one receive block.
 - Applications act on confirmed blocks rather than a confirmation count.
-- A receivable is a confirmed send that the destination has not received.
+- A receivable is a send that the destination has not received. Applications
+  act on it only after the send is confirmed.
 - Feeless transfers do not replace application-level rate limits.
 - WebSocket delivery can be duplicated or missed.
 
@@ -31,19 +32,19 @@ or the same confirmation arrives more than once.
 
 The closest concepts are:
 
-| Concept | UTXO/EVM | Nano |
-|---|---|---|
-| Transaction fee | Required (gas/miner fee) | Zero |
-| Transaction structure | Single atomic transaction | Two separate blocks: `send` + `receive` |
-| Confirmation | "Included in a block with N confirmations" | "Cemented by ORV consensus" — check `confirmed` field |
-| Unconfirmed work | Transactions wait in a public mempool | Nodes track blocks and active elections |
-| Account model | UTXO set or account state | Each account has its own blockchain |
-| Pending transactions | Visible in mempool | Receivables: sends not yet received |
-| Application finality | Usually based on a confirmation count | Based on Nano confirmation |
+| Concept               | UTXO/EVM                                   | Nano                                                  |
+| --------------------- | ------------------------------------------ | ----------------------------------------------------- |
+| Transaction fee       | Required (gas/miner fee)                   | Zero                                                  |
+| Transaction structure | Single atomic transaction                  | Two separate blocks: `send` + `receive`               |
+| Confirmation          | "Included in a block with N confirmations" | "Cemented by ORV consensus" — check `confirmed` field |
+| Unconfirmed work      | Transactions wait in a public mempool      | Nodes track blocks and active elections               |
+| Account model         | UTXO set or account state                  | Each account has its own blockchain                   |
+| Pending transactions  | Visible in mempool                         | Receivables: sends not yet received                   |
+| Application finality  | Usually based on a confirmation count      | Based on Nano confirmation                            |
 
 For deposits, act on the confirmed send to a managed destination. The later
-receive block changes the destination account chain but does not create a second
-deposit.
+receive block advances the destination account's frontier—the head block of its
+account chain—but does not create a second deposit.
 
 ## Conventions
 
@@ -51,6 +52,8 @@ deposit.
 - **Receive block:** The destination account's block that claims a receivable.
 - **Confirmed or cemented:** Accepted by Nano consensus and recorded in
   confirmation height.
+- **Frontier:** The head (latest) block of an account chain. A confirmed
+  frontier is the latest confirmed block at that account's confirmation height.
 - **Idempotent:** Repeating an operation has the same effect as running it once.
 
 ## Confirmation and Absolute Finality
@@ -58,8 +61,7 @@ deposit.
 Nano has no confirmation-count threshold. A block becomes final for application
 purposes when Nano consensus confirms or cements it. Before that stage, a block
 may only have been published, accepted by a node, observed, or placed in an
-active election. See the official [Block Confirmation
-Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/)
+active election. See the official [Block Confirmation Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/)
 guide for the complete procedure.
 
 For a known block hash, use [`block_info`](https://docs.nano.org/commands/rpc-protocol/#block_info)
@@ -136,7 +138,7 @@ as a fallback:
 
 The response contains `"confirmed": "true"` after confirmation.
 
-**Reference:** [Block Confirmation Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/), [WebSockets Confirmations](https://docs.nano.org/integration-guides/websockets/#confirmations), [RPC block_info](https://docs.nano.org/commands/rpc-protocol/#block_info)
+**Reference:** [Block Confirmation Tracking](https://docs.nano.org/integration-guides/block-confirmation-tracking/), [WebSockets Confirmations](https://docs.nano.org/integration-guides/websockets/#confirmations), [RPC block\_info](https://docs.nano.org/commands/rpc-protocol/#block_info)
 
 ### 2. Transactional Isolation and Idempotency
 
@@ -242,38 +244,38 @@ exclude a pending withdrawal to make a discrepancy disappear.
 Use `account_info` for confirmed balances:
 
 ```json
-{"action": "account_info", "account": "nano_1hotwallet..."}
+{"action": "account_info", "account": "nano_1hotwallet...", "receivable": "true", "include_confirmed": "true"}
 ```
 
 Use `receivable` for unclaimed incoming sends:
 
 ```json
-{"action": "receivable", "account": "nano_1hotwallet...", "source": true}
+{"action": "receivable", "account": "nano_1hotwallet...", "source": "true", "include_only_confirmed": "true"}
 ```
 
 The response maps send-block hashes to amounts. Include only confirmed
 receivables in credited assets.
 
-**Reference:** [RPC account_info](https://docs.nano.org/commands/rpc-protocol/#account_info), [RPC receivable](https://docs.nano.org/commands/rpc-protocol/#receivable)
+**Reference:** [RPC account\_info](https://docs.nano.org/commands/rpc-protocol/#account_info), [RPC receivable](https://docs.nano.org/commands/rpc-protocol/#receivable)
 
 ### 5. Payment Lifecycle
 
 Define application policy for at least these cases:
 
-| Scenario | What happens | What to do |
-|---|---|---|
-| **Exact payment** | Confirmed send matches invoice amount | Credit once, queue receive, then fulfill |
-| **Underpayment** | Confirmed send is less than invoice | Hold, notify user, await remainder or timeout |
-| **Overpayment** | Confirmed send exceeds invoice | Credit invoice, track excess for refund |
-| **Duplicate Payment** | Second send to one-time invoice account | Do NOT double-credit, route to manual review |
-| **Late Payment** | Send confirmed after invoice expiration | Do not auto-fulfill, queue for user decision |
-| **Expired invoice** | No payment before expiration | Stop fulfillment, but retain late-payment detection |
-| **Partial Payment** | Multiple sends accumulating | Track total, apply underpayment rules on timeout |
-| **Refund** | Returning funds | Do NOT refund to source address (may be exchange), request verified address off-chain |
-| **Exchange Source** | Deposit from shared hot wallet | Do NOT assume source address = user |
-| **Notification downtime** | WebSocket events were missed | Rescan managed accounts and process idempotently |
-| **Receive Delay** | Delay between send confirmation and your receive | Credit based on confirmed send, not on your receive timing |
-| **Confirmation delay** | Block is not confirmed | Do not credit. Show pending state |
+| Scenario                  | What happens                                     | What to do                                                                            |
+| ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| **Exact payment**         | Confirmed send matches invoice amount            | Credit once, queue receive, then fulfill                                              |
+| **Underpayment**          | Confirmed send is less than invoice              | Hold, notify user, await remainder or timeout                                         |
+| **Overpayment**           | Confirmed send exceeds invoice                   | Credit invoice, track excess for refund                                               |
+| **Duplicate Payment**     | Second send to one-time invoice account          | Do NOT double-credit, route to manual review                                          |
+| **Late Payment**          | Send confirmed after invoice expiration          | Do not auto-fulfill, queue for user decision                                          |
+| **Expired invoice**       | No payment before expiration                     | Stop fulfillment, but retain late-payment detection                                   |
+| **Partial Payment**       | Multiple sends accumulating                      | Track total, apply underpayment rules on timeout                                      |
+| **Refund**                | Returning funds                                  | Do NOT refund to source address (may be exchange), request verified address off-chain |
+| **Exchange Source**       | Deposit from shared hot wallet                   | Do NOT assume source address = user                                                   |
+| **Notification downtime** | WebSocket events were missed                     | Rescan managed accounts and process idempotently                                      |
+| **Receive Delay**         | Delay between send confirmation and your receive | Credit based on confirmed send, not on your receive timing                            |
+| **Confirmation delay**    | Block is not confirmed                           | Do not credit. Show pending state                                                     |
 
 Crediting and receiving are separate operations. Commit the credit and enqueue
 the receive task in one database transaction. A worker can then create, sign,
@@ -396,7 +398,7 @@ than the recipient's receive timing.
 
 **Account for public linkage.** Sweeping invoice accounts into a hot wallet
 links those accounts on-chain. Scheduling or splitting sweeps does not remove
-that linkage. Do not expose extended public keys to clients.
+that linkage.
 
 ## Glossary
 

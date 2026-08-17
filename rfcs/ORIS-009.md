@@ -26,6 +26,13 @@ Community documentation and wallet implementations use more than one Nano
 - RFC 8905 permits `receiver-name`, but not `receiver_name`.
 - RFC 8905 amount syntax cannot represent every 30-decimal Nano raw amount.
 
+The native `nano:` URI uses `amount` for raw units, but the unit is not visible
+in the parameter name. This differs from many payment URI conventions and has
+led to incompatible wallet behavior when links or QR codes are handled. This
+profile makes the unit explicit: `amount=NANO:...` is an XNO amount and
+`nano-raw=...` is an exact raw amount. Native `nano:` semantics remain
+unchanged.
+
 This profile defines one canonical form and limited compatibility behavior. A
 parser must reject ambiguous or inexact amounts rather than guess.
 
@@ -105,21 +112,27 @@ opt-name       = generic-opt / authority-specific-opt
 opt-value      = *pchar
 generic-opt    = "amount" / "receiver-name" / "sender-name" / "message" / "instruction"
 authority-specific-opt = ALPHA *( ALPHA / DIGIT / "-" / "." )
+authority      = ALPHA *( ALPHA / DIGIT / "-" / "." )
 
 ; Nano-specific additions (this document)
-authority      =/ "nano"
-path-abempty   = "/" nano-address
-nano-address   = ("nano_" / "xrb_") 60( base32-nano-char )
-base32-nano-char = %x31 / %x33-39 / %x61-6B / %x6D-6E /
+nano-address   = ("nano_" / "xrb_") nano-address-first 59( base32-nano-char )
+nano-address-first = %x31 / %x33
+base32-nano-char = %x31 / %x33-39 / %x61-6B / %x6D-6F /
                    %x70-75 / %x77-7A
 ```
 
 ABNF does not validate the address checksum.
 
+For this profile, `path-abempty` is one `/` followed by `nano-address`. The Nano
+profile applies only to the case-insensitive `nano` authority. The authority-
+selection requirement is stated in
+[Parsing Rules](#parsing-rules-consumer-requirements).
+
 Producers MUST emit
 `payto://nano/<nano-address>[?<opts>]`. They MUST include the double slash.
 
-Consumers MAY accept `payto:nano/<nano-address>` as legacy input. Producers MUST
+The ABNF above describes the canonical double-slash form. Consumers MAY accept
+`payto:nano/<nano-address>` as legacy input. Producers MUST
 NOT generate that form.
 
 ### Address Encoding
@@ -128,6 +141,7 @@ NOT generate that form.
 - The address underscore MUST remain unencoded.
 - Producers MUST use the `nano_` prefix.
 - Consumers MUST accept `nano_` and `xrb_`.
+- The address body MUST begin with `1` or `3`.
 - Consumers MUST validate the Nano alphabet, length, and Blake2b-40 checksum.
 - Consumers MUST reject an invalid address without truncation or recovery.
 
@@ -152,10 +166,12 @@ or amount resolution.
 
 ### Amount Representation
 
-RFC 8905 requires `amount=<currency>:<unit>[.<fraction>]`. It reserves
-three-letter currency names for ISO 4217, limits `unit` to values below 2^53,
-and permits at most eight fractional digits. The three-letter ticker `XNO`
-therefore cannot be assigned custom semantics in this field.
+RFC 8905 defines `amount=<currency>:<unit>[.<fraction>]`. A three-letter
+currency name MUST be an ISO 4217 code. A payment-target profile MAY define
+semantics for a non-three-letter currency name. The generic `unit` is limited to
+values below 2^53, and the fractional part has at most eight digits. The
+three-letter ticker `XNO` therefore cannot be assigned custom semantics in this
+field.
 
 This profile defines the four-letter currency name `NANO`:
 
@@ -166,12 +182,14 @@ amount=NANO:<unit>[.<fraction>]
 Requirements:
 
 - Consumers MUST ignore commas in `unit` and `fraction`, as RFC 8905 requires.
+- Consumers MUST reject an `amount` value whose currency name is not `NANO`.
 - After removing commas, `unit` MUST contain base-10 digits and be less than
   2^53.
 - After removing commas, `fraction` MAY contain one to eight base-10 digits.
 - Producers MUST NOT emit commas, signs, exponents, or trailing decimal points.
 - Consumers MUST interpret the value as XNO.
 - Consumers MUST convert XNO to raw with exact decimal or integer arithmetic.
+- Consumers MUST reject a converted raw amount greater than `2^128 - 1`.
 
 For an exact raw amount, use:
 
@@ -180,7 +198,7 @@ nano-raw=<unsigned-base-10-integer>
 ```
 
 `nano-raw` has no 2^53 limit. Its value MUST contain digits only, with no
-leading zero unless the value is `0`.
+leading zero unless the value is `0`, and MUST be no greater than `2^128 - 1`.
 
 A producer MUST NOT include both `amount` and `nano-raw`. A consumer MUST reject
 a URI containing both. A producer MAY omit both for an open amount.
@@ -199,14 +217,19 @@ Producers:
 
 Consumers:
 
+- MUST process only the case-insensitive `nano` authority. They MUST reject
+  other authorities or dispatch them to their respective payment-target profiles.
 - MUST accept options in any order.
 - MUST reject repeated `amount` or `nano-raw` options.
 - MUST validate the address checksum before treating a URI as actionable.
 - MUST reject an invalid address or amount without coercion, truncation, or
   rounding.
 - MUST ignore unknown options that do not affect the destination or amount.
+- SHOULD reject or request a replacement when `instruction` would be modified,
+  truncated, or otherwise lossily converted.
 - MUST require user review before signing or submitting a transaction.
-- MUST let the user inspect the complete destination and exact resolved amount.
+- MUST let the user inspect the complete destination and either the exact
+  resolved amount or that the request has no fixed amount.
 - MUST NOT present `receiver-name` or `message` as verified identity.
 
 ### URI Handler Registration (Informative)
@@ -223,7 +246,7 @@ documentation.
 
 To be populated via a community survey (tracking issue TBD) rather than unilateral reverse-engineering. Wallet maintainers should confirm current behavior directly.
 
-| Wallet | `payto://` | legacy single-slash | `receiver-name` | `receiver_name` | `nano-raw` | `NANO:` amount | `nano:` companion | Source / notes |
+| Wallet | `payto://` | legacy single-slash | `receiver-name` | `receiver_name` | `nano-raw` | `amount=NANO:<...>` | `nano:` companion | Source / notes |
 |---|---|---|---|---|---|---|---|---|
 | Nautilus | TBD | TBD | TBD | TBD | TBD | TBD | TBD | |
 | Cake Wallet | TBD | TBD | TBD | TBD | TBD | TBD | TBD | |

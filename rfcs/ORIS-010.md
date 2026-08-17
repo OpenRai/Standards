@@ -54,6 +54,11 @@ This document covers API-key transport, optional URL configuration, TLS, secret
 handling, and authentication errors. It does not define key issuance, account
 management, authorization scopes, quotas, or Nano RPC actions.
 
+This document specifies the current JSON-RPC-over-HTTPS binding. A future
+protocol or transport may provide another way for an application to communicate
+with a Nano node; that binding is outside this document unless separately
+specified.
+
 ### 2. Required On-Wire Authentication Method
 
 Clients MUST send the API key in the HTTP `Authorization` header:
