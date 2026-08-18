@@ -7,6 +7,20 @@ OpenRai Initiative Standard: 009
 > Status: Working Draft
 > Category: Application Interface
 
+> [!IMPORTANT]
+> This documents a platform-level deployment obstacle, not a defect in the URI syntax defined below.
+>
+> As of this writing, mainstream operating systems do not route custom URI schemes by authority. They route by scheme token alone.
+>
+> - **Android** dispatches on the scheme (`payto`) via intent-filter matching. If more than one installed app registers a `payto` intent filter, the OS presents a disambiguation dialog. It has no mechanism to route based on the authority (`nano`, `upi`, `iban`, etc.) that follows the scheme, because that component is opaque to the OS at dispatch time.
+> - **iOS** is stricter and worse for this purpose: when multiple installed apps register the same custom scheme, the OS resolves the conflict silently and non-deterministically. There is no disambiguation prompt and no authority-aware routing.
+>
+> Because RFC 8905 defines `payto:` as one scheme shared across many independently defined payment target types, any application that registers as a `payto:` handler competes for the same OS-level registration as every other `payto:`-handling application on the device, regardless of which authority it actually implements. A device with a `payto:` handler already installed for an unrelated payment target type MAY intercept a `payto://nano/...` URI, present the wrong app, silently launch the wrong app, or fail to reach any Nano-aware handler at all. Emitting a `payto://nano/...` link therefore does not currently guarantee it reaches Nano-capable software, or any software able to interpret it.
+>
+> This is a platform routing limitation, not a limitation of this document's Nano-specific grammar or semantics. The mechanism that reliably supports domain-verified deep linking today — Android App Links and iOS Universal Links, both keyed to a cryptographically verified `https://` domain rather than a bare custom scheme — is not available to a shared multi-authority scheme like `payto:`, because it depends on one app claiming exclusive ownership of one domain, which has no equivalent for a scheme-sharing arrangement.
+>
+> **Implication for this document:** implementations SHOULD NOT rely on OS-level `payto:` scheme dispatch to deliver a `payto://nano/...` URI to Nano-aware software. Producers MAY continue to emit `payto://nano/...` for forward compatibility and for contexts where the URI is parsed directly by a known application (e.g., pasted into a specific wallet, embedded in an API response) rather than dispatched through the OS handler registry. The informative platform registration notes below describe today's registration mechanisms; they do not describe reliable arbitration between competing `payto:` handlers, because none currently exists.
+
 ## Abstract
 
 This document defines the `nano` payment target type for the `payto:` URI scheme
