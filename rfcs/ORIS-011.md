@@ -9,11 +9,12 @@ OpenRai Initiative Standard: 011
 
 ## Abstract
 
-This document formalizes the native Nano URI scheme for payment requests and
-wallet app intents. It defines the authority-aware form
+This document defines an ORIS profile for the native Nano URI scheme and wallet
+app-intent requests. It defines the authority-aware form
 `nano://mainnet/<action>/...`, the mainnet shorthand
 `nano:<action>/...`, and compatibility aliases for the existing
-`nano:` URI forms documented by Nano.
+Nano URI forms documented by Nano. The authority-aware and action-bearing forms
+are defined by this document and do not imply current wallet support.
 
 It specifies URI components, action profiles, amount and address encoding,
 canonicalization, QR transport, platform handoff behavior, user-confirmation
@@ -30,6 +31,11 @@ Nano documentation currently describes several URI schemes for payments,
 representative changes, key imports, seed imports, and block processing. The
 examples are useful, but the formats do not yet provide one interoperable
 grammar or one security model.
+
+This document supplies that missing scheme-specific profile. It uses the generic
+URI parsing model from RFC 3986 without reproducing the generic URI grammar.
+The authority-aware and action-bearing forms below are ORIS-defined forms. The
+legacy forms are compatibility inputs documented by Nano.
 
 The important ambiguity is the difference between these forms:
 
@@ -76,8 +82,8 @@ This document covers:
 - the explicit `nano://mainnet/<action>/...` URI form;
 - the `nano:<action>/...` mainnet alias;
 - the existing address-only `nano:<address>` payment form;
-- compatibility aliases for `nanorep:`, `nanokey:`,
-  `nanoseed:`, and `nanoblock:`;
+- compatibility aliases for `nanorep:`, `nanokey:`, and `nanoseed:`; and
+- the reserved, unprofiled status of the documented `nanoblock:` form;
 - common query parameters and raw amount validation;
 - producer, consumer, QR, and platform-handoff requirements; and
 - published parsing and semantic-equivalence vectors.
@@ -161,6 +167,9 @@ A consumer MUST:
 7. Reject duplicate parameters unless an action profile explicitly permits
    them.
 8. Reject values that would be truncated, rounded, or coerced.
+9. Reject a fragment. This profile does not define fragment semantics.
+10. Reject dot-segments, empty path segments, trailing path separators, and
+    additional path segments not defined by the selected action profile.
 
 Scheme and network-authority comparison is case-insensitive. Producers MUST
 emit the lowercase forms `nano` and `mainnet`. Action names
@@ -174,6 +183,12 @@ path, or query components.
 Consumers MUST NOT treat a URI string comparison as semantic equivalence. They
 MUST compare the parsed, validated request after applying the aliases and
 canonicalization rules in this document.
+
+Canonicalization is semantic rather than a requirement for one unique URI
+serialization. Query-parameter order does not affect semantic equivalence.
+Percent-encoded values are decoded once before action validation, and accepted
+`xrb_` addresses are canonicalized to `nano_`. Producers still emit the
+required lowercase names and percent-encode delimiters as specified above.
 
 ### Address Encoding
 
@@ -291,7 +306,7 @@ The `import-key` action requests import of one raw Nano account
 private key:
 
 ```text
-nano://mainnet/import-key/<private-key>
+nano://mainnet/import-key/<private-key>?label=<text>&message=<text>
 ```
 
 The target MUST be exactly 64 hexadecimal characters. Producers SHOULD emit
@@ -310,17 +325,33 @@ The `import-seed` action requests import of one 32-byte Nano seed
 represented as 64 hexadecimal characters:
 
 ```text
-nano://mainnet/import-seed/<seed>?lastindex=<index>
+nano://mainnet/import-seed/<seed>?label=<text>&message=<text>&lastindex=<index>
 ```
 
 `lastindex` is an optional unsigned decimal integer from `0`
 through `4294967295`. It is a recovery-scan hint, not proof that
 accounts above or below that index do not exist.
 
-This profile defines the raw Nano seed format only. It does not define a
-mnemonic, BIP-39 interpretation, or BIP-44 derivation path. A consumer MUST
-identify the derivation method it will use before importing or scanning the
-seed. The existing `nanoseed:` form is a mainnet compatibility alias.
+The action distinguishes a requested seed import from an `import-key` request.
+It does not, by itself, distinguish legacy Nano seed derivation from another
+wallet derivation family. This document does not force one derivation choice
+when the URI does not identify a derivation profile.
+
+When no derivation profile is supplied, a consumer SHOULD apply its existing
+wallet seed-import behavior. A consumer MAY ask the user to select a profile,
+expose an advanced option, or probe supported profiles. Before importing, the
+consumer MUST identify the selected derivation profile and obtain explicit user
+confirmation.
+
+The documented `nanoseed:` form is historically associated with legacy Nano
+seed derivation. A future ORIS MAY define an explicit profile for BIP-39,
+BIP-32, BIP-44, or another derivation family.
+
+A producer that requires a particular derivation profile MUST NOT rely on its
+omission. It MUST use an explicitly defined profile when one is available.
+
+Under the legacy Nano derivation behavior, the private key at index `i` is
+`BLAKE2b-256(seed || uint32_be(i))`.
 
 Seed import has the same handling requirements as private-key import. A wallet
 MUST NOT overwrite an existing wallet or account without a separate explicit
@@ -328,22 +359,15 @@ confirmation.
 
 #### `process-block`
 
-The `process-block` action requests processing of one serialized JSON
-block:
+The `process-block` action is reserved for future use. Its target, when this
+document defines it, will be a JSON object that validates against the block
+schema accepted by the consumer's supported Nano node version.
 
-```text
-nano://mainnet/process-block/<percent-encoded-json>
-```
-
-The target is UTF-8 JSON after one percent-decoding step. It MUST represent a
-complete signed Nano block accepted by the consumer's block validator. The
-consumer MUST validate the block, account, signature, previous block, balance,
-representative, link, and work according to its supported Nano node rules.
-
-Processing a valid block may publish a ledger action. A consumer MUST NOT
-process or publish it without explicit user approval. The existing
-`nanoblock:` form is a mainnet compatibility alias, where the data
-after the scheme is the same JSON payload before URI decoding.
+This document does not define a separate JSON schema, parsing rules,
+block-processing semantics, or interoperability requirements for this action.
+The documented `nanoblock:` form remains unprofiled here.
+Until a later ORIS defines this action, producers MUST NOT generate it and
+consumers MUST reject it as unsupported.
 
 ### Compatibility Alias Table
 
@@ -352,9 +376,9 @@ after the scheme is the same JSON payload before URI decoding.
 | `nano:<address>?...` | `nano://mainnet/send/<address>?...` |
 | `nano:send/<address>?...` | `nano://mainnet/send/<address>?...` |
 | `nanorep:<address>?...` | `nano://mainnet/change-representative/<address>?...` |
-| `nanokey:<key>` | `nano://mainnet/import-key/<key>` |
-| `nanoseed:<seed>?lastindex=...` | `nano://mainnet/import-seed/<seed>?lastindex=...` |
-| `nanoblock:<json>` | `nano://mainnet/process-block/<percent-encoded-json>` |
+| `nanokey:<key>?label=...&message=...` | `nano://mainnet/import-key/<key>?label=...&message=...` |
+| `nanoseed:<seed>?label=...&message=...&lastindex=...` | `nano://mainnet/import-seed/<seed>?label=...&message=...&lastindex=...` |
+| `nanoblock:<json>` | Reserved; no canonical semantic form is defined |
 
 The alias table defines semantic equivalence, not a requirement that every
 consumer implement every legacy scheme. A consumer that does not support a
@@ -406,8 +430,8 @@ The QR payload is the exact URI string defined by this document. Producers MUST:
 Consumers MUST pass decoded QR text through the same URI parser used for links.
 QR decoding does not establish authenticity or user intent.
 
-Large `process-block`, seed, or key payloads may exceed practical QR
-limits. This document does not define animated or multipart QR encoding.
+Large future-reserved payloads may exceed practical QR limits. This document
+does not define animated or multipart QR encoding.
 Applications that need multipart transfer SHOULD use a separately specified
 secure transfer format.
 
@@ -513,6 +537,85 @@ this document:
 ```text
 nano://beta/send/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?amount=1000
 ```
+
+### Vector 7 — Private-Key Import
+
+```text
+nano://mainnet/import-key/1495F2D49159CC2EAAAA97EBB42346418E1268AFF16D7FCA90E6BAD6D0965520?label=Imported%20Account
+```
+
+Semantic result:
+
+```text
+network = mainnet
+action = import-key
+target = 1495F2D49159CC2EAAAA97EBB42346418E1268AFF16D7FCA90E6BAD6D0965520
+label = Imported Account
+```
+
+### Vector 8 — Seed Import With Existing Wallet Behavior
+
+```text
+nano://mainnet/import-seed/0000000000000000000000000000000000000000000000000000000000000001?label=Recovery%20Seed&lastindex=1
+```
+
+Semantic result:
+
+```text
+network = mainnet
+action = import-seed
+seed = 0000000000000000000000000000000000000000000000000000000000000001
+lastindex = 1
+derivation = selected by consumer's existing wallet behavior
+```
+
+The consumer MUST identify the selected derivation profile before import.
+
+### Vector 9 — Legacy Address Prefix Canonicalization
+
+The following URI is accepted only if the consumer supports the legacy
+`xrb_` prefix. Its semantic target MUST be canonicalized to `nano_`:
+
+```text
+nano://mainnet/send/xrb_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?amount=1000
+```
+
+### Vector 10 — Repeated Parameter
+
+The following URI MUST be rejected because `amount` appears more than once:
+
+```text
+nano://mainnet/send/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?amount=1000&amount=1000
+```
+
+### Vector 11 — Fragment
+
+The following URI MUST be rejected because this profile does not define
+fragment semantics:
+
+```text
+nano://mainnet/send/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?amount=1000#confirmation
+```
+
+### Vector 12 — Malformed Percent-Encoding
+
+The following URI MUST be rejected because `%ZZ` is not valid percent-encoding:
+
+```text
+nano://mainnet/send/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn?label=%ZZ
+```
+
+### Vector 13 — Trailing Path Segment
+
+The following URI MUST be rejected because the `send` action has an additional
+path segment:
+
+```text
+nano://mainnet/send/nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn/extra
+```
+
+The reserved `process-block` action has no test vector. This document does not
+define its processing semantics.
 
 ## Reference Implementation
 
