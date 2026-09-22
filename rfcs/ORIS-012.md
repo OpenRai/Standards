@@ -9,17 +9,12 @@ OpenRai Initiative Standard: 012
 
 ## Abstract
 
-This document defines `rai`, a Nano (XNO) display and interchange unit equal
-to `10^-6 XNO` (`10^24 raw`), and specifies normative rules for serializing
-Nano amounts — in `raw`, `XNO`, and `rai` — for JSON and other interchange
-formats with IEEE 754 binary64 receivers, without silent precision loss.
+This document defines `rai`, an application-level Nano (XNO) unit equal to
+`10^-6 XNO` (`10^24 raw`). It defines exact amount serialization rules for
+`raw`, `XNO`, and whole `rai` amounts in JSON and binary64-backed formats.
 
-It addresses a gap outside the native block/RPC layer, where `raw` is already
-an unambiguous, protocol-level BigInt-equivalent integer. Once an amount
-leaves that layer — into an API response, a webhook payload, an analytics
-event, a browser-side application, or a spreadsheet — it is routinely
-represented as a JSON or floating-point number, at which point Nano's
-30-decimal magnitude silently breaks.
+The rules apply to application payloads such as API responses, webhooks, and
+analytics events. They do not change Nano ledger or Nano RPC representations.
 
 ## Motivation
 
@@ -33,14 +28,9 @@ roughly `9 × 10^-9 rai` (`9 × 10^-15 XNO`) would fit. In practice, that means:
 **a bare JSON number is not a safe general-interchange representation for a
 `raw` amount.**
 
-This is not hypothetical. A backend that computes a `raw` balance, assigns it
-to a JSON field as a number rather than a string, and returns it through a
-language runtime that parses JSON numbers into `double` (JavaScript, most
-JSON libraries in most languages by default, spreadsheet imports, many
-webhook consumers) will silently round the value. Because Nano transactions
-are irreversible and fee-less, a rounded amount is not a cosmetic bug — it is
-a wrong balance, a wrong invoice, or a wrong payout, discovered only when
-someone reconciles against the ledger.
+An amount that is rounded in transit can produce an incorrect balance,
+invoice, or payout. A format contract must therefore state both the unit and
+the permitted representation.
 
 A second, related problem is the lack of a standardized name for the common
 six-decimal XNO display precision. This document calls that quantity `rai`.
@@ -55,14 +45,13 @@ indicate normative requirements.
 
 Unless otherwise stated:
 
-- `1 XNO = 10^30 raw` (as established in [ORIS-009](./ORIS-009.md)).
+- `1 XNO = 10^30 raw`.
 - A **producer** generates or serializes an amount.
 - A **consumer** parses or displays an amount.
 - **Safe integer range** means the closed interval
   `[-(2^53 - 1), 2^53 - 1]`, per [RFC 8259 §6](#references).
 - A **whole `rai` amount** is a non-negative integer number of `rai`.
-- Amounts in this document are assumed non-negative; Nano balances and
-  transaction amounts cannot be negative.
+- An amount defined by this document is non-negative.
 
 ## Specification
 
@@ -71,7 +60,7 @@ Unless otherwise stated:
 This document covers:
 
 - the definition of the `rai` unit,
-- its relationship to `raw`, `XNO`, and the existing informal unit ladder,
+- its relationship to `raw` and `XNO`,
 - normative serialization rules for `raw`, `XNO`, and `rai` amounts in JSON
   and comparable interchange formats, and
 - field-naming and conversion-arithmetic requirements for producers and
@@ -79,9 +68,7 @@ This document covers:
 
 This document does not cover:
 
-- the Nano block or RPC wire format, where `raw` is already an unambiguous
-  string/integer at the protocol level and is out of scope for this
-  document,
+- the Nano block format or Nano RPC action contracts,
 - wallet UI default-denomination policy (this document standardizes a name
   and value; it does not mandate what a wallet displays by default), or
 - the `payto:` or `nano:` URI amount parameters, which [ORIS-009](./ORIS-009.md)
@@ -97,10 +84,8 @@ This document does not cover:
 
 `1 rai = 0.000001 XNO = 1,000,000,000,000,000,000,000,000 raw`.
 
-`rai` is an integer-valued unit at the granularity already shown by wallet
-UIs that truncate or round `XNO` display to six decimal places. Any amount
-representable as a decimal `XNO` value with no more than six fractional
-digits is representable as a whole number of `rai`.
+`amount_rai` represents whole `rai` only. An XNO value with at most six
+fractional digits is representable as a whole number of `rai`.
 
 ### The Float64 / JSON Safe-Integer Problem
 
@@ -130,45 +115,52 @@ number of `rai`) is unproblematic; a value carrying its full native
 precision, such as `"1.234567891234567891234567891234"`, is not safe as a
 bare JSON number regardless of how small its integer part is.
 
+### Amount Syntax
+
+```abnf
+unsigned-integer = "0" / ( nonzero-digit *DIGIT )
+nonzero-digit    = %x31-39
+xno-decimal      = unsigned-integer [ "." 1*30DIGIT ]
+```
+
+The grammar does not validate the applicable maximum value or whether an XNO
+decimal converts to a whole `raw` amount.
+
 ### Serialization Requirements
 
-1. A producer MUST NOT emit a `raw` amount as a bare JSON (or other
-   float64-typed) number. A `raw` amount MUST be encoded as a decimal
-   string: base-10 digits only, no leading zeros except a standalone `"0"`,
-   no sign, no decimal point, no exponent, no digit-grouping separators.
-   The value MUST NOT exceed `2^128 - 1`.
-   This matches the existing `amount_raw` convention in
-   [ORIS-003](./ORIS-003.md) and the `nano-raw` parameter in
-   [ORIS-009](./ORIS-009.md); this document generalizes that already-proven
-   practice as a cross-cutting rule rather than a per-document convention.
-2. A producer MUST encode an `XNO` amount with a fractional part as a decimal
-   string. The string MUST use base-10 digits and no sign, exponent, or digit
-   grouping separator. Its integer component MUST be `0` or a nonzero digit
-   followed by digits. When it contains a decimal point, the point MUST be
-   followed by one through 30 digits. The parsed value MUST correspond exactly
-   to a non-negative `raw` amount no greater than `2^128 - 1`.
-   A producer MAY encode a whole `XNO` amount as a JSON integer.
-3. An `amount_rai` field represents a whole `rai` amount. A producer MUST
-   NOT round or truncate a `raw` amount to produce `amount_rai`. When the
-   raw amount is not divisible by `10^24`, a producer MUST use `amount_raw`
-   or a decimal-string `amount_xno` instead. A decimal-string `amount_rai`
-   MUST use the same integer syntax as `amount_raw`. Its value MUST NOT
-   exceed `340282366920938`. A whole `rai` amount MAY be encoded as a JSON
-   integer or a decimal string. Because every
-   amount that can exist on the Nano ledger remains within the float64 safe
-   integer range when expressed in `rai` (see
-   [above](#the-float64--json-safe-integer-problem)), this is exact, not an
-   approximation. Producers SHOULD still prefer decimal-string encoding for
-   `rai` where a schema mixes `rai` fields with `raw` or fractional `XNO`
-   fields, for consistency and to simplify shared parsing code; a
-   consumer MUST accept a `rai` amount encoded as either a JSON integer or
-   a decimal string.
-4. A consumer MUST reject a `raw` amount received as a bare JSON number. A
-   consumer MUST reject an `XNO` amount with a fractional part received as a
-   bare JSON number. A consumer MUST reject a fractional `rai` amount. A
-   consumer MUST reject any amount that fails the applicable syntax, range,
-   or exact-conversion rule.
-5. These rules apply to any interchange format backed by IEEE 754 binary64
+#### Producer Requirements
+
+A producer:
+
+- MUST encode `amount_raw` as an `unsigned-integer` string no greater than
+  `2^128 - 1`.
+- MUST NOT encode `amount_raw` as a JSON number.
+- MUST encode an `amount_xno` value with a fractional part as an
+  `xno-decimal` string.
+- MAY encode a whole `amount_xno` value as a JSON integer.
+- MUST encode `amount_rai` as a whole `rai` amount no greater than
+  `340282366920938`.
+- MAY encode `amount_rai` as a JSON integer or an `unsigned-integer` string.
+- MUST NOT round or truncate a `raw` amount to produce `amount_rai`.
+- MUST use `amount_raw` or decimal-string `amount_xno` when a raw amount is
+  not divisible by `10^24`.
+
+A producer MUST ensure that an `amount_xno` value converts exactly to a
+non-negative raw amount no greater than `2^128 - 1`.
+
+#### Consumer Requirements
+
+A consumer:
+
+- MUST reject an `amount_raw` JSON number.
+- MUST reject an `amount_xno` JSON number with a fractional part.
+- MUST reject a fractional `amount_rai` value.
+- MUST reject an amount that fails its syntax, range, or exact-conversion
+  requirement.
+- MUST accept a valid whole `amount_rai` encoded as either a JSON integer or
+  an `unsigned-integer` string.
+
+These rules apply to any interchange format backed by IEEE 754 binary64
    or narrower (JSON, YAML with a JSON-compatible number model, MessagePack
    using its float64 number type, many RPC/serialization frameworks'
    default number types, spreadsheet cell values). They do not apply to
