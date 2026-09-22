@@ -16,6 +16,7 @@ A collection of technical specifications designed to promote interoperability ac
 - [ORIS-009: Nano Payment Targets for `payto:`](rfcs/ORIS-009.md) (Working Draft)
 - [ORIS-010: API-Key Authentication for Nano RPC](rfcs/ORIS-010.md) (Working Draft)
 - [ORIS-011: Nano App-Intent URI Profiles](rfcs/ORIS-011.md) (Working Draft)
+- [ORIS-012: The `rai` Sub-Unit and Safe Amount Serialization for Nano Applications](rfcs/ORIS-012.md) (Working Draft)
 <!-- ORIS-INDEX-END -->
 
 ## Document Statuses
