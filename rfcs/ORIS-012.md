@@ -23,7 +23,7 @@ common JSON receivers use IEEE 754 binary64. This is also the numeric type of
 JavaScript `Number` and many languages' default float type. Binary64
 represents integers exactly only up to `2^53 - 1 = 9,007,199,254,740,991`
 ([`Number.MAX_SAFE_INTEGER`](#references)). A `raw` amount exceeds this range
-for essentially every transaction of practical size; only amounts below
+for essentially every transaction of practical size. Only amounts below
 roughly `9 × 10^-9 rai` (`9 × 10^-15 XNO`) would fit. In practice, that means:
 **a bare JSON number is not a safe general-interchange representation for a
 `raw` amount.**
@@ -69,8 +69,7 @@ This document covers:
 This document does not cover:
 
 - the Nano block format or Nano RPC action contracts,
-- wallet UI default-denomination policy (this document standardizes a name
-  and value; it does not mandate what a wallet displays by default), or
+- wallet UI default-denomination policy, or
 - the `payto:` or `nano:` URI amount parameters, which [ORIS-009](./ORIS-009.md)
   already specifies.
 
@@ -93,9 +92,9 @@ fractional digits is representable as a whole number of `rai`.
 
 | Unit  | Approximate value below which a bare JSON/float64 number is exact |
 |-------|---------------------------------------------------------------------|
-| `raw` | `~9 × 10^-9 rai` (`~9 × 10^-15 XNO`) — effectively unreachable for any real amount |
+| `raw` | `~9 × 10^-9 rai` (`~9 × 10^-15 XNO`) |
 | `rai` | `~9.0 × 10^15 rai` (`~9.0 × 10^9 XNO`) |
-| `XNO` | depends on required fractional precision; see below |
+| `XNO` | depends on required fractional precision, described below |
 
 The largest whole `rai` amount representable by a Nano `uint128` raw value is
 `floor((2^128 - 1) / 10^24) = 340,282,366,920,938 rai`. This is less than
@@ -104,16 +103,10 @@ representable as a binary64 integer. This establishes the `rai` allowance in
 [Serialization Requirements](#serialization-requirements) without depending
 on the current circulating supply.
 
-`XNO` itself is not automatically safe just because its integer part is
-small: a fractional `XNO` value carrying `raw`-level precision needs up to
-30 significant decimal digits, and per
-[RFC 8259 §6](#references) and [RFC 7493](#references), a JSON number
-carrying more precision than binary64 provides (roughly 15–17 significant
-decimal digits) is not guaranteed to round-trip. A displayed value like
-`"1.234567"` (six decimal places, i.e. exactly representable as an integer
-number of `rai`) is unproblematic; a value carrying its full native
-precision, such as `"1.234567891234567891234567891234"`, is not safe as a
-bare JSON number regardless of how small its integer part is.
+The XNO integer component alone does not establish safety. A value with raw
+precision can require 30 decimal places. Binary64 does not preserve that
+precision. RFC 8259 and RFC 7493 therefore do not guarantee that such a JSON
+number round-trips. Encode a fractional XNO value as a decimal string.
 
 ### Amount Syntax
 
@@ -160,11 +153,10 @@ A consumer:
 - MUST accept a valid whole `amount_rai` encoded as either a JSON integer or
   an `unsigned-integer` string.
 
-These rules apply to any interchange format backed by IEEE 754 binary64
-   or narrower (JSON, YAML with a JSON-compatible number model, MessagePack
-   using its float64 number type, many RPC/serialization frameworks'
-   default number types, spreadsheet cell values). They do not apply to
-   formats with native arbitrary-precision decimal or integer types.
+These rules apply to binary64 or narrower formats. Examples include JSON
+receivers, JSON-compatible YAML numbers, float64 MessagePack values, and
+spreadsheet cells. They do not apply to native arbitrary-precision numeric
+types.
 
 ### Field Naming Convention
 
@@ -174,60 +166,41 @@ consistent with the `amount`/`nano-raw` disambiguation already adopted in
 [ORIS-009](./ORIS-009.md):
 
 ```text
-amount_raw   — decimal string, raw
-amount_rai   — whole rai: JSON integer or decimal string
-amount_xno   — decimal string (or integer where the value is known to be
-               a whole number of XNO), XNO
+amount_raw   — `unsigned-integer` string, raw
+amount_rai   — whole rai: JSON integer or `unsigned-integer` string
+amount_xno   — `xno-decimal` string, or JSON integer for whole XNO
 ```
 
-A single payload SHOULD carry an amount in exactly one of these units. A
-payload that carries the same amount in more than one unit for convenience
-MUST ensure the values are exactly consistent, computed as described in
-[Conversion Arithmetic](#conversion-arithmetic).
+A payload SHOULD carry one amount unit. A payload with multiple amount units
+MUST use values that convert exactly under [Conversion Arithmetic](#conversion-arithmetic).
 
 ### Conversion Arithmetic
 
 Conversion between `raw`, `rai`, and `XNO` MUST use exact integer or
-arbitrary-precision decimal arithmetic (e.g., a `BigInt`/`bigint` type, an
-arbitrary-precision decimal library, or equivalent integer division/
-multiplication by the exact powers of ten in the
-[Unit Definition](#unit-definition) table). Conversion MUST NOT be performed
-using native binary floating-point division or multiplication, since doing
-so reintroduces the precision loss this document exists to prevent, even
-when the input and output are both subsequently encoded as strings.
+arbitrary-precision decimal arithmetic. A producer or consumer MUST NOT use
+binary floating-point arithmetic for a conversion that preserves raw value.
 
 Conversion from `raw` to a whole `rai` amount MUST reject a value that is not
 divisible by `10^24`. It MUST NOT round or truncate the value.
 
 ### Display Guidance (Informative)
 
-Wallet and application UIs that already round or truncate `XNO` display to
-six decimal places are, in effect, already displaying `rai`-granularity
-values without naming the unit. Such interfaces SHOULD consider adopting
-`rai` as the labeled unit for that display mode — either as the primary
-display denomination or as an explicit, switchable alternative to `XNO` —
-rather than leaving the truncation unnamed and denomination-implicit.
+Wallet and application UIs MAY label a six-decimal XNO display as `rai`.
+This document does not require a default display denomination.
 
 ## Relationship to Other ORIS Documents
 
-- [ORIS-003](./ORIS-003.md) (NanoNyms Payment Event Schema) already encodes
-  `amount_raw` as a decimal string; a future revision MAY add an optional
-  `amount_rai` field following the rules in this document.
-- [ORIS-008](./ORIS-008.md) (Reliable Nano Payment Integration) covers
-  confirmation tracking and reconciliation; implementations following
-  ORIS-008 SHOULD apply this document's serialization rules to any amount
-  fields in their reconciliation records.
-- [ORIS-009](./ORIS-009.md) (Nano Payment Targets for `payto:`) already
-  distinguishes `amount=NANO:...` from `nano-raw=...`; the precision
-  requirements in this document apply equally to both parameters and MAY be
-  cited by reference rather than restated in future revisions of ORIS-009.
+- [ORIS-003](./ORIS-003.md) (NanoNyms Payment Event Schema) defines
+  `amount_raw` as a decimal string.
+- [ORIS-008](./ORIS-008.md) (Reliable Nano Payment Integration) applies these
+  rules to amount fields in reconciliation records.
+- [ORIS-009](./ORIS-009.md) (Nano Payment Targets for `payto:`) defines
+  `amount=NANO:...` and `nano-raw=...` for URI parameters.
 
 ## Non-Goals
 
-- This document does not change the native Nano block format, RPC
-  responses, or any wire-level representation, all of which already
-  represent `raw` as an unambiguous integer or decimal string outside of
-  JSON's number type constraints.
+- This document does not change native Nano block or Nano RPC amount
+  representations.
 - This document does not mandate a default display denomination for any
   wallet or application.
 - This document does not deprecate any existing Nano denomination. It defines
@@ -256,20 +229,19 @@ rather than leaving the truncation unnamed and denomination-implicit.
 
 ### Vector 2 — Six-Decimal Display Amount
 
-Input (`XNO`, six decimal places — safely representable as an integer `rai`
-value or a decimal string):
+Input (`XNO`, six decimal places):
 
 ```json
 { "amount_xno": "1.500000" }
 ```
 
-Equivalent, safe as a bare JSON integer:
+Equivalent whole `rai` amount:
 
 ```json
 { "amount_rai": 1500000 }
 ```
 
-Equivalent, required as a decimal string (unsafe as a bare JSON number):
+Equivalent `raw` amount:
 
 ```json
 { "amount_raw": "1500000000000000000000000000000" }
@@ -307,11 +279,7 @@ precision for any amount that can exist on the Nano ledger.
 
 ## Reference Implementation
 
-No reference implementation is nominated yet. Implementers adding `rai`
-support to an existing conversion utility (for example, one already
-handling `raw`/`knano`/`Mnano`) SHOULD add it as an additional named unit at
-`10^24 raw` alongside the existing ladder, using the exact-arithmetic
-requirement in [Conversion Arithmetic](#conversion-arithmetic).
+No reference implementation is nominated yet.
 
 ## References
 
