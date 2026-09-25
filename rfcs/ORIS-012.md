@@ -219,11 +219,11 @@ This document does not require a default display denomination.
 
 ### Vector 1 — Unit Conversion
 
-```text
+```
 1 XNO  = 1,000,000 rai
 1 XNO  = 1000000000000000000000000000000 raw   (10^30)
 1 rai  = 1000000000000000000000000 raw          (10^24)
-1 raw  = 0.000001 rai
+1 raw  = 0.000000000000000000000001 rai         (10^-24)
 1 raw  = 0.000000000000000000000000000001 XNO   (10^-30)
 ```
 
@@ -231,19 +231,19 @@ This document does not require a default display denomination.
 
 Input (`XNO`, six decimal places):
 
-```json
+```
 { "amount_xno": "1.500000" }
 ```
 
 Equivalent whole `rai` amount:
 
-```json
+```
 { "amount_rai": 1500000 }
 ```
 
 Equivalent `raw` amount:
 
-```json
+```
 { "amount_raw": "1500000000000000000000000000000" }
 ```
 
@@ -251,25 +251,25 @@ Equivalent `raw` amount:
 
 A payment of exactly `133248297 raw` above one whole `XNO`:
 
-```text
+```
 raw = 1000000000000000000000133248297
 ```
 
 Correct (decimal string):
 
-```json
+```
 { "amount_raw": "1000000000000000000000133248297" }
 ```
 
 Incorrect (bare JSON number — silently rounds under IEEE 754 binary64):
 
-```json
+```
 { "amount_raw": 1000000000000000000000133248297 }
 ```
 
 ### Vector 4 — Maximum Whole `rai` Amount
 
-```text
+```
 floor((2^128 - 1) / 10^24) = 340282366920938 rai
 ```
 
