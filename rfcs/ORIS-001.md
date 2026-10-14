@@ -326,5 +326,6 @@ signature              : 8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f34900
 
 ## Reference Implementation
 
-No reference implementation is listed yet. Implementations and examples are
-informative. The requirements in this document are authoritative.
+Reference implementations, examples, and machine-readable copies of these vectors are maintained in
+[OpenRai/noms](https://github.com/OpenRai/noms). Implementations and examples are informative.
+The requirements in this document are authoritative.
