@@ -117,6 +117,9 @@ Requirements:
 - The verifier MUST reconstruct the payload from the exact original message.
 - Implementations MUST NOT normalize, trim, or otherwise transform the message.
 - Line endings, whitespace, and Unicode content are part of the signed bytes.
+- Input text MUST consist of Unicode scalar values. Implementations MUST reject
+  unpaired UTF-16 surrogates and malformed UTF-8 rather than replace them.
+- A leading U+FEFF (UTF-8 BOM), if present, is message content and MUST be preserved.
 
 ## Hashing
 
@@ -127,6 +130,8 @@ message_hash = Blake2b256(payload)
 ```
 
 Implementations MUST use the same Blake2b-256 behavior used by Nano for block hashing.
+This is unkeyed BLAKE2b parameterized for a 32-byte output, not a truncated
+64-byte digest. No salt or personalization is used.
 
 ## Signing
 
@@ -135,7 +140,7 @@ To produce a NOMS signature, an implementation MUST perform the following steps:
 1. Encode the application message as UTF-8 bytes.
 2. Construct `payload = MAGIC_HEADER || MESSAGE_LENGTH || MESSAGE`.
 3. Compute `message_hash = Blake2b256(payload)`.
-4. Sign `message_hash` using the same account-signing behavior used by Nano for block hashes.
+4. Sign `message_hash` using the deterministic Ed25519-BLAKE2b construction below.
 
 Formally:
 
@@ -147,7 +152,36 @@ Where:
 
 - `private_key` is the 32-byte Nano account private key,
 - `message_hash` is the 32-byte Blake2b-256 digest of the NOMS payload, and
-- `signature` is the resulting Ed25519-compatible signature.
+- `signature` is the resulting 64-byte Ed25519-BLAKE2b signature.
+
+### Deterministic account signing
+
+Use the Edwards25519 curve, standard base point `B`, and prime subgroup order
+`L = 2^252 + 27742317777372353535851937790883648493`.
+`H` below is unkeyed BLAKE2b parameterized for a 64-byte output, with no salt or
+personalization. Integers in this construction are decoded and encoded in
+**little-endian** order; the frame length remains big-endian.
+
+1. Compute `h = H(private_key)` and copy `h[0:32]` to `a_bytes`.
+2. Clamp `a_bytes`: `a_bytes[0] &= 248`, `a_bytes[31] &= 127`,
+   `a_bytes[31] |= 64`. Let `a` be the resulting little-endian integer.
+3. Compute `A = encode([a]B)`, using the canonical compressed Edwards encoding.
+4. Compute `r = LE(H(h[32:64] || message_hash)) mod L`.
+   If `r = 0`, signing MUST fail; no signature is emitted.
+5. Compute `R = encode([r]B)`.
+6. Compute `k = LE(H(R || A || message_hash)) mod L`.
+7. Compute `S = (r + k*a) mod L`.
+8. Emit `R || LE32(S)`.
+
+This specifies plain deterministic EdDSA with BLAKE2b-512 replacing SHA-512
+internally. It uses neither Ed25519 context separation nor Ed25519ph prehash
+mode. The separate NOMS payload hash remains BLAKE2b-256.
+
+Nano V28.2 uses the same public-key and signature equation but randomizes its
+signing nonce. Its signer is therefore **not** a deterministic NOMS signing
+recipe. The pinned [Nano implementation][nano-signing] and
+[BLAKE2b hash binding][nano-hashing] are informative compatibility references;
+the construction above is normative.
 
 Implementations:
 
@@ -163,7 +197,7 @@ To verify a NOMS signature, an implementation MUST:
 2. Encode the application message as UTF-8 bytes.
 3. Construct the payload exactly as specified.
 4. Compute `message_hash = Blake2b256(payload)`.
-5. Verify the signature against `message_hash` using Nano-compatible account-signature verification.
+5. Verify the signature against `message_hash` using the strict rules below.
 
 Formally:
 
@@ -178,13 +212,41 @@ Verification MUST fail if:
 - the account identifier does not decode to the supplied public key
 - the signature is invalid
 
+### Strict verification
+
+For a 32-byte public key `A_bytes` and 64-byte signature `R_bytes || S_bytes`:
+
+1. Decode `S_bytes` as a little-endian integer `S`. Require `0 <= S < L`;
+   verifiers MUST NOT reduce a noncanonical `S` modulo `L`.
+2. Decode `A_bytes` and `R_bytes` as Edwards25519 points. Require canonical
+   compressed encodings: `y < 2^255 - 19`, a valid curve point, and a zero
+   sign bit when `x = 0`. Re-encoding MUST reproduce the supplied bytes.
+3. Require both decoded points to be nonidentity points in the prime-order
+   subgroup: `[L]A = [L]R = identity`. Small-order and mixed-order points fail.
+4. Compute `k = LE(H(R_bytes || A_bytes || message_hash)) mod L` using
+   BLAKE2b-512 as defined above.
+5. Accept if and only if `[S]B = R + [k]A`. This is the uncofactored equation.
+
+Verification does not recompute the deterministic signing nonce. A signature
+using another nonce strategy can satisfy these verification rules even though
+its producer does not implement the deterministic NOMS signing procedure.
+
+These rules intentionally reject some inputs accepted by Nano V28.2's
+permissive verifier. Nano acceptance alone does not establish NOMS conformance.
+In particular, `S + L` variants and noncanonical, identity, small-order, and
+mixed-order points MUST fail NOMS verification.
+
+Malformed textual inputs and resource-limit failures are input errors;
+well-encoded signatures that fail these cryptographic checks are invalid.
+Language-specific exception types and error wording are implementation policy.
+
 ## Canonical Encodings
 
 For interoperability, implementations SHOULD use the following textual forms.
 
 ### Signature Encoding
 
-A NOMS signature SHOULD be represented as:
+A signature emitted in the canonical NOMS textual form MUST be represented as:
 
 - exactly 128 hexadecimal characters,
 - lowercase, and
@@ -192,7 +254,9 @@ A NOMS signature SHOULD be represented as:
 
 Each byte of the 64-byte signature MUST be encoded as exactly two lowercase hexadecimal characters, zero-padded where necessary. Variable-length or bignum-style hex encoding MUST NOT be used.
 
-Verifiers MAY accept uppercase hexadecimal as input for compatibility, but emitters SHOULD produce lowercase.
+Verifiers MAY accept uppercase hexadecimal as input for compatibility.
+Canonical emitters MUST produce lowercase. Textual signatures with a prefix,
+incorrect length, or non-hexadecimal characters are malformed.
 
 ### Account Encoding
 
@@ -265,6 +329,9 @@ An implementation can process the payload as a stream:
 4. Hash each part as it is read.
 5. Verify the resulting digest and signature.
 
+A parser of framed input MUST reject truncated frames, trailing bytes after
+the declared message, and malformed UTF-8 within the declared message.
+
 A contiguous full-payload buffer is not required.
 
 ## Published Test Vectors
@@ -326,5 +393,26 @@ signature              : 8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f34900
 
 ## Reference Implementation
 
-No reference implementation is listed yet. Implementations and examples are
-informative. The requirements in this document are authoritative.
+The [OpenRai NOMS repository](https://github.com/OpenRai/noms) contains independent
+TypeScript and Rust reference libraries, JavaScript and native CLIs, and a
+browser playground. It runs shared known-answer, adversarial, and cross-language
+conformance checks.
+
+The [machine-readable fixtures](../test-vectors/oris-001/suite.json) provide
+expected results for the requirements in this specification. This specification
+is authoritative. If a fixture contradicts a requirement, the fixture must be
+corrected.
+
+Cases marked `protocol` test required behavior. Cases marked `compatibility`
+test optional input forms. Cases marked `reference_policy` test limits chosen
+by the reference implementations. Framed-input cases apply to implementations
+that accept framed input.
+
+Implementations may vendor a hash-checked copy pinned to a Standards revision.
+Reference implementations and examples are informative.
+
+This specification remains Implementation Draft pending independent
+interoperability evidence.
+
+[nano-signing]: https://github.com/nanocurrency/nano-node/blob/0d8eea4524b8da626cbab50c286c48eae25c76a9/crypto/ed25519-donna/ed25519.c
+[nano-hashing]: https://github.com/nanocurrency/nano-node/blob/0d8eea4524b8da626cbab50c286c48eae25c76a9/nano/crypto_lib/interface.cpp

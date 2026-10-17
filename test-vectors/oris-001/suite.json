@@ -1,0 +1,4269 @@
+{
+  "schema_version": 1,
+  "profile": "oris-001-strict-v1",
+  "provenance": "Independent Python integer/hashlib model; RFC 8032 Edwards arithmetic; ORIS-001 deterministic BLAKE2b construction.",
+  "cases": [
+    {
+      "id": "key-0",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "public_key": "d2b3c9d00ffb55e84e7979d67308a515fb07ca79e40a77eb1aafe62881781783",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-0",
+      "operation": "inspect",
+      "input": {
+        "message": ""
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000000",
+        "digest": "977a10e19a7857eefad986d73b071bbb7dad60846c7785f6d0ccffe0d7bd40b9"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-0",
+      "operation": "sign",
+      "input": {
+        "message": "",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f3490077066f174d7fb6795b966e1d9078952ad065f836b35cd82d402cbeb63f9ace94b2123c506"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-0",
+      "operation": "verify",
+      "input": {
+        "message": "",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "8fca45d1490a276ac9d4376d9251df3a1069f673013c33d49f3490077066f174d7fb6795b966e1d9078952ad065f836b35cd82d402cbeb63f9ace94b2123c506"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-1",
+      "operation": "inspect",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "48656a204e616e6f21f09fa5a6",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000d48656a204e616e6f21f09fa5a6",
+        "digest": "33ce285b257df1ba87e1a91f32211a3b900ab4fdf68bebb3f75bef4b85aef951"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-1",
+      "operation": "sign",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-2",
+      "operation": "inspect",
+      "input": {
+        "message": "a\u0000b"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "610062",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000003610062",
+        "digest": "68701cd6ba6dc6f15efa3902a540ded12cd4c197911a5344da207affabe3626e"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-2",
+      "operation": "sign",
+      "input": {
+        "message": "a\u0000b",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "6e40b8b593aa279dcaa025ccfe12d08bec3e97781c578a87383c9a9593ea8e18b15e40e4158dbc82fc5f5b935830a4b1047a003978a495fc2ea5b91122fa5f00"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-2",
+      "operation": "verify",
+      "input": {
+        "message": "a\u0000b",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "6e40b8b593aa279dcaa025ccfe12d08bec3e97781c578a87383c9a9593ea8e18b15e40e4158dbc82fc5f5b935830a4b1047a003978a495fc2ea5b91122fa5f00"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-3",
+      "operation": "inspect",
+      "input": {
+        "message": "line\nbreak"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "6c696e650a627265616b",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000a6c696e650a627265616b",
+        "digest": "82a44172d705d16e0e5c7b2fb0eebb5b796fd1db247ef8d0888f16ddd54077f4"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-3",
+      "operation": "sign",
+      "input": {
+        "message": "line\nbreak",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a13732bf30ad53f0456d43521eab9eacef7486276b40315fba38dc683d6fd1cdd2886a44c329675ca4f49755d091441b69ee8c100f6ac20f4f17f85b381f5801"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-3",
+      "operation": "verify",
+      "input": {
+        "message": "line\nbreak",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "a13732bf30ad53f0456d43521eab9eacef7486276b40315fba38dc683d6fd1cdd2886a44c329675ca4f49755d091441b69ee8c100f6ac20f4f17f85b381f5801"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-4",
+      "operation": "inspect",
+      "input": {
+        "message": "line\r\nbreak"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "6c696e650d0a627265616b",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000b6c696e650d0a627265616b",
+        "digest": "244b972a2bd8c4c68d7ebb3ba181d11696c03aee2f745f6fbf95554a1e91e08d"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-4",
+      "operation": "sign",
+      "input": {
+        "message": "line\r\nbreak",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ddacb95781cce3c0cfa9c4cebcc9d142ca16af5f391c25efd2b8a811a4eb89c5400a0489adf34931a6a3556db6bf25890a14569a956e20dc30ff464ecdb1ce05"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-4",
+      "operation": "verify",
+      "input": {
+        "message": "line\r\nbreak",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ddacb95781cce3c0cfa9c4cebcc9d142ca16af5f391c25efd2b8a811a4eb89c5400a0489adf34931a6a3556db6bf25890a14569a956e20dc30ff464ecdb1ce05"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-5",
+      "operation": "inspect",
+      "input": {
+        "message": " left/right "
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "206c6566742f726967687420",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000c206c6566742f726967687420",
+        "digest": "9dc9b5a62c4409cb9951665030f6d777c45d8bb32e419c193483a7a56c0d00ad"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-5",
+      "operation": "sign",
+      "input": {
+        "message": " left/right ",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "95d59f22764f086235d91829866426e35e8e91aaa7aa4e20dd892eb66efc7477f93e99767e5c25050731a203573584dd2245d0f274a9124325d6b066df674900"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-5",
+      "operation": "verify",
+      "input": {
+        "message": " left/right ",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "95d59f22764f086235d91829866426e35e8e91aaa7aa4e20dd892eb66efc7477f93e99767e5c25050731a203573584dd2245d0f274a9124325d6b066df674900"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-6",
+      "operation": "inspect",
+      "input": {
+        "message": "\u00e9"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "c3a9",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000002c3a9",
+        "digest": "d5f74a60170a4649531c5e89ee0a78f5a4e232ce0212a726d86d77ed8803ea0a"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-6",
+      "operation": "sign",
+      "input": {
+        "message": "\u00e9",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "4b0b4e8403e0a02b6c3b385b3db2986c574b5215c8427acf192589df890c53d85481796422e46ba421f36f29bc30d9e3d2934d73f2ca1f9a831575a67a255e0c"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-6",
+      "operation": "verify",
+      "input": {
+        "message": "\u00e9",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "4b0b4e8403e0a02b6c3b385b3db2986c574b5215c8427acf192589df890c53d85481796422e46ba421f36f29bc30d9e3d2934d73f2ca1f9a831575a67a255e0c"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-7",
+      "operation": "inspect",
+      "input": {
+        "message": "e\u0301"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "65cc81",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000365cc81",
+        "digest": "49acfa54b539f9e964f58528ecae2e6fd0b07cd7f41a83d5af1e643eff362e6e"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-7",
+      "operation": "sign",
+      "input": {
+        "message": "e\u0301",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "1855cdf743ad215488acde98d85ecc74a063461e51b9dcbb4b976b3e761bd64a098ba677605ef7bb34cc9c4d23df0b414c439f785bdce08ea543603b6f9c080b"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-7",
+      "operation": "verify",
+      "input": {
+        "message": "e\u0301",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "1855cdf743ad215488acde98d85ecc74a063461e51b9dcbb4b976b3e761bd64a098ba677605ef7bb34cc9c4d23df0b414c439f785bdce08ea543603b6f9c080b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-8",
+      "operation": "inspect",
+      "input": {
+        "message": "\ufeffhello"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "efbbbf68656c6c6f",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000008efbbbf68656c6c6f",
+        "digest": "bc05a411205cec81ce1be55b4074b38fef84a511b1284e311d8724ef68659643"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-8",
+      "operation": "sign",
+      "input": {
+        "message": "\ufeffhello",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "8a162ef8b4e3babb877ba24a45140d3b05fd8d73c737369702961e373b266e713f47bfd0346b1eed2119d550b518b7d4e2f84aa6d4e64c4fe0123323e438b30a"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-8",
+      "operation": "verify",
+      "input": {
+        "message": "\ufeffhello",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "8a162ef8b4e3babb877ba24a45140d3b05fd8d73c737369702961e373b266e713f47bfd0346b1eed2119d550b518b7d4e2f84aa6d4e64c4fe0123323e438b30a"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-9",
+      "operation": "inspect",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "7fc280dfbfe0a080ed9fbfee8080efbfbf",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a000000117fc280dfbfe0a080ed9fbfee8080efbfbf",
+        "digest": "6dd83dd1da78f7332c1159fb555cd47b1a4a08c5765063aa090023d745d8df6f"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-9",
+      "operation": "sign",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a6309acbf4d5fa9dcb0f85567e61ae20fff21d58f80a68a520b2c6351937c5894652638c12999081fe0345243247823069ee165691c47b1475f9c7799228ee03"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-9",
+      "operation": "verify",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "a6309acbf4d5fa9dcb0f85567e61ae20fff21d58f80a68a520b2c6351937c5894652638c12999081fe0345243247823069ee165691c47b1475f9c7799228ee03"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-10",
+      "operation": "inspect",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "f0908080f48fbfbf",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000008f0908080f48fbfbf",
+        "digest": "908cb1b4604f86b87e4f92ef2553c98526bfbd541121284e451f327bf07b9ed0"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-10",
+      "operation": "sign",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "9d15ff4d05f1ce145acc31b9b0c5cdae3409c596c5782cc09506c2a4a34730dc9017aea07cc8064a70714eafc1fbc087b9a81f07c30a5f098ee22b249af2610f"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-10",
+      "operation": "verify",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "9d15ff4d05f1ce145acc31b9b0c5cdae3409c596c5782cc09506c2a4a34730dc9017aea07cc8064a70714eafc1fbc087b9a81f07c30a5f098ee22b249af2610f"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-11",
+      "operation": "inspect",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000007f61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "digest": "2c2a9ee422f7bd074f7428cd524687708df604a4caa7f12683bdd3f6f5451801"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-11",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "7a31cad54cf854185727fcc253765372543ef770a492dc81da028298e80be4e5113a281e4227cf38f262c0cb00e1cbb36dc8ad9598efd2bfc5256fe635959d0b"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-11",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "7a31cad54cf854185727fcc253765372543ef770a492dc81da028298e80be4e5113a281e4227cf38f262c0cb00e1cbb36dc8ad9598efd2bfc5256fe635959d0b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-12",
+      "operation": "inspect",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a000000806161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "digest": "07459b1804705e3e06dd5aadb13a68f87507b074d932a6331b65633db72af51e"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-12",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "8037ca180057475b7d2ec6ff77073e2d213a3d45c6557dae9fec71e16a8399925ba3b1619bc39bfa61fd381c57d05ca7564462ba849ba21d1a52f72471a8c40b"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-12",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "8037ca180057475b7d2ec6ff77073e2d213a3d45c6557dae9fec71e16a8399925ba3b1619bc39bfa61fd381c57d05ca7564462ba849ba21d1a52f72471a8c40b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-13",
+      "operation": "inspect",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a000000ff616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "digest": "339e10c14f4f35b6434fcde50558efa74a0fad6a392cb00937e422fb57b62026"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-13",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ee39714f58a2368ca5f5aef642d5f6ee95a318ec48b3b73efb3cabd84e8c8601dcce8a6968da5b29c057103fac6df5caa2d62cdcc03083ce263131cf2c126108"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-13",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ee39714f58a2368ca5f5aef642d5f6ee95a318ec48b3b73efb3cabd84e8c8601dcce8a6968da5b29c057103fac6df5caa2d62cdcc03083ce263131cf2c126108"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "message-14",
+      "operation": "inspect",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000010061616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+        "digest": "aeff241f915b1995cbe85bc255e8068331dd75ee9dc6f8bfe0d981819eb65a2f"
+      },
+      "rule": "MESSAGE / Hashing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-0-14",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "2370a3e000e1d837efa251d10b37d4a31adf814dd4a9d072ae65977388d89d084ef49d57cfaeb007c2cfe0953581af12a9b46587767d42db17bf8869c88dca0d"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-0-14",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "2370a3e000e1d837efa251d10b37d4a31adf814dd4a9d072ae65977388d89d084ef49d57cfaeb007c2cfe0953581af12a9b46587767d42db17bf8869c88dca0d"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "key-1",
+      "operation": "derive",
+      "input": {
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "public_key": "19d3d919475deed4696b5d13018151d1af88b2bd3bcff048b45031c1f36d1858",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-0",
+      "operation": "sign",
+      "input": {
+        "message": "",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "74100e839d266567a034909028d4e84ebacf19323b5356d732e9262a9b4058196285670732c12de77ebaa1f544dd423ab16f264171b295a896b9b36b8143da04"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-0",
+      "operation": "verify",
+      "input": {
+        "message": "",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "74100e839d266567a034909028d4e84ebacf19323b5356d732e9262a9b4058196285670732c12de77ebaa1f544dd423ab16f264171b295a896b9b36b8143da04"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-1",
+      "operation": "sign",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "37ae966dcf855862dc56dad0b4e14e411ea904441b3a4939d754429bc2f807769990deeea0396366c555be5f8ec9a27e3b66f8b406100451a339c8fb6c1b280b"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "37ae966dcf855862dc56dad0b4e14e411ea904441b3a4939d754429bc2f807769990deeea0396366c555be5f8ec9a27e3b66f8b406100451a339c8fb6c1b280b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-2",
+      "operation": "sign",
+      "input": {
+        "message": "a\u0000b",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "bede3521ba136a4497cc964f0a6e274f2153383bf563c78b2a86e5871a94f9fbd8c87ed6fd39288f7e22306922b8afe384aac92819287450c85e5d025c95ad04"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-2",
+      "operation": "verify",
+      "input": {
+        "message": "a\u0000b",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "bede3521ba136a4497cc964f0a6e274f2153383bf563c78b2a86e5871a94f9fbd8c87ed6fd39288f7e22306922b8afe384aac92819287450c85e5d025c95ad04"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-3",
+      "operation": "sign",
+      "input": {
+        "message": "line\nbreak",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "5a753823da27f7bf28688b56ed303d3dfef80f876867dfd57162edbe941d4f89130cd2471f819a6a094e42bce5889023d4d8b6a56b3ca8d1c5dc889e59458d03"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-3",
+      "operation": "verify",
+      "input": {
+        "message": "line\nbreak",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "5a753823da27f7bf28688b56ed303d3dfef80f876867dfd57162edbe941d4f89130cd2471f819a6a094e42bce5889023d4d8b6a56b3ca8d1c5dc889e59458d03"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-4",
+      "operation": "sign",
+      "input": {
+        "message": "line\r\nbreak",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "23eb8fbb53a6527d0e18568fe2a8f6e1ba3a3b175240585162ad10ed54bad93e5aa1d431f0bb61ce648c986d118807cb0b4474c5b318063dd59a7ca895b0b903"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-4",
+      "operation": "verify",
+      "input": {
+        "message": "line\r\nbreak",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "23eb8fbb53a6527d0e18568fe2a8f6e1ba3a3b175240585162ad10ed54bad93e5aa1d431f0bb61ce648c986d118807cb0b4474c5b318063dd59a7ca895b0b903"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-5",
+      "operation": "sign",
+      "input": {
+        "message": " left/right ",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "c888b6adf42c036f2029bedd706f9cee0a712a8145a4402d6b952e4b1b3094c30170e247e4e22ab3d8f5056c85c6be3d455e2c01c075cd008c3cd4f27b830a06"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-5",
+      "operation": "verify",
+      "input": {
+        "message": " left/right ",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "c888b6adf42c036f2029bedd706f9cee0a712a8145a4402d6b952e4b1b3094c30170e247e4e22ab3d8f5056c85c6be3d455e2c01c075cd008c3cd4f27b830a06"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-6",
+      "operation": "sign",
+      "input": {
+        "message": "\u00e9",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "c1def5683a3ca8888670bbc4e710fadd7d0d0895afe4b2352269e2434996b61d7b78dfa2ff2466e88bc8799560df6b0361d9834f4d13a98c6b78c503ba18b70e"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-6",
+      "operation": "verify",
+      "input": {
+        "message": "\u00e9",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "c1def5683a3ca8888670bbc4e710fadd7d0d0895afe4b2352269e2434996b61d7b78dfa2ff2466e88bc8799560df6b0361d9834f4d13a98c6b78c503ba18b70e"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-7",
+      "operation": "sign",
+      "input": {
+        "message": "e\u0301",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a4da41d40418f0c3fc4ff81628e0481115af028ae40f025561b7762b3bf06b0ca3dd882bd32c2d62d768b723bd6b98da9e5aeb6f58086626ccfd011ef3daab07"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-7",
+      "operation": "verify",
+      "input": {
+        "message": "e\u0301",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "a4da41d40418f0c3fc4ff81628e0481115af028ae40f025561b7762b3bf06b0ca3dd882bd32c2d62d768b723bd6b98da9e5aeb6f58086626ccfd011ef3daab07"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-8",
+      "operation": "sign",
+      "input": {
+        "message": "\ufeffhello",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ed4082021abbdad21767d720d251103a6531ffa5810a740d3ad95ee6e3072c38d19cd76f8109199e5b301ad6b020fd8e5426bce1830ac2961410f80d70572409"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-8",
+      "operation": "verify",
+      "input": {
+        "message": "\ufeffhello",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "ed4082021abbdad21767d720d251103a6531ffa5810a740d3ad95ee6e3072c38d19cd76f8109199e5b301ad6b020fd8e5426bce1830ac2961410f80d70572409"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-9",
+      "operation": "sign",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ac5aba72ada8b1a7f17a8b699e9c63d7dab2a4a2b905f4956587e4aabc0c7c59cc6a43df84cbaf845a4ab73d846f7352e27d515a8b1c4c51b91e87694cf2b10a"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-9",
+      "operation": "verify",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "ac5aba72ada8b1a7f17a8b699e9c63d7dab2a4a2b905f4956587e4aabc0c7c59cc6a43df84cbaf845a4ab73d846f7352e27d515a8b1c4c51b91e87694cf2b10a"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-10",
+      "operation": "sign",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "87406383bd6da0c4e78b9741aa74054fa4238ef2c15b97991c08898ba6ecd9703c5b5e22179273febc6f7562dae26e75f47d510f4ffa054eb8803016ad85ab02"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-10",
+      "operation": "verify",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "87406383bd6da0c4e78b9741aa74054fa4238ef2c15b97991c08898ba6ecd9703c5b5e22179273febc6f7562dae26e75f47d510f4ffa054eb8803016ad85ab02"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-11",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "fd359273032935ae529fb37752b94fe6cf56fd3be1c1d7d08c98fdc88a31854d2ad20e8c462d170db5bc4ba81e6ad7a68fdd63e65d944e1fcf60f3f76df42402"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-11",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "fd359273032935ae529fb37752b94fe6cf56fd3be1c1d7d08c98fdc88a31854d2ad20e8c462d170db5bc4ba81e6ad7a68fdd63e65d944e1fcf60f3f76df42402"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-12",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "9d0d521808ebf2df4c4ccaa07f03c07408a0a0da9cfbd0650fd3ed072740e84a471d4868d6ee8b502fc7df8d811ecd7e4b1f5f5f281a66f57a95b6107cfce50f"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-12",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "9d0d521808ebf2df4c4ccaa07f03c07408a0a0da9cfbd0650fd3ed072740e84a471d4868d6ee8b502fc7df8d811ecd7e4b1f5f5f281a66f57a95b6107cfce50f"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-13",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "884efa89b405544436d455c7d035299e2afd297b88a12783d49e30dd5bfac2e4d9b0b6bbfb81efd616157676c54a833501b7fb085ccdbc09b925c4ac5d14d304"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-13",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "884efa89b405544436d455c7d035299e2afd297b88a12783d49e30dd5bfac2e4d9b0b6bbfb81efd616157676c54a833501b7fb085ccdbc09b925c4ac5d14d304"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-1-14",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "100c0073d8a65df23dd326253c861623ce457ac3840a75c2e359366e9246eb8e3ed97122ac394fec301480f27f44c58f138f5e9610abf4fc0636159932586a04"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-1-14",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "100c0073d8a65df23dd326253c861623ce457ac3840a75c2e359366e9246eb8e3ed97122ac394fec301480f27f44c58f138f5e9610abf4fc0636159932586a04"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "key-2",
+      "operation": "derive",
+      "input": {
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "public_key": "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-0",
+      "operation": "sign",
+      "input": {
+        "message": "",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "d03e0eb90213d7795384fb38664a9fb0a6eeb01745dc0ac11319ef672719597b855f3aece18dc29b83cbc5253148a43f0a384f84949d5c421a037a035c0de50f"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-0",
+      "operation": "verify",
+      "input": {
+        "message": "",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "d03e0eb90213d7795384fb38664a9fb0a6eeb01745dc0ac11319ef672719597b855f3aece18dc29b83cbc5253148a43f0a384f84949d5c421a037a035c0de50f"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-1",
+      "operation": "sign",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a4f2844090c7a0322b964cbf6bc96e7cac4191a7276c520a031efde03f9eab917b45558902f1c22ed43425f71b78e3298721091ff57925904d86331b2837a206"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "a4f2844090c7a0322b964cbf6bc96e7cac4191a7276c520a031efde03f9eab917b45558902f1c22ed43425f71b78e3298721091ff57925904d86331b2837a206"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-2",
+      "operation": "sign",
+      "input": {
+        "message": "a\u0000b",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "784e88d4dc927a671d250fa1851c8569044ed4cb58a9527f281e1fbcf535cb1d32aca992e918309549bc9c42c3c6acd41bb1c2220b7a45a12f4b664711f0cd07"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-2",
+      "operation": "verify",
+      "input": {
+        "message": "a\u0000b",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "784e88d4dc927a671d250fa1851c8569044ed4cb58a9527f281e1fbcf535cb1d32aca992e918309549bc9c42c3c6acd41bb1c2220b7a45a12f4b664711f0cd07"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-3",
+      "operation": "sign",
+      "input": {
+        "message": "line\nbreak",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "e3c22a5a78b99c4e963f2d6701a7f0eb72c93f30ff620fb934e1bbd99d69e9191aaf2ce00bfd49003cbf3c84f6b9f92723c10d1ef224d5833d763b7c87749108"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-3",
+      "operation": "verify",
+      "input": {
+        "message": "line\nbreak",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "e3c22a5a78b99c4e963f2d6701a7f0eb72c93f30ff620fb934e1bbd99d69e9191aaf2ce00bfd49003cbf3c84f6b9f92723c10d1ef224d5833d763b7c87749108"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-4",
+      "operation": "sign",
+      "input": {
+        "message": "line\r\nbreak",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "f85b1a74aa3c5f6774eb7dec1de8d57aabc3d045a7e95e5337587230526ee0678a9ee7fc9b1921bc3873b27b3227e43cd43238511a22fee551791812dfe85303"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-4",
+      "operation": "verify",
+      "input": {
+        "message": "line\r\nbreak",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "f85b1a74aa3c5f6774eb7dec1de8d57aabc3d045a7e95e5337587230526ee0678a9ee7fc9b1921bc3873b27b3227e43cd43238511a22fee551791812dfe85303"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-5",
+      "operation": "sign",
+      "input": {
+        "message": " left/right ",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "07e441c316e9ba5c020b5994cd7bf43a1bf183b47f1d53570013b50dbfa87811a4b5d212ca0c7f41be1ee92ba6b594df6d42d3d73223bf7daf15a54a2c3e7c0a"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-5",
+      "operation": "verify",
+      "input": {
+        "message": " left/right ",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "07e441c316e9ba5c020b5994cd7bf43a1bf183b47f1d53570013b50dbfa87811a4b5d212ca0c7f41be1ee92ba6b594df6d42d3d73223bf7daf15a54a2c3e7c0a"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-6",
+      "operation": "sign",
+      "input": {
+        "message": "\u00e9",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "9d8f5f2d86ab4d103c6a4633c55e5bca14e853d59a1f2edbd3f094079272f1b07d8e6f5a23d3068ffdfddaa66b25825389ddb23b555ada3509864811ae9cf70f"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-6",
+      "operation": "verify",
+      "input": {
+        "message": "\u00e9",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "9d8f5f2d86ab4d103c6a4633c55e5bca14e853d59a1f2edbd3f094079272f1b07d8e6f5a23d3068ffdfddaa66b25825389ddb23b555ada3509864811ae9cf70f"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-7",
+      "operation": "sign",
+      "input": {
+        "message": "e\u0301",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "df35f8ca509421bcd4d486bdb16f9e8da8644aa87641b31b24a7dacb1108653e8a4029f3c0b75bb3c7113e2d2d76f62d0f40f3847b1466276206c7d52abdd401"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-7",
+      "operation": "verify",
+      "input": {
+        "message": "e\u0301",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "df35f8ca509421bcd4d486bdb16f9e8da8644aa87641b31b24a7dacb1108653e8a4029f3c0b75bb3c7113e2d2d76f62d0f40f3847b1466276206c7d52abdd401"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-8",
+      "operation": "sign",
+      "input": {
+        "message": "\ufeffhello",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "8555a96fe398056e6173a2613750bd076f0562537175a78cc9b997cdf462b3a9137419a5729dd18cdafe973634b1c9da596d4aacdf2d297f6a71c38d9168d109"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-8",
+      "operation": "verify",
+      "input": {
+        "message": "\ufeffhello",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "8555a96fe398056e6173a2613750bd076f0562537175a78cc9b997cdf462b3a9137419a5729dd18cdafe973634b1c9da596d4aacdf2d297f6a71c38d9168d109"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-9",
+      "operation": "sign",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "24d546451ff4a78fd8f68f414023242519d13dbf6d5c3caf20481f9c66b7dd9ecbb31317f6fb57ac5e57e5bf772ca6367948bbe92120e6499efbb98527bedc0d"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-9",
+      "operation": "verify",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "24d546451ff4a78fd8f68f414023242519d13dbf6d5c3caf20481f9c66b7dd9ecbb31317f6fb57ac5e57e5bf772ca6367948bbe92120e6499efbb98527bedc0d"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-10",
+      "operation": "sign",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a808ac9ff87172c017d74758202c3ad2edbe9c03f236251c7b9ce2e2f695fea8464320a72a19bdcd6b2831b367144d4f55749b31f157bca4b8ccbf65b1761c05"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-10",
+      "operation": "verify",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "a808ac9ff87172c017d74758202c3ad2edbe9c03f236251c7b9ce2e2f695fea8464320a72a19bdcd6b2831b367144d4f55749b31f157bca4b8ccbf65b1761c05"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-11",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a3f8690cc5d5fbe5e301e6ec5dc6a0144f9f8c23e34355aa3235c2b949818587e623fd5ef8de653595a23dfd8b1f046de5b8147b7f418af8312b2ef013117c07"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-11",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "a3f8690cc5d5fbe5e301e6ec5dc6a0144f9f8c23e34355aa3235c2b949818587e623fd5ef8de653595a23dfd8b1f046de5b8147b7f418af8312b2ef013117c07"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-12",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "96bbbba2ecbeea556d6f26f8c756ab96557fb5ac477f16cbc4e12cd13e02fe50e55fb4b2eaf69dfd6dd93754efbc69a9a9738abc7b9f422f46ebf4ad955ced02"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-12",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "96bbbba2ecbeea556d6f26f8c756ab96557fb5ac477f16cbc4e12cd13e02fe50e55fb4b2eaf69dfd6dd93754efbc69a9a9738abc7b9f422f46ebf4ad955ced02"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-13",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "d7a76d639241812be53f75df837d6a253ddab843d8466b0271c63d9ea64da8366d4f92b9b2990ef0950df4bf0868c09cf50ab1ad33edb99ef6f4469be9c81f0e"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-13",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "d7a76d639241812be53f75df837d6a253ddab843d8466b0271c63d9ea64da8366d4f92b9b2990ef0950df4bf0868c09cf50ab1ad33edb99ef6f4469be9c81f0e"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-2-14",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "8759f1e3b055b24b1c02e2480e583a51d45e7f79586824a0836acca39920bdd672715c2d172a3df2262e0a346224764e1603370d5f24c9844c1fef3b47f6dc06"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-2-14",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_3xkm8hx881xpnayyzoyy7dwcnjiwp35wshrktmpx79qmp9otew5d3trwtsbs",
+        "signature": "8759f1e3b055b24b1c02e2480e583a51d45e7f79586824a0836acca39920bdd672715c2d172a3df2262e0a346224764e1603370d5f24c9844c1fef3b47f6dc06"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "key-3",
+      "operation": "derive",
+      "input": {
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "public_key": "2bc0c96667f2bba066f4b50d860bdd51c4a413b20e3d9ef28c3515a8dc4d1dfc",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-0",
+      "operation": "sign",
+      "input": {
+        "message": "",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "6cfa8307c4d414281c9d2763a3159439e56b579a1756216d90e043ff3667bcfcfddc8d10e6c0b5cb53a4fb90a8e169a7ecb1523b8a3178fff650f5ed9a011e02"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-0",
+      "operation": "verify",
+      "input": {
+        "message": "",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "6cfa8307c4d414281c9d2763a3159439e56b579a1756216d90e043ff3667bcfcfddc8d10e6c0b5cb53a4fb90a8e169a7ecb1523b8a3178fff650f5ed9a011e02"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-1",
+      "operation": "sign",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "6e2b1cf2a059f7420c3b5d7f647e2c8429b0b0e801057635757be1f2821bbd0842ee2884cd80477519f66b455986a895a49e2893cb2a00878deb2484fdd1be02"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "6e2b1cf2a059f7420c3b5d7f647e2c8429b0b0e801057635757be1f2821bbd0842ee2884cd80477519f66b455986a895a49e2893cb2a00878deb2484fdd1be02"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-2",
+      "operation": "sign",
+      "input": {
+        "message": "a\u0000b",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "f4997f7c9ed927bedbf3d1a5d74687fa6ea3bc172f2e215edf65df0346c32c7d248074c8ec1e270235aad9968339435a170c1571c900c564eff2f9eafaf54805"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-2",
+      "operation": "verify",
+      "input": {
+        "message": "a\u0000b",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "f4997f7c9ed927bedbf3d1a5d74687fa6ea3bc172f2e215edf65df0346c32c7d248074c8ec1e270235aad9968339435a170c1571c900c564eff2f9eafaf54805"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-3",
+      "operation": "sign",
+      "input": {
+        "message": "line\nbreak",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "a6bfc453eac2855720529171e60ca50d79145b26967318a777323a13d70d152e339fc621a9378f097cf116baeef930fbda9d051afa2ffa3ab704e532593f180b"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-3",
+      "operation": "verify",
+      "input": {
+        "message": "line\nbreak",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "a6bfc453eac2855720529171e60ca50d79145b26967318a777323a13d70d152e339fc621a9378f097cf116baeef930fbda9d051afa2ffa3ab704e532593f180b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-4",
+      "operation": "sign",
+      "input": {
+        "message": "line\r\nbreak",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ffb6c0f78de6ef14589f81e86225f2aeb81f3ff901da2298754d25522d0bde36d8c08bd5b098c2f30e68a5c02285eed72468cb195f4339393a28c2e3a210e40a"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-4",
+      "operation": "verify",
+      "input": {
+        "message": "line\r\nbreak",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "ffb6c0f78de6ef14589f81e86225f2aeb81f3ff901da2298754d25522d0bde36d8c08bd5b098c2f30e68a5c02285eed72468cb195f4339393a28c2e3a210e40a"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-5",
+      "operation": "sign",
+      "input": {
+        "message": " left/right ",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "e2fec018d085d4bff08160b6663b1dfdce24f7d56cd68213f9e8c733f3a94a9b695ef6e914ffaf5c29dc809b65b9dd52f85f17e07087608c2adeddea825e4506"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-5",
+      "operation": "verify",
+      "input": {
+        "message": " left/right ",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "e2fec018d085d4bff08160b6663b1dfdce24f7d56cd68213f9e8c733f3a94a9b695ef6e914ffaf5c29dc809b65b9dd52f85f17e07087608c2adeddea825e4506"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-6",
+      "operation": "sign",
+      "input": {
+        "message": "\u00e9",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "6c7b56d3deebf89b760c7d239e3c24787d9ba0ec67ee36f76fd9eb55dce3e06b72359240ee33711c4d594921da2155c53312df6466ef8a5ce93a0c5bc86a9e06"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-6",
+      "operation": "verify",
+      "input": {
+        "message": "\u00e9",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "6c7b56d3deebf89b760c7d239e3c24787d9ba0ec67ee36f76fd9eb55dce3e06b72359240ee33711c4d594921da2155c53312df6466ef8a5ce93a0c5bc86a9e06"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-7",
+      "operation": "sign",
+      "input": {
+        "message": "e\u0301",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "4e46bda973feafdf72cfc709c6426a97141857f1cd1c943ec111f44ee0be35039d0f70b9a04be190e29273e02388ad1371bde391af620acbf0d50cbf219a9c09"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-7",
+      "operation": "verify",
+      "input": {
+        "message": "e\u0301",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "4e46bda973feafdf72cfc709c6426a97141857f1cd1c943ec111f44ee0be35039d0f70b9a04be190e29273e02388ad1371bde391af620acbf0d50cbf219a9c09"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-8",
+      "operation": "sign",
+      "input": {
+        "message": "\ufeffhello",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "0b516109ceb978d5017e153bdf566c69c992288825498fe0e4ff673fd6bd858af642d565e1132f44fa3a13ce4d0de17891446a67837765ab72eabb1305eea60e"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-8",
+      "operation": "verify",
+      "input": {
+        "message": "\ufeffhello",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "0b516109ceb978d5017e153bdf566c69c992288825498fe0e4ff673fd6bd858af642d565e1132f44fa3a13ce4d0de17891446a67837765ab72eabb1305eea60e"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-9",
+      "operation": "sign",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "ab8748ff4d7841d2afdecb76b25e3a3deb9a5e897a7c9766a656d6f9cb8d68bd00552bae6d15dbc3dc73842054a2dcd07a07c3c8954892161eaaadd9622f1105"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-9",
+      "operation": "verify",
+      "input": {
+        "message": "\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "ab8748ff4d7841d2afdecb76b25e3a3deb9a5e897a7c9766a656d6f9cb8d68bd00552bae6d15dbc3dc73842054a2dcd07a07c3c8954892161eaaadd9622f1105"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-10",
+      "operation": "sign",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "1563e4df346d34388a3b70c7a5888e480a9a0207a5ba80e1aa279592bd6ace9e277d28e8b6e507ee1960013655e7495f1d98872953f4ad65d83fd9a652c31302"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-10",
+      "operation": "verify",
+      "input": {
+        "message": "\ud800\udc00\udbff\udfff",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "1563e4df346d34388a3b70c7a5888e480a9a0207a5ba80e1aa279592bd6ace9e277d28e8b6e507ee1960013655e7495f1d98872953f4ad65d83fd9a652c31302"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-11",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "4ac5e6fe7956c3ba2238cf02cce5311868100dba5a400f85095fa177359d9b6e7bc9dcf729192d4b26584757cb054c923f9a9bb04ad2ec7bd700bdbf66648306"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-11",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "4ac5e6fe7956c3ba2238cf02cce5311868100dba5a400f85095fa177359d9b6e7bc9dcf729192d4b26584757cb054c923f9a9bb04ad2ec7bd700bdbf66648306"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-12",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "6a4c49954f753b603920e7dd95abe294d4f06b6a225d70cbd2ea887987d0879b4fb086003b5696f5fdff10e9dc5f7adfaef31afb3fd92b3931fd558c7cfed509"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-12",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "6a4c49954f753b603920e7dd95abe294d4f06b6a225d70cbd2ea887987d0879b4fb086003b5696f5fdff10e9dc5f7adfaef31afb3fd92b3931fd558c7cfed509"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-13",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "428df1849cdf8e69727f297e920db09e0f8177def341c60e6e1b1610cb2857117c50ff673da33cffb75aa82ac975ba2445c383fe04442cd2d349198a9e00b809"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-13",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "428df1849cdf8e69727f297e920db09e0f8177def341c60e6e1b1610cb2857117c50ff673da33cffb75aa82ac975ba2445c383fe04442cd2d349198a9e00b809"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sign-3-14",
+      "operation": "sign",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "private_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "ok",
+        "signature": "68f147c7c9c52b3193269736bdad2f7ae9a710ad9f9f8b8a639787bfd498ded0982c1464b16e1c0e63aa90c7e691a92ec72edf713e22efcc8d0c252354857201"
+      },
+      "rule": "Signing / Deterministic account signing",
+      "scope": "protocol"
+    },
+    {
+      "id": "verify-3-14",
+      "operation": "verify",
+      "input": {
+        "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "account": "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "signature": "68f147c7c9c52b3193269736bdad2f7ae9a710ad9f9f8b8a639787bfd498ded0982c1464b16e1c0e63aa90c7e691a92ec72edf713e22efcc8d0c252354857201"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-plus-L",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d76ebad339d8453b408f093b2680fa1db4315519ff73bd356f561d19865dc90f19"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-L-minus-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d7ecd3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-L",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d7edd3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-L-plus-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d7eed3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-zero",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d70000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-high-bits",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d70000000000000000000000000000000000000000000000000000000000000020"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "s-max",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "wrong-message",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66!",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "wrong-account",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "alternate-nonce",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ef4f62f8479733ad879cfaced3c89a9c39dd4fc795ef2efa1c3eafe4d729a08146f516df3b23e66070bae4af5a2f9d042db1dec2584175ae5f13e30943babc0b"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "identity-R-equation",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "0100000000000000000000000000000000000000000000000000000000000000558e4c4348c1c01e6432762f4749ff820749e31543395d7128ab48b72cf75c09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "identity-A-forgery",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_11a11111111111111111111111111111111111111111111111116iq5p4i8",
+        "signature": "58666666666666666666666666666666666666666666666666666666666666660100000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3jrqfbr5tmgrbyx5r4up3na8g5sc63bznd3ssm56xjzxgybcr1utiexbqo17",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_384jmtpz8pwscasuc8twtazbsjf4jfjsppkcy5pb1h7se5e3py1sugp5nrw1",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "98519eadf35b995233b51b5cd23e9cc5a28b639b5a4af0ec903cb960d81b781981e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_11111111111111111111111111111111111111111111111111615rm9e38g",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "000000000000000000000000000000000000000000000000000000000000008081e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_38xf8htr3quysj6xynt4qd63aqcuxq41yosx5e59yh4ewj6pj8ioojty1d33",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "9bad33f580df7ecc49df5342bac8145d5bedc40f573d1b067f3c4ce449689a1581e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1bqakp9w7ej9p34w9x6bydqsjw8ouyp1dny88ewu4g14j3po9z173ojb36nf",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc0581e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3pnswc7tccgfurtt6qxtk3eyh5pcxrjsz8dodgfjob9pdqr1i1z46e9eaeot",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "da99e28ba529cdde35a25fba9059e78ecaee239f99755b9b1aa4f65df00803e281e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3u9zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzuzaop7b3ky",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_37esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esnajmb5yb",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "959999999999999999999999999999999999999999999999999999999999999981e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-5",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1bqakp9w7ej9p34w9x6bydqsjw8ouyp1dny88ewu4g14j3po9z67n614afzn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-5",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc8581e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-5",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1ofge7b1sb58oq86os757q1p8gkxgkg8bbfo3wbpzit8mwmyb3z8tyiwdxxm",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-5",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "55ae61520ca466adcc4ae4a32dc1633a5d749c64a5b50f136fc3469f27e487e681e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-6",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1111111111111111111111111111111111111111111111111111hifc8npp",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-6",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "000000000000000000000000000000000000000000000000000000000000000081e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-6",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_1nkksi79ya638gu43d7xanuyqao64axz3c84wmwr3ixm5gubgshcnht8ryy7",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-6",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "5252cc0a7f208133b620acbd4537eba2a4123bf0a8c2e4f980c3b31bb69765ea81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-A-7",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3jrqfbr5tmgrbyx5r4up3na8g5sc63bznd3ssm56xjzxgybcr1ztwufwa9m4",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "torsion-R-7",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-7",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_16u85ot7oojk6977ua47fym3iwbo49g81sncnjkgcprbna9zhz1xeooawbtt",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-R-7",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "13661d745ad63221ca5da0456fa618713511dc60668aa464e55b09a20ff7fc1d81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-A-0",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3uhzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzuzaozyry56",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-R-0",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-A-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3uqzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzuzumqmmdsp",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-R-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-A-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzuzbuaonad9",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-R-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-A-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_11a1111111111111111111111111111111111111111111111161ub3a1obn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-R-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "010000000000000000000000000000000000000000000000000000000000008081e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-A-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3u9zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz86u5urht",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "noncanonical-R-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "off-curve-A",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_11i1111111111111111111111111111111111111111111111111abd3c5ci",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "off-curve-R",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "020000000000000000000000000000000000000000000000000000000000000081e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "mixed-A-equation",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_37esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esm8esnajmb5yb",
+        "signature": "58666666666666666666666666666666666666666666666666666666666666663329507a72479662bfea5b1d626e7577f8a632c87bb777e3739cd4cf5d87880d"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-0",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "525c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-1",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535d745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-2",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c755819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-3",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745919d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-4",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745818d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-5",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d1f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-6",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f50056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-7",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40156f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-8",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40057f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-9",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f2c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-10",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c56402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-11",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46502b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-12",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46403b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-13",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b5fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-14",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fbe4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-15",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae5356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-16",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4346b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-17",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356a3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-18",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3b8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-19",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8997bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-20",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8896bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-21",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bce99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-22",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde89c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-23",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99d955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-24",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c945d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-25",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955c411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-26",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d401920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-27",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411820e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-28",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411921e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-29",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e640d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-30",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e741d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-31",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d681e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-32",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d780e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-33",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e7dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-34",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dcdcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-35",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6ddddbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-36",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbce228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-37",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde328e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-38",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde229e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-39",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e9b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-40",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b96c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-41",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86d4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-42",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4283a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-43",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4382a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-44",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a0003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-45",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1013f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-46",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003e9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-47",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9e315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-48",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f305519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-49",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315419ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-50",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315518ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-51",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519fe73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-52",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff72bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-53",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bc356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-54",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd346f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-55",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356e561d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-56",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f571d19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-57",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561c19865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-58",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d18865dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-59",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19875dc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-60",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865cc90f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-61",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc80f09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-62",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90e09"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "bit-flip-63",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f08"
+      },
+      "expected": {
+        "status": "invalid"
+      },
+      "rule": "Verification / Strict verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-256",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": ""
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-257",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "00"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-258",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-259",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "0x535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-260",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f0900"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-261",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "\u20ac00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-262",
+      "operation": "derive",
+      "input": {
+        "private_key": ""
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-263",
+      "operation": "derive",
+      "input": {
+        "private_key": "00"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-264",
+      "operation": "derive",
+      "input": {
+        "private_key": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-265",
+      "operation": "derive",
+      "input": {
+        "private_key": "\u20ac0000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-266",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-267",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_invalid",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-268",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn ",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-269",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8m1",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-270",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_znoms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-271",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac\u20ac",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "legacy",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "xrb_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Canonical Encodings / compatibility",
+      "scope": "compatibility"
+    },
+    {
+      "id": "uppercase",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535C745819D0F40056F3C46402B4FAE4356B3A8897BDE99C955D411920E740D781E6DDDCBDE228E8B86C4383A1003F9F315519FF73BD356F561D19865DC90F09"
+      },
+      "expected": {
+        "status": "valid"
+      },
+      "rule": "Canonical Encodings / compatibility",
+      "scope": "compatibility"
+    },
+    {
+      "id": "invalid-utf16-274",
+      "operation": "inspect",
+      "input": {
+        "message_utf16": [
+          55296
+        ]
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / Unicode scalar values",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf16-275",
+      "operation": "inspect",
+      "input": {
+        "message_utf16": [
+          56320
+        ]
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / Unicode scalar values",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf16-276",
+      "operation": "inspect",
+      "input": {
+        "message_utf16": [
+          55296,
+          65
+        ]
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / Unicode scalar values",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf8-c080",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "c080"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / valid UTF-8",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf8-eda080",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "eda080"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / valid UTF-8",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf8-f4908080",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "f4908080"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / valid UTF-8",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf8-ff",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "ff"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / valid UTF-8",
+      "scope": "protocol"
+    },
+    {
+      "id": "invalid-utf8-e282",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "e282"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "MESSAGE / valid UTF-8",
+      "scope": "protocol"
+    },
+    {
+      "id": "bom-bytes",
+      "operation": "inspect",
+      "input": {
+        "message_utf8_hex": "efbbbf68656c6c6f"
+      },
+      "expected": {
+        "status": "ok",
+        "message_utf8_hex": "efbbbf68656c6c6f",
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000008efbbbf68656c6c6f",
+        "digest": "bc05a411205cec81ce1be55b4074b38fef84a511b1284e311d8724ef68659643"
+      },
+      "rule": "MESSAGE / BOM preservation",
+      "scope": "protocol"
+    },
+    {
+      "id": "frame-truncated-header",
+      "operation": "parse_frame",
+      "input": {
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Implementation Notes / framed input",
+      "scope": "protocol"
+    },
+    {
+      "id": "frame-truncated-length",
+      "operation": "parse_frame",
+      "input": {
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a000000"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Implementation Notes / framed input",
+      "scope": "protocol"
+    },
+    {
+      "id": "frame-truncated-message",
+      "operation": "parse_frame",
+      "input": {
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a0000000261"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Implementation Notes / framed input",
+      "scope": "protocol"
+    },
+    {
+      "id": "frame-trailing-bytes",
+      "operation": "parse_frame",
+      "input": {
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a000000016162"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Implementation Notes / framed input",
+      "scope": "protocol"
+    },
+    {
+      "id": "frame-malformed-utf8",
+      "operation": "parse_frame",
+      "input": {
+        "payload_hex": "184e616e6f204f66662d636861696e204d6573736167653a0a00000002c080"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Implementation Notes / framed input",
+      "scope": "protocol"
+    },
+    {
+      "id": "limit-over",
+      "operation": "inspect",
+      "input": {
+        "message_repeat": {
+          "text": "a",
+          "count": 16777217
+        }
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Reference policy / 16 MiB",
+      "scope": "reference_policy"
+    },
+    {
+      "id": "malformed-signature-plus-sign",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-plus-sign",
+      "operation": "derive",
+      "input": {
+        "private_key": "+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a+a"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-tail-lf",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09\n"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-tail-lf",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173\n"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-tail-lf",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn\n",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-tail-cr",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09\r"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-tail-cr",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173\r"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-tail-cr",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn\r",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-tail-crlf",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09\r\n"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-tail-crlf",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173\r\n"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-tail-crlf",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn\r\n",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-tail-ls",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09\u2028"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-tail-ls",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173\u2028"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-tail-ls",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn\u2028",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-signature-tail-ps",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09\u2029"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Signature Encoding",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-key-tail-ps",
+      "operation": "derive",
+      "input": {
+        "private_key": "681fd5ed71a9f81e9d29e3450f6cd8aacb87346fd21a26003389290b9d0cb173\u2029"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Signing / private_key",
+      "scope": "protocol"
+    },
+    {
+      "id": "malformed-account-tail-ps",
+      "operation": "verify",
+      "input": {
+        "message": "Hej Nano!\ud83e\udd66",
+        "account": "nano_3noms9a1zytox399kygpge6cc7hu1z79ms1cgzojodz8741qi7w5u3nzb8mn\u2029",
+        "signature": "535c745819d0f40056f3c46402b4fae4356b3a8897bde99c955d411920e740d781e6dddcbde228e8b86c4383a1003f9f315519ff73bd356f561d19865dc90f09"
+      },
+      "expected": {
+        "status": "input_error"
+      },
+      "rule": "Canonical Encodings / Account Encoding",
+      "scope": "protocol"
+    }
+  ]
+}
